@@ -1,0 +1,174 @@
+
+<h2 class="chart-heading">Overall Heat Transfer Rate</h2>
+<div width="1000" height="550">
+	<svg id="visualisation" width="800" height="550"></svg>
+</div>
+
+<style>
+div.tooltip {
+	position: absolute;
+	text-align: center;
+	width: 130px;
+	height: 32px;
+	padding: 2px;
+	font: 12px sans-serif;
+	background: lightsteelblue;
+	border: 0px;
+	border-radius: 8px;
+	pointer-events: none;
+}
+
+.legend {
+	font-weight: bold;
+	font-size: 200%;
+	font-style: oblique;
+	cursor: pointer;
+}
+</style>
+<script src="js/d3.min.js"></script>
+
+<script>
+var currTime, colors = {};
+	var vis = d3.select("#visualisation"), WIDTH = 700, HEIGHT = 400, MARGINS = {
+		top : 20,
+		right : 20,
+		bottom : 20,
+		left : 50
+	};
+	var data = <%-JSON.stringify(data)%>;
+	var counter = parseInt(<%-JSON.stringify(counter)%>);
+	var graphData = data["data"];
+	var legendSpace = WIDTH/graphData.length; // spacing for the legend
+	currTime = data["currTime"];
+	var xScale = d3.scaleLinear()
+			.range([ MARGINS.left, WIDTH - MARGINS.right - 50 ]).domain(
+					[ currTime-counter, currTime ]);
+
+	var yScale = d3.scaleLinear().range(
+			[ HEIGHT - MARGINS.top, MARGINS.bottom ]).domain([ 24.9, 25.5 ]);
+
+	var xAxis = d3.axisBottom(xScale).ticks(10);
+	var yAxis = d3.axisLeft(yScale);
+
+	vis.append("svg:g").attr("class", "xaxis").attr("transform",
+			"translate(0," + (HEIGHT - MARGINS.bottom) + ")").call(xAxis).selectAll("text")
+		    .attr("y", 0)
+		    .attr("x", 9)
+		    .attr("dy", ".35em")
+		    .attr("transform", "rotate(90)")
+		    .style("text-anchor", "start");
+
+	vis.append("svg:g").attr("class", "yaxis")
+			.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(
+					yAxis);
+	var tip = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+	var lineGen = d3.line().x(function(d) {
+		return xScale(d.TimeStamp);
+	}).y(function(d) {
+		return yScale(d.Value);
+	});
+
+	assignColor();
+	graphData.forEach(function(da, i) {
+		var key = Object.keys(da)[0];
+		var items = da[key];
+		vis.append("text")
+            .attr("x", ((legendSpace/2)+i*legendSpace) - 60)  // space legend
+            .attr("y", HEIGHT + (MARGINS.bottom/2)+ 100)
+            .attr("class", "legend showLine")    // style the legend
+            .style("fill", function() { return colors[key]; })
+          	.on("click", function(){
+                var device = $(this).text();
+                $(this).toggleClass("showLine");
+                setStrokeVisibility(device);
+             }) 
+            .text(key);  
+		vis.append('svg:path').datum(items).attr("class","line").attr('id',key).attr('d',
+				d3.line().x(function(d) {
+					return xScale(d.TimeStamp);
+				}).y(function(d) {
+					return yScale(d.Value);
+				})).attr('stroke', function(d) { return colors[d[0].DeviceID]; }).attr('stroke-width', 2)
+				.attr('fill', 'none').on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
+	});
+
+	function handleMouseOver() {
+		var xValue = Math.round(xScale.invert(d3.mouse(this)[0]));
+		var yValue = yScale.invert(d3.mouse(this)[1]);
+		tip.transition()		
+        .duration(200)		
+        .style("opacity", .9);		
+		
+    	tip.html(xValue + "<br/>"  + yValue)	
+        .style("left", (d3.event.pageX) + "px")		
+        .style("top", (d3.event.pageY - 28) + "px");	
+		//console.log(xValue + ", " + yValue);
+	}
+	
+	function handleMouseOut(){
+		tip.transition()		
+        .duration(200)		
+        .style("opacity", 0)
+        .style("pointer-events", 'none');
+	}
+	
+	function updateGraph(data) {
+		data = JSON.parse(data);
+		currTime = data["currTime"];
+		var graphData1 = data["data"];
+		xScale.domain([currTime-counter , currTime]);
+		
+		vis.select(".xaxis").remove();
+		vis.selectAll(".line").remove();
+        
+		vis.append("svg:g").attr("transform",
+				"translate(0," + (HEIGHT - MARGINS.bottom) + ")").attr("class","xaxis").call(xAxis).selectAll("text")
+			    .attr("y", 0)
+			    .attr("x", 9)
+			    .attr("dy", ".35em")
+			    .attr("transform", "rotate(90)")
+			    .style("text-anchor", "start");
+
+		
+		graphData1.forEach(function(da, i) {
+			var key = Object.keys(da)[0];
+			var items1 = da[key];
+			vis.append('svg:path').datum(items1).attr("class","line").attr('id',key).attr('d',
+					d3.line().x(function(d) {
+						setStrokeVisibility(key);
+						return xScale(d.TimeStamp);
+					}).y(function(d) {
+						return yScale(d.Value);
+					})).attr('stroke', function(d) { return colors[key]; })
+					.attr('stroke-width', 2).attr(
+					'fill', 'none').on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
+		});
+	}
+
+	function setStrokeVisibility(key){
+		if($("text:contains('"+key+"')" ).hasClass("showLine"))
+			$("#"+key).show();
+		else
+			$("#"+key).hide();
+	}
+	
+	function assignColor(){
+		var assets = <%-JSON.stringify(assets)%>;
+		assets.forEach(function(asset){
+			colors[asset] = getRandomColor();
+		});
+	}
+	
+	function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++ ) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+	
+</script>

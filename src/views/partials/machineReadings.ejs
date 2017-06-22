@@ -1,0 +1,95 @@
+
+<style>
+.radar-chart .area {
+  fill-opacity: 0.7;
+}
+.radar-chart.focus .area {
+  fill-opacity: 0.3;
+}
+.radar-chart.focus .area.focused {
+  fill-opacity: 0.9;
+}
+.area.germany, .germany .circle {
+  fill: #FFD700;
+  stroke: none;
+}
+.area.argentina, .argentina .circle {
+  fill: #ADD8E6;
+  stroke: none;
+}
+</style>
+
+<ul class="nav nav-pills">
+  <li class="nav-item">
+    <a class="nav-link " href="#">Table</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="#">Plot</a>
+  </li>
+</ul>
+
+<div class="table-responsive">
+<table class="table" id="details">
+    <thead>
+      <tr>
+        <th>Sensor ID</th>
+        <th>T1</th>
+        <th>T2</th>
+        <th>T3</th>
+        <th>T4</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Latest Value (F)</td>
+        <td id="latest_t1"></td>
+        <td id="latest_t2"></td>
+        <td id="latest_t3"></td>
+        <td id="latest_t4"></td>
+      </tr>      
+      <tr>
+        <td>Max (F)</td>
+        <td id="max_t1"></td>
+        <td id="max_t2"></td>
+        <td id="max_t3"></td>
+        <td id="max_t4"></td>
+      </tr>
+      <tr>
+        <td>Min (F)</td>
+        <td id="min_t1"></td>
+        <td id="min_t2"></td>
+        <td id="min_t3"></td>
+        <td id="min_t4"></td>
+      </tr>
+       <tr>
+        <td>Mean (F)</td>
+        <td id="mean_t1"></td>
+        <td id="mean_t2"></td>
+        <td id="mean_t3"></td>
+        <td id="mean_t4"></td>
+      </tr>
+            <tr>
+        <td>Measurement Uncertainity (F)</td>
+        <td id="min_t1"></td>
+        <td id="min_t2"></td>
+        <td id="min_t3"></td>
+        <td id="min_t4"></td>
+      </tr>
+            <tr>
+        <td>Standard Deviation (F)</td>
+        <td id="measurement_t1"></td>
+        <td id="measurement_t2"></td>
+        <td id="measurement_t3"></td>
+        <td id="measurement_t4"></td>
+      </tr>
+           <tr>
+        <td>Stability(%/min)</td>
+        <td id="stability_t1"></td>
+        <td id="stability_t2"></td>
+        <td id="stability_t3"></td>
+        <td id="stability_t4"></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+ 
