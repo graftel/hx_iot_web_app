@@ -114,6 +114,7 @@ module.exports = function(app,options){
 	 
 	 function functionTwo(callback) {
 		 devicesDetails = [];
+		 deviceIDs = [];
 		 var params = {
 				    TableName : "Devices",
 				    ProjectionExpression: "DeviceID"
