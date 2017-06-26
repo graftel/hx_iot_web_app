@@ -20,32 +20,34 @@ div.tooltip {
 
 .legend {
 	font-weight: bold;
-	font-size: 200%;
+	font-size: 20px;
 	font-style: oblique;
 	cursor: pointer;
+	writing-mode: vertical-lr;
 }
 </style>
 <script src="js/d3.min.js"></script>
 
 <script>
-var currTime, colors = {};
+var colors = {};
 	var vis = d3.select("#visualisation"), WIDTH = 700, HEIGHT = 400, MARGINS = {
 		top : 20,
 		right : 20,
 		bottom : 20,
 		left : 50
 	};
+	var minX = -1, maxX = -1, minY = -1, maxY = -1;
 	var data = <%-JSON.stringify(data)%>;
 	var counter = parseInt(<%-JSON.stringify(counter)%>);
 	var graphData = data["data"];
 	var legendSpace = WIDTH/graphData.length; // spacing for the legend
-	currTime = data["currTime"];
+	setMinMaxforYAxis(graphData);
+	
 	var xScale = d3.scaleLinear()
 			.range([ MARGINS.left, WIDTH - MARGINS.right - 50 ]).domain(
-					[ currTime-counter, currTime ]);
-
+					[ minX, maxX ]);
 	var yScale = d3.scaleLinear().range(
-			[ HEIGHT - MARGINS.top, MARGINS.bottom ]).domain([ 24.9, 25.5 ]);
+			[ HEIGHT - MARGINS.top, MARGINS.bottom ]).domain([ minY - 0.2, maxY + 0.2 ]);
 
 	var xAxis = d3.axisBottom(xScale).ticks(10);
 	var yAxis = d3.axisLeft(yScale);
@@ -66,7 +68,7 @@ var currTime, colors = {};
     .style("opacity", 0);
 
 	var lineGen = d3.line().x(function(d) {
-		return xScale(d.TimeStamp);
+		return xScale(d.EpochTimeStamp);
 	}).y(function(d) {
 		return yScale(d.Value);
 	});
@@ -76,8 +78,8 @@ var currTime, colors = {};
 		var key = Object.keys(da)[0];
 		var items = da[key];
 		vis.append("text")
-            .attr("x", ((legendSpace/2)+i*legendSpace) - 60)  // space legend
-            .attr("y", HEIGHT + (MARGINS.bottom/2)+ 100)
+            .attr("x", ((legendSpace/2)+i*legendSpace) )  // space legend
+            .attr("y", HEIGHT + (MARGINS.bottom/2)+50)
             .attr("class", "legend showLine")    // style the legend
             .style("fill", function() { return colors[key]; })
           	.on("click", function(){
@@ -88,11 +90,11 @@ var currTime, colors = {};
             .text(key);  
 		vis.append('svg:path').datum(items).attr("class","line").attr('id',key).attr('d',
 				d3.line().x(function(d) {
-					return xScale(d.TimeStamp);
+					return xScale(d.EpochTimeStamp);
 				}).y(function(d) {
 					return yScale(d.Value);
 				})).attr('stroke', function(d) { if(d.length == 0) 
-													return null 
+													return null ;
 												else 
 													return colors[d[0].DeviceID]; }).attr('stroke-width', 2)
 				.attr('fill', 'none').on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
@@ -119,13 +121,16 @@ var currTime, colors = {};
 	
 	function updateGraph(data) {
 		data = JSON.parse(data);
-		currTime = data["currTime"];
 		var graphData1 = data["data"];
-		xScale.domain([currTime-counter , currTime]);
-		
+		setMinMaxforYAxis(graphData1);
+		xScale.domain([minX , maxX]);
+		yScale.domain([ minY - 0.5, maxY + 0.5 ]);
 		vis.select(".xaxis").remove();
+		vis.select(".yaxis").remove();
 		vis.selectAll(".line").remove();
-        
+		vis.append("svg:g").attr("class", "yaxis")
+		.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(
+				yAxis);
 		vis.append("svg:g").attr("transform",
 				"translate(0," + (HEIGHT - MARGINS.bottom) + ")").attr("class","xaxis").call(xAxis).selectAll("text")
 			    .attr("y", 0)
@@ -141,7 +146,7 @@ var currTime, colors = {};
 			vis.append('svg:path').datum(items1).attr("class","line").attr('id',key).attr('d',
 					d3.line().x(function(d) {
 						setStrokeVisibility(key);
-						return xScale(d.TimeStamp);
+						return xScale(d.EpochTimeStamp);
 					}).y(function(d) {
 						return yScale(d.Value);
 					})).attr('stroke', function(d) { return colors[key]; })
@@ -173,4 +178,13 @@ var currTime, colors = {};
         return color;
     }
 	
+	function setMinMaxforYAxis(data){
+		var tempX = [], tempY = [];
+		tempX = data.reduce(function(a,b) {  var vals = Object.values(b)[0]; var i = vals.map(function(x){ return(x.EpochTimeStamp); });  return a.concat(i); }, [])
+		tempY = data.reduce(function(a,b) {  var vals = Object.values(b)[0]; var i = vals.map(function(x){ if(x.Value != 999) return(x.Value); });  return a.concat(i); }, [])
+		minX = Math.min.apply(Math,tempX);
+		maxX = Math.max.apply(Math,tempX);
+		minY = Math.min.apply(Math,tempY);
+		maxY = Math.max.apply(Math,tempY);
+	}
 </script>

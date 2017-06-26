@@ -1,11 +1,10 @@
 module.exports = function(app,options){
 	
-	var tableName = "DHMMAIN";
 	var devicesDetails = [], deviceIDs = [];
-	var startTime = 1495827480;
+	var startTime = 1498234355;
 	var currTime = startTime;
-	var endTime = 1495830120;
-	var counter = 60 * 10; // 3 minutes
+	var endTime = 1498248935;
+	var counter = 60;
 	var dynamodb = new options.AWS.DynamoDB();
 	
 	const path = require("path");
@@ -87,8 +86,8 @@ module.exports = function(app,options){
 		 for(device of deviceIDs)(function(device){
 		 	 var obj = new Object();
 			 params = {
-					 	TableName : "DHMMAIN",
-					    ExpressionAttributeNames: {"#T":"TimeStamp"},
+					 	TableName : "Hx.RawData",
+					    ExpressionAttributeNames: {"#T":"EpochTimeStamp"},
 					    // ProjectionExpression: "DeviceID, #T, #V",
 					    KeyConditionExpression: "DeviceID = :v1 AND #T BETWEEN :v2a and :v2b",
 					    ExpressionAttributeValues: {
@@ -116,7 +115,7 @@ module.exports = function(app,options){
 		 devicesDetails = [];
 		 deviceIDs = [];
 		 var params = {
-				    TableName : "Devices",
+				    TableName : "Hx.DeviceConfiguration",
 				    ProjectionExpression: "DeviceID"
 				};
 		 options.docClient.scan(params, function (err, data) {
