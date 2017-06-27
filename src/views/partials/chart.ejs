@@ -1,7 +1,8 @@
 
 <h2 class="chart-heading">Overall Heat Transfer Rate</h2>
-<div width="1000" height="550">
-	<svg id="visualisation" width="800" height="550"></svg>
+<div width="1000" height="600">
+	<svg id="visualisation" width="800" height="500"></svg>
+	<table class="table table-bordered" id="legend"></table>
 </div>
 
 <style>
@@ -18,18 +19,25 @@ div.tooltip {
 	pointer-events: none;
 }
 
-.legend {
+#legend {
 	font-weight: bold;
 	font-size: 20px;
 	font-style: oblique;
 	cursor: pointer;
-	writing-mode: vertical-lr;
+}
+
+#legend td{
+	text-align: center;
+}
+
+#legend td:hover{
+	background-color: #f5f5f5;
 }
 </style>
 <script src="js/d3.min.js"></script>
 
 <script>
-var colors = {};
+	var colors = {};
 	var vis = d3.select("#visualisation"), WIDTH = 700, HEIGHT = 400, MARGINS = {
 		top : 20,
 		right : 20,
@@ -41,7 +49,7 @@ var colors = {};
 	var counter = parseInt(<%-JSON.stringify(counter)%>);
 	var graphData = data["data"];
 	var legendSpace = WIDTH/graphData.length; // spacing for the legend
-	setMinMaxforYAxis(graphData);
+	setMinMaxforAxis(graphData);
 	
 	var xScale = d3.scaleLinear()
 			.range([ MARGINS.left, WIDTH - MARGINS.right - 50 ]).domain(
@@ -77,17 +85,24 @@ var colors = {};
 	graphData.forEach(function(da, i) {
 		var key = Object.keys(da)[0];
 		var items = da[key];
-		vis.append("text")
+/* 	vis.append("text")
             .attr("x", ((legendSpace/2)+i*legendSpace) )  // space legend
             .attr("y", HEIGHT + (MARGINS.bottom/2)+50)
-            .attr("class", "legend showLine")    // style the legend
-            .style("fill", function() { return colors[key]; })
+             
+            .text(key); */
+            d3.select("#legend").append(function(){
+            	if(i%5 == 0){
+            		d3.select("#legend").append("tr");
+            	}
+            	return "td";
+            }(i)).text(key).attr("class", "legend showLine")    // style the legend
+            .style("color", function() { return colors[key]; })
           	.on("click", function(){
                 var device = $(this).text();
                 $(this).toggleClass("showLine");
                 setStrokeVisibility(device);
-             }) 
-            .text(key);  
+             });
+            
 		vis.append('svg:path').datum(items).attr("class","line").attr('id',key).attr('d',
 				d3.line().x(function(d) {
 					return xScale(d.EpochTimeStamp);
@@ -122,7 +137,7 @@ var colors = {};
 	function updateGraph(data) {
 		data = JSON.parse(data);
 		var graphData1 = data["data"];
-		setMinMaxforYAxis(graphData1);
+		setMinMaxforAxis(graphData1);
 		xScale.domain([minX , maxX]);
 		yScale.domain([ minY - 0.5, maxY + 0.5 ]);
 		vis.select(".xaxis").remove();
@@ -156,7 +171,7 @@ var colors = {};
 	}
 
 	function setStrokeVisibility(key){
-		if($("text:contains('"+key+"')" ).hasClass("showLine"))
+		if($("td:contains('"+key+"')" ).hasClass("showLine"))
 			$("#"+key).show();
 		else
 			$("#"+key).hide();
@@ -178,7 +193,7 @@ var colors = {};
         return color;
     }
 	
-	function setMinMaxforYAxis(data){
+	function setMinMaxforAxis(data){
 		var tempX = [], tempY = [];
 		tempX = data.reduce(function(a,b) {  var vals = Object.values(b)[0]; var i = vals.map(function(x){ return(x.EpochTimeStamp); });  return a.concat(i); }, [])
 		tempY = data.reduce(function(a,b) {  var vals = Object.values(b)[0]; var i = vals.map(function(x){ if(x.Value != 999) return(x.Value); });  return a.concat(i); }, [])

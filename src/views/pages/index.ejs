@@ -63,7 +63,7 @@
 	$( document ).ready(function() {
 		var refreshIntervalId =	setInterval(function(){
 		getLiveData();
-	},3000); 
+	},60 * 1000); 
 	
 	 function getLiveData(){
 		$.ajax({
