@@ -47,7 +47,7 @@ module.exports = function(app,options){
 	});
 	 
 	app.get('/', function (req, res) {
-		if(typeof req.user == 'undefined'){
+		if(typeof req.session.passport == 'undefined'){
 			res.redirect('/login');
 		}
 		else{
