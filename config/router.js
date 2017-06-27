@@ -1,9 +1,9 @@
 module.exports = function(app,options){
 	
 	var devicesDetails = [], deviceIDs = [];
-	var startTime = 1498234355;
+	var startTime = 1498570765;
 	var currTime = startTime;
-	var endTime = 1498248935;
+	var endTime = 1498574189;
 	var counter = 60;
 	var dynamodb = new options.AWS.DynamoDB();
 	
@@ -68,11 +68,14 @@ module.exports = function(app,options){
 	});
 
 	app.post('/live', function (req, res) {
-		if(currTime>=endTime){
-			res.status(404).send("Oh uh, something went wrong");
-		}
+	//	if(currTime>=endTime){
+		//	res.status(404).send("Oh uh, something went wrong");
+	//	}
 		
 		functionOne( functionThree = function(){
+			if(devicesDetails.length == 0 ){
+				res.status(404).send("Oh uh, something went wrong");
+			}
 			if(devicesDetails.length == deviceIDs.length){
 				res.end(JSON.stringify({"currTime" : currTime, "data": devicesDetails }));
 			}
