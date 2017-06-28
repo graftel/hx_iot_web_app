@@ -442,3 +442,7 @@ h2.chart-heading{
 	background-color: #337ab7;
 	color: white;
 }
+
+.shadow{
+	text-shadow: 1px 1px 10px #000, 1px 1px 10px #000;
+}

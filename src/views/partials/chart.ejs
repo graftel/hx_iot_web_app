@@ -63,7 +63,7 @@ div.tooltip {
 	var yScale = d3.scaleLinear().range(
 			[ HEIGHT - MARGINS.top, MARGINS.bottom ]).domain([ minY - 0.2, maxY + 0.2 ]);
 
-	var xAxis = d3.axisBottom(xScale).ticks(10);
+	var xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(function(d){ return timestampToTime(d); });
 	var yAxis = d3.axisLeft(yScale);
 
 	vis.append("svg:g").attr("class", "xaxis").attr("transform",
@@ -173,8 +173,8 @@ div.tooltip {
 					})).attr('stroke', function(d) { return colors[key]; })
 					.attr('stroke-width', 2).attr(
 					'fill', 'none').on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
+			setLegendEnability(key,items1.length);
 		});
-		setLegendEnability(key,items1.length);
 	}
 
 	function setStrokeVisibility(key){
@@ -207,10 +207,20 @@ div.tooltip {
         return color;
     }
 	
+	function timestampToTime(timestamp){
+		var date = new Date(timestamp*1000);
+		var hours = date.getHours();
+		var minutes = "0" + date.getMinutes();
+		var seconds = "0" + date.getSeconds();
+		return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+	}
+	
 	function setMinMaxforAxis(data){
 		var tempX = [], tempY = [];
 		tempX = data.reduce(function(a,b) {  var vals = Object.values(b)[0]; var i = vals.map(function(x){ return(x.EpochTimeStamp); });  return a.concat(i); }, [])
 		tempY = data.reduce(function(a,b) {  var vals = Object.values(b)[0]; var i = vals.map(function(x){ if(x.Value != 999) return(x.Value); });  return a.concat(i); }, [])
+		if(tempX.length == 0 && tempY == 0)
+			return;
 		minX = Math.min.apply(Math,tempX);
 		maxX = Math.max.apply(Math,tempX);
 		minY = Math.min.apply(Math,tempY);
