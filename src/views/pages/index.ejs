@@ -17,41 +17,12 @@
 
 			<div class="row"><%- include ../partials/dashboard-panels.ejs
 				%></div>
-			<!-- /.row -->
-			<!-- 	<div class="row">
-				<div class="col-lg-6">
-                    <div class="panel panel-primary">
-                        <div class="panel-heading">
-                            Temperature Data - Devices
-                        </div>
-                        /.panel-heading
-                        <div class="panel-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Device ID</th>
-                                            <th>Time Stamp</th>
-                                            <th>Temperature</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-
-                                    </tbody>
-                                </table>
-                            </div>
-                            /.table-responsive
-                        </div>
-                        /.panel-body
-                    </div>
-                    /.panel
-                </div> -->
-			<!-- /.row -->
 			<div class="row">
 				<hr>
-				<div class="col-md-6"><%- include ../partials/chart.ejs %></div>
-
-				<div class="col-md-4"><%- include ../partials/graph.ejs %></div>
+				<div><%- include ../partials/chart.ejs %></div>
+			</div>
+			<div class="row">
+				<div><%- include ../partials/graph.ejs %></div>
 			</div>
 			<!-- /#page-wrapper -->
 		</div>
@@ -63,7 +34,7 @@
 	$( document ).ready(function() {
 		var refreshIntervalId =	setInterval(function(){
 		getLiveData();
-	},60 * 1000); 
+	},10 * 1000); 
 	
 	 function getLiveData(){
 		$.ajax({
