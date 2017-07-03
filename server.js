@@ -40,7 +40,6 @@ app.use(passport.session());
  * var dynamodb = new AWS.DynamoDB(config);
  */
  require('./config/router')(app,{session: session, AWS: AWS, passport: passport, docClient: docClient});
- 
 // starting server
 var server = app.listen(5000, function () {
     console.log('Server is running on port 5000 !');

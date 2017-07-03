@@ -1,14 +1,48 @@
 module.exports = function(app,options){
 	
-	var devicesDetails = [], deviceIDs = [];
-	var startTime = 1498570765;
-	var currTime = startTime;
-	var endTime = 1498574189;
-	var counter = 60;
+	var tables = {
+			company: "Hx.Company",
+			users: "Hx.Users",
+			assets: "Hx.Assets", 
+			deviceConfig: "Hx.DeviceConfiguration", 
+			rawData: "Hx.RawData", 
+			calculatedData: "Hx.CalculatedData",
+			alerts: "Hx.Alerts"
+	};
+	
+	var HBEdetails = [], assets=[], assetIDs = [];
+	var today = new Date();
+	today.setHours(0,0,0,0);
+	today = today.getTime()/1000;
+	var startTime=0;
+	var params = {
+			  TableName: tables.rawData,
+			  FilterExpression: "EpochTimeStamp >= :val",
+			  ExpressionAttributeValues: {":val" : today },
+			  Limit: 1
+	};
+	var startTime=0;
+	var currTime;
+	getStartTime();	
+	function getStartTime(){
+		options.docClient.scan(params, function (err, data) {
+		    if (err) {
+		        console.error("Unable to scan time. Error JSON:", JSON.stringify(err, null, 2));
+		    } else {
+		    	if(data.Count > 0)
+		    		startTime = data.Items[0].EpochTimeStamp;
+		    	else
+		    		startTime= 0;
+		    	currTime=startTime;
+		    }
+		});
+	}
+	//var startTime = options.startTime;
+	var counter = 120;
 	var dynamodb = new options.AWS.DynamoDB();
 	
 	const path = require("path");
-	var functionThree;
+	var simpleCallback;
 	 
 	app.get('/login', function (req, res) {
 		 res.render('pages' + path.sep + 'login');
@@ -29,7 +63,7 @@ module.exports = function(app,options){
 		 var username = req.body.username;
 		 var password = req.body.password;
 		 var params = {
-				  TableName: "Users",
+				  TableName: tables.users,
 				  Item: {
 					  UserName: username,
 					  Password: password
@@ -51,16 +85,16 @@ module.exports = function(app,options){
 			res.redirect('/login');
 		}
 		else{
-			functionTwo(functionOne);
-			functionThree = function(){
-				if(devicesDetails.length == deviceIDs.length){		
+			getAssets(getCalculatedValues);
+			simpleCallback = function(){
+				if(HBEdetails.length == assetIDs.length){		
 					res.render('pages' + path.sep + 'index', {
-						assets: deviceIDs,
+						assets: assets,
 						warnings: 0,
 						alerts: 4,
 						predictions: 1,
 						counter: counter,
-						data: {"currTime" : currTime, "data": devicesDetails }
+						data: HBEdetails
 					});
 				}
 			}
@@ -72,33 +106,33 @@ module.exports = function(app,options){
 		//	res.status(404).send("Oh uh, something went wrong");
 	//	}
 		
-		functionOne( functionThree = function(){
-			if(devicesDetails.length == 0 ){
+		getCalculatedValues(simpleCallback = function(){
+			if(HBEdetails.length == 0 ){
 				res.status(404).send("Oh uh, something went wrong");
 			}
-			if(devicesDetails.length == deviceIDs.length){
-				res.end(JSON.stringify({"currTime" : currTime, "data": devicesDetails }));
+			if(HBEdetails.length == assetIDs.length){
+				res.end(JSON.stringify( HBEdetails ));
 			}
 		});
 	});
 	 	 
-	var functionOne = function(callback) { 
+	var getCalculatedValues = function(callback) { 
 		 var params;
-		 devicesDetails=[];
+		 HBEdetails=[];
 		 
-		 for(device of deviceIDs)(function(device){
+		 for(device of assetIDs)(function(device){
 		 	 var obj = new Object();
 			 params = {
-					 	TableName : "Hx.RawData",
-					    ExpressionAttributeNames: {"#T":"EpochTimeStamp"},
-					    // ProjectionExpression: "DeviceID, #T, #V",
-					    KeyConditionExpression: "DeviceID = :v1 AND #T BETWEEN :v2a and :v2b",
+					 	TableName : tables.calculatedData,
+					    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": "Heat_Balance_Error(%)"},
+					    ProjectionExpression: "AssetID, #T, #E",
+					    KeyConditionExpression: "AssetID = :v1 AND #T BETWEEN :v2a and :v2b",
 					    ExpressionAttributeValues: {
 					        ":v1": device,
 					        ":v2a": currTime,
 					        ":v2b": currTime + counter
 					    },
-					    Select: "ALL_ATTRIBUTES"
+					    Select: "SPECIFIC_ATTRIBUTES"
 			 };
 			 options.docClient.query(params, function (err, data) {
 			 	    if (err) {
@@ -106,7 +140,7 @@ module.exports = function(app,options){
 				    } else {
 				        console.log("Device Details query successful");
 				        obj[device] = data.Items;
-				        devicesDetails.push(obj);
+				        HBEdetails.push(obj);
 				        callback();
 				    }
 			 });
@@ -114,22 +148,21 @@ module.exports = function(app,options){
 		 currTime += counter;
 	 }
 	 
-	 function functionTwo(callback) {
-		 devicesDetails = [];
-		 deviceIDs = [];
+	 function getAssets(callback) {
+		 HBEdetails = [], assets = [], assetIDs = []; // to empty any previous values stored 
 		 var params = {
-				    TableName : "Hx.DeviceConfiguration",
-				    ProjectionExpression: "DeviceID"
+				    TableName : tables.assets,
+				    ProjectionExpression: ["AssetID","DisplayName"]
 				};
 		 options.docClient.scan(params, function (err, data) {
 			    if (err) {
 			        console.error("Unable to scan the devices. Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
-			    	console.log("Devices scan succesful.");
-			    	var devicesList = data.Items;
-			    	deviceIDs.push(devicesList.map(function(k){return k['DeviceID']; }));
-			    	deviceIDs = deviceIDs[0];
-				    callback(functionThree);		
+			    	console.log("Assets scan succesful.");
+			    	assets = data.Items;
+			    	assetIDs.push(assets.map(function(k){return k['AssetID']; }));
+			    	assetIDs = assetIDs[0];
+				    callback(simpleCallback);		
 			    }
 			});
 		}
@@ -144,7 +177,7 @@ module.exports = function(app,options){
 					return false;
 				}
 				res.render('pages' + path.sep + 'asset',{
-					assets: deviceIDs,
+					assets: assetIDs,
 					asset: asset
 				});
 			}

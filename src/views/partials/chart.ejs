@@ -55,7 +55,7 @@ div.tooltip {
 	var minX = -1, maxX = -1, minY = -1, maxY = -1;
 	var data = <%-JSON.stringify(data)%>;
 	var counter = parseInt(<%-JSON.stringify(counter)%>);
-	var graphData = data["data"];
+	var graphData = data;
 	var legendSpace = WIDTH/graphData.length; // spacing for the legend
 	setMinMaxforAxis(graphData);
 	
@@ -83,12 +83,6 @@ div.tooltip {
     .attr("class", "tooltip")				
     .style("opacity", 0);
 
-	var lineGen = d3.line().x(function(d) {
-		return xScale(d.EpochTimeStamp);
-	}).y(function(d) {
-		return yScale(d.Value);
-	});
-
 	assignColor();
 	graphData.forEach(function(da, i) {
 		var key = Object.keys(da)[0];
@@ -113,13 +107,13 @@ div.tooltip {
             setLegendEnability(key,items.length);
 		vis.append('svg:path').datum(items).attr("class","line").attr('id',key).attr('d',
 				d3.line().x(function(d) {
-					return xScale(d.EpochTimeStamp);
+					return xScale(d["EpochTimeStamp"]);
 				}).y(function(d) {
-					return yScale(d.Value);
+					return yScale(d["Heat_Balance_Error(%)"]);
 				})).attr('stroke', function(d) { if(d.length == 0) 
 													return null ;
 												else 
-													return colors[d[0].DeviceID]; }).attr('stroke-width', 2)
+													return colors[d[0].AssetID]; }).attr('stroke-width', 2)
 				.attr('fill', 'none').on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
 	});
 
@@ -144,7 +138,7 @@ div.tooltip {
 	
 	function updateGraph(data) {
 		data = JSON.parse(data);
-		var graphData1 = data["data"];
+		var graphData1 = data;
 		setMinMaxforAxis(graphData1);
 		xScale.domain([minX , maxX]);
 		yScale.domain([ minY - 0.5, maxY + 0.5 ]);
@@ -171,7 +165,7 @@ div.tooltip {
 						setStrokeVisibility(key);
 						return xScale(d.EpochTimeStamp);
 					}).y(function(d) {
-						return yScale(d.Value);
+						return yScale(d["Heat_Balance_Error(%)"]);
 					})).attr('stroke', function(d) { return colors[key]; })
 					.attr('stroke-width', 2).attr(
 					'fill', 'none').on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
@@ -196,7 +190,7 @@ div.tooltip {
 	function assignColor(){
 		var assets = <%-JSON.stringify(assets)%>;
 		assets.forEach(function(asset){
-			colors[asset] = getRandomColor();
+			colors[asset.AssetID] = getRandomColor();
 		});
 	}
 	
@@ -220,7 +214,7 @@ div.tooltip {
 	function setMinMaxforAxis(data){
 		var tempX = [], tempY = [];
 		tempX = data.reduce(function(a,b) {  var vals = Object.values(b)[0]; var i = vals.map(function(x){ return(x.EpochTimeStamp); });  return a.concat(i); }, [])
-		tempY = data.reduce(function(a,b) {  var vals = Object.values(b)[0]; var i = vals.map(function(x){ if(x.Value != 999) return(x.Value); });  return a.concat(i); }, [])
+		tempY = data.reduce(function(a,b) {  var vals = Object.values(b)[0]; var i = vals.map(function(x){ if(x["Heat_Balance_Error(%)"] != 999) return(x["Heat_Balance_Error(%)"]); });  return a.concat(i); }, [])
 		if(tempX.length == 0 && tempY == 0)
 			return;
 		minX = Math.min.apply(Math,tempX);
