@@ -7,9 +7,9 @@
 			<li><a href="#"><i class="fa fa-suitcase fa-fw"></i> Assets<span
 					class="fa arrow"></span></a>
 				<ul class="nav nav-second-level">
-					<% assets.forEach(function(asset){ %>
+					<% for(asset in assets){ %>
 					<li><a href="/asset?asset=<%= asset%>"><i
-							class="fa fa-align-justify fa-fw"></i> <%= asset %> </a></li> <% }) %>
+							class="fa fa-align-justify fa-fw"></i> <%= assets[asset] %> </a></li> <% } %>
 				</ul> <!-- /.nav-second-level --></li>
 
 			<li><a href="#"><i class="fa fa-cog fa-fw"></i> Settings</a></li>

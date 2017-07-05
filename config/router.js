@@ -176,7 +176,7 @@ module.exports = function(app,options){
 	 }
 	 
 	 function getAssets(callback) {
-		 HBEdetails = [], assets = [], assetIDs = []; // to empty any previous values stored 
+		 HBEdetails = [], assets = {}, assetIDs = []; // to empty any previous values stored 
 		 var params = {
 				    TableName : tables.assets,
 				    ProjectionExpression: ["AssetID","DisplayName"]
@@ -186,9 +186,11 @@ module.exports = function(app,options){
 			        console.error("Unable to scan the devices. Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	console.log("Assets scan succesful.");
-			    	assets = data.Items;
-			    	assetIDs.push(assets.map(function(k){return k['AssetID']; }));
-			    	assetIDs = assetIDs[0];
+			    	//assets = data.Items;
+			    	for(item in data.Items){
+			    		assets[data.Items[item].AssetID] = data.Items[item].DisplayName;
+			    		assetIDs.push(data.Items[item].AssetID);
+			    	}
 				    callback(simpleCallback);		
 			    }
 			});

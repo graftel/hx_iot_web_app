@@ -57,8 +57,8 @@ div.tooltip {
 	var counter = parseInt(<%-JSON.stringify(counter)%>);
 	var graphData = data;
 	var legendSpace = WIDTH/graphData.length; // spacing for the legend
-	setMinMaxforAxis(graphData);
-	
+		setMinMaxforAxis(graphData);
+	var assets = <%- JSON.stringify(assets) %>;
 	var xScale = d3.scaleLinear()
 			.range([ MARGINS.left, WIDTH - MARGINS.right - 50 ]).domain(
 					[ minX, maxX ]);
@@ -189,9 +189,9 @@ div.tooltip {
 	
 	function assignColor(){
 		var assets = <%-JSON.stringify(assets)%>;
-		assets.forEach(function(asset){
-			colors[asset.AssetID] = getRandomColor();
-		});
+		Object.keys(assets).forEach(function(key){
+			colors[key] = getRandomColor();	
+		});		
 	}
 	
 	function getRandomColor() {
