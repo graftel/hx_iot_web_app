@@ -25,7 +25,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
 app.set('views', views_path);
 app.use(express.static('src/public'));
-app.use(session({ secret: 'anything', cookie: { maxAge: 60000 },resave: true,
+app.use(session({ secret: 'anything', cookie: { maxAge: 600000 },resave: true,
     saveUninitialized: true }));
 app.use(cookieParser());
 app.use(passport.initialize());

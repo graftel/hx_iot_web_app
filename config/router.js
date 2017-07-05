@@ -113,10 +113,30 @@ module.exports = function(app,options){
 				if(typeof asset == 'undefined'){
 					return false;
 				}
-				res.render('pages' + path.sep + 'asset',{
-					assets: assetIDs,
-					asset: asset
-				});
+				var params = {
+						TableName : tables.calculatedData,
+						KeyConditionExpression: "AssetID = :v1",
+						ExpressionAttributeValues: {
+					        ":v1": asset
+					    },
+					    ScanIndexForward: false,
+					    Limit: 1
+				};
+				options.docClient.query(params, function (err, data) {
+			 	    if (err) {
+				        console.error("Unable to query recent data. Error JSON:", JSON.stringify(err, null, 2));
+				    } else {
+				        if(data.Items.length == 1){
+							res.render('pages' + path.sep + 'asset',{
+								assets: assetIDs,
+								asset: asset,
+								values: data.Items[0]
+							});
+				        }else{
+				        	console.log("Data pulled not correct");
+				        }
+			    }
+			});
 			}
 		});
 	 
@@ -141,6 +161,11 @@ module.exports = function(app,options){
 				res.end(JSON.stringify(result));
 				}
 		});
+	 
+	 // Settings route
+	 app.get('/settings', function(req,res){
+		 res.render('pages' + path.sep + 'settings');
+	 });
 	
 	// Helper Methods
 	var getCalculatedValues = function(callback) { 

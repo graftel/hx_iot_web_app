@@ -7,12 +7,12 @@
 			<li><a href="#"><i class="fa fa-suitcase fa-fw"></i> Assets<span
 					class="fa arrow"></span></a>
 				<ul class="nav nav-second-level">
-					<% for(asset in assets){ %>
-					<li><a href="/asset?asset=<%= asset%>"><i
-							class="fa fa-align-justify fa-fw"></i> <%= assets[asset] %> </a></li> <% } %>
+					<% Object.keys(assets).forEach(function(key){ %>
+					<li><a href="/asset?asset=<%=key%>"><i
+							class="fa fa-align-justify fa-fw"></i> <%= assets[key] %> </a></li> <% }); %>
 				</ul> <!-- /.nav-second-level --></li>
 
-			<li><a href="#"><i class="fa fa-cog fa-fw"></i> Settings</a></li>
+			<li><a href="/settings"><i class="fa fa-cog fa-fw"></i> Settings</a></li>
 		</ul>
 	</div>
 	<!-- /.sidebar-collapse -->
