@@ -1,5 +1,5 @@
 module.exports = function(app,options){
-	
+	// declarations
 	var tables = {
 			company: "Hx.Company",
 			users: "Hx.Users",
@@ -24,26 +24,12 @@ module.exports = function(app,options){
 	var startTime=0;
 	var currTime;
 	getStartTime();	
-	function getStartTime(){
-		options.docClient.scan(params, function (err, data) {
-		    if (err) {
-		        console.error("Unable to scan time. Error JSON:", JSON.stringify(err, null, 2));
-		    } else {
-		    	if(data.Count > 0)
-		    		startTime = data.Items[0].EpochTimeStamp;
-		    	else
-		    		startTime= 0;
-		    	currTime=startTime;
-		    }
-		});
-	}
-	//var startTime = options.startTime;
 	var counter = 120;
 	var dynamodb = new options.AWS.DynamoDB();
-	
 	const path = require("path");
 	var simpleCallback;
-	 
+	
+	// User Management Routes
 	app.get('/login', function (req, res) {
 		 res.render('pages' + path.sep + 'login');
 	});
@@ -79,7 +65,8 @@ module.exports = function(app,options){
 			});
 		 res.redirect('/login');
 	});
-	 
+	
+	// Dashboard page routes
 	app.get('/', function (req, res) {
 		if(typeof req.session.passport == 'undefined'){
 			res.redirect('/login');
@@ -115,7 +102,47 @@ module.exports = function(app,options){
 			}
 		});
 	});
-	 	 
+	
+	// Assets page routes
+	app.get('/asset', function (req, res) {
+		 if(typeof req.user == 'undefined'){
+				res.redirect('/login');
+			}
+			else{
+				var asset = req.query.asset;
+				if(typeof asset == 'undefined'){
+					return false;
+				}
+				res.render('pages' + path.sep + 'asset',{
+					assets: assetIDs,
+					asset: asset
+				});
+			}
+		});
+	 
+	 app.post('/asset/detail', function (req, res) {
+		 if(typeof req.user == 'undefined'){
+				return false;
+			}
+			else{
+			 	var asset = req.body.asset;
+				var tube = req.body.tube;
+				if(typeof asset == 'undefined'){
+					return false;
+				}
+				var result = { latest: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7} , 
+							   max: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
+							   min: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
+							   mean: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
+							   measurement: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
+							   sd: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
+							   stability: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}
+							 }; 			
+				res.end(JSON.stringify(result));
+				}
+		});
+	
+	// Helper Methods
 	var getCalculatedValues = function(callback) { 
 		 var params;
 		 HBEdetails=[];
@@ -167,42 +194,19 @@ module.exports = function(app,options){
 			});
 		}
 	 
-	 app.get('/asset', function (req, res) {
-		 if(typeof req.user == 'undefined'){
-				res.redirect('/login');
-			}
-			else{
-				var asset = req.query.asset;
-				if(typeof asset == 'undefined'){
-					return false;
-				}
-				res.render('pages' + path.sep + 'asset',{
-					assets: assetIDs,
-					asset: asset
-				});
-			}
-		});
+		function getStartTime(){
+			options.docClient.scan(params, function (err, data) {
+			    if (err) {
+			        console.error("Unable to scan time. Error JSON:", JSON.stringify(err, null, 2));
+			    } else {
+			    	if(data.Count > 0)
+			    		startTime = data.Items[0].EpochTimeStamp;
+			    	else
+			    		startTime= 0;
+			    	currTime=startTime;
+			    }
+			});
+		}
 	 
-	 app.post('/asset/detail', function (req, res) {
-		 if(typeof req.user == 'undefined'){
-				return false;
-			}
-			else{
-			 	var asset = req.body.asset;
-				var tube = req.body.tube;
-				if(typeof asset == 'undefined'){
-					return false;
-				}
-				var result = { latest: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7} , 
-							   max: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
-							   min: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
-							   mean: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
-							   measurement: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
-							   sd: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
-							   stability: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}
-							 }; 			
-				res.end(JSON.stringify(result));
-				}
-		});
 	 
 }
