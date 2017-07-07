@@ -24,7 +24,7 @@ module.exports = function(app,options){
 	var startTime=0;
 	var currTime;
 	getStartTime();	
-	var counter = 120;
+	var counter = 60*60;
 	var dynamodb = new options.AWS.DynamoDB();
 	const path = require("path");
 	var simpleCallback;
@@ -176,13 +176,15 @@ module.exports = function(app,options){
 		 	 var obj = new Object();
 			 params = {
 					 	TableName : tables.calculatedData,
-					    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": "Heat_Balance_Error(%)"},
+					    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": "Heat_Balance_Error(%)", "#S": "Status"},
 					    ProjectionExpression: "AssetID, #T, #E",
 					    KeyConditionExpression: "AssetID = :v1 AND #T BETWEEN :v2a and :v2b",
+					    FilterExpression: "NOT #S in (:v3)",
 					    ExpressionAttributeValues: {
 					        ":v1": device,
 					        ":v2a": currTime,
-					        ":v2b": currTime + counter
+					        ":v2b": currTime + counter,
+					        ":v3": 1
 					    },
 					    Select: "SPECIFIC_ATTRIBUTES"
 			 };
@@ -230,10 +232,9 @@ module.exports = function(app,options){
 			    		startTime = data.Items[0].EpochTimeStamp;
 			    	else
 			    		startTime= 0;
+			    	startTime = 1499347022;
 			    	currTime=startTime;
 			    }
 			});
 		}
-	 
-	 
 }
