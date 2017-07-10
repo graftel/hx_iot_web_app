@@ -19,6 +19,12 @@ div.tooltip {
 	pointer-events: none;
 }
 
+path.line {
+	width: 580px;
+	height: 351px;
+	overflow: hidden;
+}
+
 #legend {
 	font-weight: bold;
 	font-size: 20px;
@@ -28,15 +34,15 @@ div.tooltip {
 	margin-top: 3%;
 }
 
-#legend td{
+#legend td {
 	text-align: center;
 }
 
-#legend td:hover{
+#legend td:hover {
 	background-color: #f5f5f5;
 }
 
-.disable{
+.disable {
 	pointer-events: none;
 	background-color: #e6e6e6;
 }
@@ -70,7 +76,7 @@ div.tooltip {
 	var xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(function(d){ return timestampToTime(d); });
 	var yAxis = d3.axisLeft(yScale);
 
-	var gX = vis.append("svg:g").attr("class", "xaxis").attr("transform",
+	var gX = vis.append("g").attr("class", "xaxis").attr("transform",
 			"translate(0," + (HEIGHT - MARGINS.bottom) + ")").call(xAxis).selectAll("text")
 		    .attr("y", 0)
 		    .attr("x", 9)
@@ -78,7 +84,7 @@ div.tooltip {
 		    .attr("transform", "rotate(90)")
 		    .style("text-anchor", "start");
 
-	var gY = vis.append("svg:g").attr("class", "yaxis")
+	var gY = vis.append("g").attr("class", "yaxis")
 			.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(
 					yAxis);
 	var tip = d3.select("body").append("div")	
@@ -87,49 +93,12 @@ div.tooltip {
 	
 	var view = vis
 	//  .attr("class", "zoom")
-//	  .attr("width", 500)
-	//  .attr("height", 400)
+//	  .attr("width", 300)
+	//  .attr("height", 300)
 	  .call(zoom);
 	assignColor();
 
-	var dataGroup = d3.nest()
-    .key(function(d) {
-        return d.key;
-    })
-    .entries(res);
-/*	graphData.forEach(function(da, i) {
-		var key = Object.keys(da)[0];
-		var items = da[key];
-	vis.append("text")
-            .attr("x", ((legendSpace/2)+i*legendSpace) )  // space legend
-            .attr("y", HEIGHT + (MARGINS.bottom/2)+50)
-             
-            .text(key);
-            d3.select("#legend").append(function(){
-            	if(i%5 == 0){
-            		d3.select("#legend").append("tr");
-            	}
-            	return "td";
-            }(i)).text(key).attr("class", "legend showLine")    // style the legend
-            .style("color", function() { return colors[key]; })
-          	.on("click", function(){
-                var device = $(this).text();
-                $(this).toggleClass("showLine");
-                setStrokeVisibility(device);
-             });
-            setLegendEnability(key,items.length);
-		vis.append('svg:path').datum(items).attr("class","line").attr('id',key).attr('d',
-				d3.line().x(function(d) {
-					return xScale(d["EpochTimeStamp"]);
-				}).y(function(d) {
-					return yScale(d["Heat_Balance_Error(%)"]);
-				})).attr('stroke', function(d) { if(d.length == 0) 
-													return null ;
-												else 
-													return colors[d[0].AssetID]; }).attr('stroke-width', 2)
-				.attr('fill', 'none').on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
-	});*/
-	
+	var dataGroup = res;	
 	var lineGen = d3.line()
 	  .x(function(d) {
 	    return xScale(d.xV);
@@ -137,27 +106,42 @@ div.tooltip {
 	  .y(function(d) {
 	    return yScale(d.yV);
 	  });
-	
+
 	dataGroup.forEach(function(d, i) {
-	    vis.append('svg:path')
-	        .attr('d', lineGen(d.values[0].values))
-	        .attr('stroke', 'blue')
+        d3.select("#legend").append(function(){
+        	if(i%5 == 0){
+        		d3.select("#legend").append("tr");
+        	}
+        	return "td";
+        }(i)).text(d.key).attr("class", "legend showLine")
+        .style("color", function() { return colors[d.key]; })
+      	.on("click", function(){
+            var device = $(this).text();
+            $(this).toggleClass("showLine");
+            setStrokeVisibility(device);
+        });
+        
+        setLegendEnability(d.key,d.values.length);
+        
+		vis.append('path')
+	        .attr('d', lineGen(d.values))
+	        .attr('stroke', colors[d.key])
 	        .attr('stroke-width', 2)
 	        .attr('class', 'line')
-	        .attr('fill', 'none');
+	        .attr('fill', 'none')
+	        .attr('id',d.key)
+	        .on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
 	});
 	function zoomFunction(){
 		  var new_xScale = d3.event.transform.rescaleX(xScale);
 		  var new_yScale = d3.event.transform.rescaleY(yScale);			
-
 		  gX.call(xAxis.scale(new_xScale));
 		  gY.call(yAxis.scale(new_yScale));
-
-		vis.selectAll('.line').attr("transform", d3.event.transform);
+		  vis.selectAll('.line').attr("transform", d3.event.transform);
 	}
 	
 	function handleMouseOver() {
-		var xValue = Math.round(xScale.invert(d3.mouse(this)[0]));
+		var xValue = timestampToTime(Math.round(xScale.invert(d3.mouse(this)[0])));
 		var yValue = yScale.invert(d3.mouse(this)[1]);
 		tip.transition()		
         .duration(200)		
@@ -177,73 +161,41 @@ div.tooltip {
 	
 	function updateGraph(data) {
 		data = JSON.parse(data);
-		vis.select(".xaxis").remove();
-		vis.select(".yaxis").remove();
-		//vis.selectAll(".line").remove();
-		var graphData1 = data;
-		setMinMaxforAxis(graphData1);
+		setMinMaxforAxis(data);
 		res = reformatData(data);
-		dataGroup.push( d3.nest()
-	    .key(function(d) {
-	        return d.key;
-	    }).entries(res));
+		res.forEach(function(d){
+			dataGroup.unshift(d);
+		});
 		
 		xScale.domain([minX , maxX]);
 		yScale.domain([ minY - 0.5, maxY + 0.5 ]);
-	//	dataGroup.append(data);
-		// Select the section we want to apply our changes to
-	  
-	    dataGroup.forEach(function(d, i) {
-	    	console.log("d");
-	    	console.log(d);
-		    vis.append('svg:path')
-		        .attr('d', lineGen(d.values[0].values))
-		        .attr('stroke', 'blue')
-		        .attr('stroke-width', 2)
-		        .attr('class', 'line')
-		        .attr('fill', 'none');
-		});
-	    // Make the changes
-	        gY = vis.append("svg:g").attr("class", "yaxis")
-			.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(
-					yAxis);
-			gX = vis.append("svg:g").attr("transform",
-					"translate(0," + (HEIGHT - MARGINS.bottom) + ")").attr("class","xaxis").call(xAxis).selectAll("text")
-				    .attr("y", 0)
-				    .attr("x", 9)
-				    .attr("dy", ".35em")
-				    .attr("transform", "rotate(90)")
-				    .style("text-anchor", "start");
-			
-		/*vis.select(".xaxis").remove();
+		vis.select(".xaxis").remove();
 		vis.select(".yaxis").remove();
 		vis.selectAll(".line").remove();
-		gY = vis.append("svg:g").attr("class", "yaxis")
-		.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(
-				yAxis);
-		gX = vis.append("svg:g").attr("transform",
-				"translate(0," + (HEIGHT - MARGINS.bottom) + ")").attr("class","xaxis").call(xAxis).selectAll("text")
-			    .attr("y", 0)
-			    .attr("x", 9)
-			    .attr("dy", ".35em")
-			    .attr("transform", "rotate(90)")
-			    .style("text-anchor", "start");
 
-		
-		graphData1.forEach(function(da, i) {
-			var key = Object.keys(da)[0];
-			var items1 = da[key];
-			vis.append('svg:path').datum(items1).attr("class","line").attr('id',key).attr('d',
-					d3.line().x(function(d) {
-						setStrokeVisibility(key);
-						return xScale(d.EpochTimeStamp);
-					}).y(function(d) {
-						return yScale(d["Heat_Balance_Error(%)"]);
-					})).attr('stroke', function(d) { return colors[key]; })
-					.attr('stroke-width', 2).attr(
-					'fill', 'none').on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
-			setLegendEnability(key,items1.length);
-		});*/
+	    gY = vis.append("g").attr("class", "yaxis")
+			.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(yAxis);
+		gX = vis.append("g").attr("transform",
+			"translate(0," + (HEIGHT - MARGINS.bottom) + ")").attr("class","xaxis").call(xAxis).selectAll("text")
+			.attr("y", 0)
+			.attr("x", 9)
+			.attr("dy", ".35em")
+			.attr("transform", "rotate(90)")
+			.style("text-anchor", "start");
+		console.log(dataGroup);
+	    dataGroup.forEach(function(d, i) {
+		   var ele =  vis.append('path')
+		        .attr('d', lineGen(d.values))
+		        .attr('stroke', colors[d.key])
+		        .attr('stroke-width', 2)
+		        .attr('class', 'line')
+		        .attr('fill', 'none')
+		        .attr('id', d.key)
+		        .on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
+	
+		    setStrokeVisibility(d.key);
+		    setLegendEnability(d.key,d.values.length);
+		});
 	}
 
 	function setStrokeVisibility(key){
@@ -305,7 +257,7 @@ div.tooltip {
 			grp["values"] = new Array();
 			var t =  data[a][key];
 			for(b in t){
-				grp["values"].push({ "xV": t[b]["EpochTimeStamp"], "yV": t[b]["Heat_Balance_Error(%)"] });
+				grp["values"].push({ "xV": t[b]["EpochTimeStamp"], "yV": t[b]["Heat_Balance_Error(%)"], "new": true });
 			}
 			res.push(grp);
 		}
