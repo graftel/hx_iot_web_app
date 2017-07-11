@@ -19,8 +19,9 @@ div.tooltip {
 	pointer-events: none;
 }
 
-.xaxis text{
+.xaxis text, .yaxis text{
 	color: black;
+	font-size: 150%;
 }
 path.line {
 	width: 580px;
@@ -232,9 +233,9 @@ path.line {
 	}
 	function setStrokeVisibility(key){
 		if($("td:contains('"+key+"')" ).hasClass("showLine"))
-			$("#"+key).show();
+			d3.selectAll("#"+key).style("opacity", 1);
 		else
-			$("#"+key).hide();
+			d3.selectAll("#"+key).style("opacity", 0);
 	}
 	
 	function setLegendEnability(key,itemsLength){
