@@ -131,31 +131,31 @@
 				<div class="panel panel-info col-md-3" id="ts_in_info" style="">
 					<div class="panel-heading">Tube Side In</div>
 					<div class="panel-body">
-						<a src="#" class="temperature-data" id="ts_in_temp" onclick="getData(this)"> TSI: <%= values["Ave_RHR_Inlet(F)"].toFixed(2) %> F </a> <br> <a
-							src="#" class="flow-data" id="ts_in_flow" onclick="getData(this)">  FSI: <%= values["RHR_Flow(gpm)"].toFixed(2) %> GPM</a>
+						<a src="#" class="temperature-data" id="ts_in_temp" onclick="getData(this)"> TSI: <%= values["Ave_COLD_Inlet(F)"].toFixed(2) %> F </a> <br> <a
+							src="#" class="flow-data" id="ts_in_flow" onclick="getData(this)">  FSI: <%= values["COLD_Flow(gpm)"].toFixed(2) %> GPM</a>
 					</div>
 				</div>
 				<div class="panel panel-info col-md-3" id="ss_in_info" style="">
 					<div class="panel-heading">Shell Side In</div>
 					<div class="panel-body">
-						<a src="#" class="temperature-data" id="ss_in_temp" onclick="getData(this)"> TSI: <%= values["Ave_SW_Inlet(F)"].toFixed(2) %> F</a> <br> <a
-							src="#" class="flow-data" id="ss_in_flow" onclick="getData(this)">  FSI: <%= values["SW_Flow(gpm)"].toFixed(2) %> GPM </a>
+						<a src="#" class="temperature-data" id="ss_in_temp" onclick="getData(this)"> TSI: <%= values["Ave_HOT_Inlet(F)"].toFixed(2) %> F</a> <br> <a
+							src="#" class="flow-data" id="ss_in_flow" onclick="getData(this)">  FSI: <%= values["HOT_Flow(gpm)"].toFixed(2) %> GPM </a>
 					</div>
 				</div>
 
 				<div class="panel panel-info col-md-3" id="ss_out_info" style="">
 					<div class="panel-heading">Shell Side Out</div>
 					<div class="panel-body">
-						<a src="#" class="temperature-data" id="ss_out_temp" onclick="getData(this)"> TSI: <%= values["Ave_SW_Outlet(F)"].toFixed(2) %> F </a> <br> <a
-							src="#" class="flow-data" id="ss_out_flow" onclick="getData(this)">  FSI: <%= values["SW_Flow(gpm)"].toFixed(2) %> GPM </a>
+						<a src="#" class="temperature-data" id="ss_out_temp" onclick="getData(this)"> TSI: <%= values["Ave_HOT_Outlet(F)"].toFixed(2) %> F </a> <br> <a
+							src="#" class="flow-data" id="ss_out_flow" onclick="getData(this)">  FSI: <%= values["HOT_Flow(gpm)"].toFixed(2) %> GPM </a>
 					</div>
 				</div>
 
 				<div class="panel panel-info col-md-3" id="ts_out_info" style="">
 					<div class="panel-heading">Tube Side Out</div>
 					<div class="panel-body">
-						<a src="#" class="temperature-data" id="ts_out_temp" onclick="getData(this)"> TSI: <%= values["Ave_RHR_Outlet(F)"].toFixed(2) %> F</a> <br> <a
-							src="#" class="flow-data" id="ts_out_flow" onclick="getData(this)">  FSI: <%= values["RHR_Flow(gpm)"].toFixed(2) %> GPM </a>
+						<a src="#" class="temperature-data" id="ts_out_temp" onclick="getData(this)"> TSI: <%= values["Ave_COLD_Outlet(F)"].toFixed(2) %> F</a> <br> <a
+							src="#" class="flow-data" id="ts_out_flow" onclick="getData(this)">  FSI: <%= values["COLD_Flow(gpm)"].toFixed(2) %> GPM </a>
 					</div>
 				</div>
 			</div>
