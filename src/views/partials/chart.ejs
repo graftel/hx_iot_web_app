@@ -19,6 +19,9 @@ div.tooltip {
 	pointer-events: none;
 }
 
+.xaxis text{
+	color: black;
+}
 path.line {
 	width: 580px;
 	height: 351px;
@@ -52,21 +55,23 @@ path.line {
 
 <script>
 	var colors = {};
+	var minX = -1, maxX = -1, minY = -1, maxY = -1;
+	
 	var vis = d3.select("#visualisation"), WIDTH = 700, HEIGHT = 400, MARGINS = {
 		top : 20,
 		right : 20,
 		bottom : 20,
 		left : 50
 	};
-	var minX = -1, maxX = -1, minY = -1, maxY = -1;
 	var data = <%-JSON.stringify(data)%>;
-	var counter = parseInt(<%-JSON.stringify(counter)%>);
-	var graphData = data;
-	var res = reformatData(data);
-	var legendSpace = WIDTH/graphData.length; // spacing for the legend
-		setMinMaxforAxis(graphData);
-	var zoom = d3.zoom().on("zoom", zoomFunction);
 	var assets = <%- JSON.stringify(assets) %>;
+	var res = reformatData(data);
+	
+	setMinMaxforAxis(data);
+	
+	var legendSpace = WIDTH/data.length; // spacing for the legend
+	var zoom = d3.zoom().scaleExtent([0.5, 5]).on("zoom", zoomFunction);
+	
 	var xScale = d3.scaleLinear()
 			.range([ MARGINS.left, WIDTH - MARGINS.right - 50 ]).domain(
 					[ minX, maxX ]);
@@ -77,7 +82,9 @@ path.line {
 	var yAxis = d3.axisLeft(yScale);
 
 	var gX = vis.append("g").attr("class", "xaxis").attr("transform",
-			"translate(0," + (HEIGHT - MARGINS.bottom) + ")").call(xAxis).selectAll("text")
+			"translate(0," + (HEIGHT - MARGINS.bottom) + ")");
+			
+			gX.call(xAxis).selectAll("text")
 		    .attr("y", 0)
 		    .attr("x", 9)
 		    .attr("dy", ".35em")
@@ -87,15 +94,28 @@ path.line {
 	var gY = vis.append("g").attr("class", "yaxis")
 			.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(
 					yAxis);
+	
 	var tip = d3.select("body").append("div")	
     .attr("class", "tooltip")				
     .style("opacity", 0);
 	
+	vis.append("defs").append("clipPath")
+    .attr("id", "clip")
+    .append("rect")
+    .attr("x","50")
+    .attr("y","-20")
+    .attr("width", WIDTH - 50 )
+    .attr("height", HEIGHT );
+	
 	var view = vis
-	//  .attr("class", "zoom")
-//	  .attr("width", 300)
-	//  .attr("height", 300)
+//	 .attr("class", "zoom")
+	  .attr("x", 9)
+	  .attr("y", 0)
+	  .attr("width", WIDTH - 50)
+	  .attr("height", HEIGHT + 50)
 	  .call(zoom);
+	var chartBody = vis.append("g").attr("clip-path", "url(#clip)")	;
+	
 	assignColor();
 
 	var dataGroup = res;	
@@ -123,7 +143,7 @@ path.line {
         
         setLegendEnability(d.key,d.values.length);
         
-		vis.append('path')
+        chartBody.append('path')
 	        .attr('d', lineGen(d.values))
 	        .attr('stroke', colors[d.key])
 	        .attr('stroke-width', 2)
@@ -132,17 +152,69 @@ path.line {
 	        .attr('id',d.key)
 	        .on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
 	});
+	
+	// update live graph
+	function updateGraph(data) {
+		data = JSON.parse(data);
+		setMinMaxforAxis(data);
+		res = reformatData(data);
+		res.forEach(function(d){
+			dataGroup.unshift(d);
+		});
+		
+		vis.select(".xaxis").remove();
+		vis.select(".yaxis").remove();
+		chartBody.selectAll(".line").remove();
+		
+		xScale.domain([minX , maxX]);
+		yScale.domain([ minY - 0.5, maxY + 0.5 ]);
+		
+		xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(function(d){ return timestampToTime(d); });
+		yAxis = d3.axisLeft(yScale);
+	    
+		gY = vis.append("g").attr("class", "yaxis")
+			.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(yAxis);
+		gX = vis.append("g").attr("transform",
+			"translate(0," + (HEIGHT - MARGINS.bottom) + ")").attr("class","xaxis");
+		
+		gX.call(xAxis).selectAll("text")
+			.attr("y", 0)
+			.attr("x", 9)
+			.attr("dy", ".35em")
+			.attr("transform", "rotate(90)")
+			.style("text-anchor", "start");
+		
+	    dataGroup.forEach(function(d, i) {
+	    	chartBody.append('path')
+		        .attr('d', lineGen(d.values))
+		        .attr('stroke', colors[d.key])
+		        .attr('stroke-width', 2)
+		        .attr('class', 'line')
+		        .attr('fill', 'none')
+		        .attr('id', d.key)
+		        .on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
+		    setStrokeVisibility(d.key);
+		    setLegendEnability(d.key,d.values.length);
+		});
+	}
+	
+	// helper functions
 	function zoomFunction(){
 		  var new_xScale = d3.event.transform.rescaleX(xScale);
-		  var new_yScale = d3.event.transform.rescaleY(yScale);			
-		  gX.call(xAxis.scale(new_xScale));
+		  var new_yScale = d3.event.transform.rescaleY(yScale);				 
+		  gX.call(xAxis.scale(new_xScale)).selectAll("text")
+		    .attr("y", 0)
+		    .attr("x", 9)
+		    .attr("dy", ".35em")
+		    .attr("transform", "rotate(90)")
+		    .style("text-anchor", "start");
 		  gY.call(yAxis.scale(new_yScale));
 		  vis.selectAll('.line').attr("transform", d3.event.transform);
 	}
 	
 	function handleMouseOver() {
 		var xValue = timestampToTime(Math.round(xScale.invert(d3.mouse(this)[0])));
-		var yValue = yScale.invert(d3.mouse(this)[1]);
+		var yValue = yScale.invert(d3.mouse(this)[1]).toFixed(2);
 		tip.transition()		
         .duration(200)		
         .style("opacity", .9);		
@@ -158,46 +230,6 @@ path.line {
         .style("opacity", 0)
         .style("pointer-events", 'none');
 	}
-	
-	function updateGraph(data) {
-		data = JSON.parse(data);
-		setMinMaxforAxis(data);
-		res = reformatData(data);
-		res.forEach(function(d){
-			dataGroup.unshift(d);
-		});
-		
-		xScale.domain([minX , maxX]);
-		yScale.domain([ minY - 0.5, maxY + 0.5 ]);
-		vis.select(".xaxis").remove();
-		vis.select(".yaxis").remove();
-		vis.selectAll(".line").remove();
-
-	    gY = vis.append("g").attr("class", "yaxis")
-			.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(yAxis);
-		gX = vis.append("g").attr("transform",
-			"translate(0," + (HEIGHT - MARGINS.bottom) + ")").attr("class","xaxis").call(xAxis).selectAll("text")
-			.attr("y", 0)
-			.attr("x", 9)
-			.attr("dy", ".35em")
-			.attr("transform", "rotate(90)")
-			.style("text-anchor", "start");
-		console.log(dataGroup);
-	    dataGroup.forEach(function(d, i) {
-		   var ele =  vis.append('path')
-		        .attr('d', lineGen(d.values))
-		        .attr('stroke', colors[d.key])
-		        .attr('stroke-width', 2)
-		        .attr('class', 'line')
-		        .attr('fill', 'none')
-		        .attr('id', d.key)
-		        .on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
-	
-		    setStrokeVisibility(d.key);
-		    setLegendEnability(d.key,d.values.length);
-		});
-	}
-
 	function setStrokeVisibility(key){
 		if($("td:contains('"+key+"')" ).hasClass("showLine"))
 			$("#"+key).show();
@@ -257,7 +289,7 @@ path.line {
 			grp["values"] = new Array();
 			var t =  data[a][key];
 			for(b in t){
-				grp["values"].push({ "xV": t[b]["EpochTimeStamp"], "yV": t[b]["Heat_Balance_Error(%)"], "new": true });
+				grp["values"].push({ "xV": t[b]["EpochTimeStamp"], "yV": t[b]["Heat_Balance_Error(%)"] });
 			}
 			res.push(grp);
 		}
