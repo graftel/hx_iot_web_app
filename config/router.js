@@ -12,9 +12,8 @@ module.exports = function(app,options){
 	
 	var HBEdetails = [], assets=[], assetIDs = [];
 	var today = new Date();
-	today.setHours(0,0,0,0);
+	//today.setHours(0,0,0,0);
 	today = today.getTime()/1000;
-	var startTime=0;
 	var params = {
 			  TableName: tables.rawData,
 			  FilterExpression: "EpochTimeStamp >= :val",
@@ -95,7 +94,7 @@ module.exports = function(app,options){
 		
 		getCalculatedValues(simpleCallback = function(){
 			if(HBEdetails.length == 0 ){
-				res.status(404).send("Oh uh, something went wrong");
+				res.end(null);
 			}
 			if(HBEdetails.length == assetIDs.length){
 				res.end(JSON.stringify( HBEdetails ));
@@ -182,8 +181,8 @@ module.exports = function(app,options){
 					    FilterExpression: "NOT #S in (:v3)",
 					    ExpressionAttributeValues: {
 					        ":v1": device,
-					        ":v2a": currTime,
-					        ":v2b": currTime + counter,
+					        ":v2a": currTime - counter,
+					        ":v2b": currTime ,
 					        ":v3": 1
 					    },
 					    Select: "SPECIFIC_ATTRIBUTES"
@@ -199,7 +198,7 @@ module.exports = function(app,options){
 				    }
 			 });
 		 })(device)
-		 currTime += counter;
+		 currTime += 10*60;
 	 }
 	 
 	 function getAssets(callback) {
@@ -224,7 +223,7 @@ module.exports = function(app,options){
 		}
 	 
 		function getStartTime(){
-			options.docClient.scan(params, function (err, data) {
+/*			options.docClient.scan(params, function (err, data) {
 			    if (err) {
 			        console.error("Unable to scan time. Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
@@ -232,9 +231,11 @@ module.exports = function(app,options){
 			    		startTime = data.Items[0].EpochTimeStamp;
 			    	else
 			    		startTime= 0;
-			    	startTime = 1499347022;
+			    	startTime = 1499850224;
 			    	currTime=startTime;
 			    }
-			});
+			});*/
+			startTime = today - (2*60);
+			currTime=startTime;
 		}
 }

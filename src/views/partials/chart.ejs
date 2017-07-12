@@ -1,8 +1,10 @@
 
 <h2 class="chart-heading">Overall Heat Transfer Rate</h2>
 <div width="1000" height="600" class="row">
-	<svg id="visualisation" width="800" height="500" class="col col-md-5"></svg>
-	<table class="table col col-md-4" id="legend"></table>
+	<svg id="visualisation" width="1000" height="600" class="col col-md-9 col-md-offset-3"></svg>
+</div>
+<div class="row">
+	<table class="table col col-md-9 col-md-offset-3" id="legend"></table>
 </div>
 
 <style>
@@ -29,13 +31,18 @@ path.line {
 	overflow: hidden;
 }
 
-#legend {
+.leg text{
+	font-weight: bold;
+	font-size: 15px;
+	cursor: pointer;
+}
+
+/* #legend {
 	font-weight: bold;
 	font-size: 20px;
 	font-style: oblique;
 	cursor: pointer;
 	width: 40%;
-	margin-top: 3%;
 }
 
 #legend td {
@@ -45,7 +52,7 @@ path.line {
 #legend td:hover {
 	background-color: #f5f5f5;
 }
-
+ */
 .disable {
 	pointer-events: none;
 	background-color: #e6e6e6;
@@ -94,18 +101,23 @@ path.line {
 
 	var gY = vis.append("g").attr("class", "yaxis")
 			.attr("transform", "translate(" + (MARGINS.left) + ",0)").call(
-					yAxis);
-	
-	var tip = d3.select("body").append("div")	
+					yAxis);	
+	var leg = vis
+    .append('g')
+    .attr('class', 'leg');
+
+ 
+  
+	/*var tip = d3.select("body").append("div")	
     .attr("class", "tooltip")				
-    .style("opacity", 0);
+    .style("opacity", 0);*/
 	
 	vis.append("defs").append("clipPath")
     .attr("id", "clip")
     .append("rect")
     .attr("x","50")
     .attr("y","-20")
-    .attr("width", WIDTH - 50 )
+    .attr("width", WIDTH - 120 )
     .attr("height", HEIGHT );
 	
 	var view = vis
@@ -129,7 +141,31 @@ path.line {
 	  });
 
 	dataGroup.forEach(function(d, i) {
-        d3.select("#legend").append(function(){
+
+		leg.append('rect')
+		    .attr('x', WIDTH - 20)
+		    .attr('y', function() {
+		      return (i * 20)+10;
+		    })
+		    .attr('width', 10)
+		    .attr('height', 10)
+		    .style('fill', function() {
+		      return colors[d.key];
+		    });
+
+		  leg.append('text')
+		    .attr('x', WIDTH - 8)
+		    .attr('y', function() {
+		      return (i * 20) + 20;
+		    }).attr("class", "showLine")
+		    .text(function() {
+		      return d.key;
+		    }).on("click", function(){
+	            var device = $(this).text();
+	            $(this).toggleClass("showLine");
+	            setStrokeVisibility(device);
+	        });
+      /*   d3.select("#legend").append(function(){
         	if(i%5 == 0){
         		d3.select("#legend").append("tr");
         	}
@@ -141,7 +177,7 @@ path.line {
             $(this).toggleClass("showLine");
             setStrokeVisibility(device);
         });
-        
+         */
         setLegendEnability(d.key,d.values.length);
         
         chartBody.append('path')
@@ -150,10 +186,103 @@ path.line {
 	        .attr('stroke-width', 2)
 	        .attr('class', 'line')
 	        .attr('fill', 'none')
-	        .attr('id',d.key)
-	        .on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
+	        .attr('id',d.key);
+	     //   .on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
 	});
 	
+	// mouse over event - start
+	var mouseG = vis.append("g")
+    .attr("class", "mouse-over-effects");
+
+  mouseG.append("path") // this is the black vertical line to follow mouse
+    .attr("class", "mouse-line")
+    .style("stroke", "black")
+    .style("stroke-width", "1px")
+    .style("opacity", "0");
+    
+  var lines = document.getElementsByClassName('line');
+
+  var mousePerLine = mouseG.selectAll('.mouse-per-line')
+    .data(data)
+    .enter()
+    .append("g")
+    .attr("class", "mouse-per-line");
+
+  mousePerLine.append("circle")
+    .attr("r", 7)
+    .style("stroke", "red")
+    .style("fill", "none")
+    .style("stroke-width", "1px")
+    .style("opacity", "0");
+
+  mousePerLine.append("text")
+    .attr("transform", "translate(10,3)");
+
+  mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
+  .attr("x","50")
+  .attr("y","30")  
+  .attr('width', WIDTH - 120) // can't catch mouse events on a g element
+    .attr('height', HEIGHT - 50)
+    .attr('fill', 'none')
+    .attr('pointer-events', 'all')
+    .on('mouseout', function() { // on mouse out hide line, circles and text
+      d3.select(".mouse-line")
+        .style("opacity", "0");
+      d3.selectAll(".mouse-per-line circle")
+        .style("opacity", "0");
+      d3.selectAll(".mouse-per-line text")
+        .style("opacity", "0");
+    })
+    .on('mouseover', function() { // on mouse in show line, circles and text
+      d3.select(".mouse-line")
+        .style("opacity", "1");
+      d3.selectAll(".mouse-per-line circle")
+        .style("opacity", "1");
+      d3.selectAll(".mouse-per-line text")
+        .style("opacity", "1");
+    })
+    .on('mousemove', function() { // mouse moving over canvas
+      var mouse = d3.mouse(this);
+      d3.select(".mouse-line")
+        .attr("d", function() {
+          var d = "M" + mouse[0] + "," + HEIGHT;
+          d += " " + mouse[0] + "," + 0;
+          return d;
+        });
+
+      d3.selectAll(".mouse-per-line")
+        .attr("transform", function(d, i) {
+          
+          var key =  Object.keys(d)[0];
+          if(!($(".leg text:contains('"+key+"')" ).hasClass("showLine"))) 
+        		  return null;
+          
+          var xDate = xScale.invert(mouse[0]),
+              bisect = d3.bisector(function(d) { return key; }).right;
+              idx = bisect(d[key], xDate);
+          
+          var beginning = 0,
+              end = lines[i].getTotalLength(),
+              target = null;
+
+          while (true){
+            target = Math.floor((beginning + end) / 2);
+            pos = lines[i].getPointAtLength(target);
+            if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+                break;
+            }
+            if (pos.x > mouse[0])      end = target;
+            else if (pos.x < mouse[0]) beginning = target;
+            else break; //position found
+          }
+          d3.select(this).select('text')
+            .text(yScale.invert(pos.y).toFixed(2));
+            
+          return "translate(" + mouse[0] + "," + pos.y +")";
+        });
+    });
+//mouse over event - end
+
 	// update live graph
 	function updateGraph(data) {
 		data = JSON.parse(data);
@@ -192,8 +321,8 @@ path.line {
 		        .attr('stroke-width', 2)
 		        .attr('class', 'line')
 		        .attr('fill', 'none')
-		        .attr('id', d.key)
-		        .on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
+		        .attr('id', d.key);
+		      //  .on("mouseover", handleMouseOver).on("mouseout", handleMouseOut);
 		    setStrokeVisibility(d.key);
 		    setLegendEnability(d.key,d.values.length);
 		});
@@ -213,7 +342,7 @@ path.line {
 		  vis.selectAll('.line').attr("transform", d3.event.transform);
 	}
 	
-	function handleMouseOver() {
+/*	function handleMouseOver() {
 		var xValue = timestampToTime(Math.round(xScale.invert(d3.mouse(this)[0])));
 		var yValue = yScale.invert(d3.mouse(this)[1]).toFixed(2);
 		tip.transition()		
@@ -230,9 +359,10 @@ path.line {
         .duration(200)		
         .style("opacity", 0)
         .style("pointer-events", 'none');
-	}
+	}*/
+	
 	function setStrokeVisibility(key){
-		if($("td:contains('"+key+"')" ).hasClass("showLine"))
+		if($(".leg text:contains('"+key+"')" ).hasClass("showLine"))
 			d3.selectAll("#"+key).style("opacity", 1);
 		else
 			d3.selectAll("#"+key).style("opacity", 0);
@@ -240,9 +370,9 @@ path.line {
 	
 	function setLegendEnability(key,itemsLength){
 		if(itemsLength == 0)
-        	$("td:contains('"+key+"')" ).addClass("disable");
+        	$(".leg text:contains('"+key+"')" ).addClass("disable");
         else
-        	$("td:contains('"+key+"')" ).removeClass("disable");	
+        	$(".leg text:contains('"+key+"')" ).removeClass("disable");	
 	}
 	
 	function assignColor(){
@@ -265,8 +395,7 @@ path.line {
 		var date = new Date(timestamp*1000);
 		var hours = date.getHours();
 		var minutes = "0" + date.getMinutes();
-		var seconds = "0" + date.getSeconds();
-		return hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+		return hours + ':' + minutes.substr(-2);
 	}
 	
 	function setMinMaxforAxis(data){
