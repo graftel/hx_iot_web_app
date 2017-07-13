@@ -196,8 +196,7 @@ module.exports = function(app,options){
 					    ExpressionAttributeValues: {
 					        ":v1": device,
 					        ":v2a": currTime - counter,
-					        ":v2b": currTime ,
-					        ":v3": 1
+					        ":v2b": currTime
 					    },
 					    Select: "SPECIFIC_ATTRIBUTES"
 			 };
