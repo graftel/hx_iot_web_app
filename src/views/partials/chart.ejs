@@ -76,7 +76,7 @@ path.line {
 	var data = <%-JSON.stringify(data)%>;
 	var assets = <%- JSON.stringify(assets) %>;
 	var res = reformatData(data);
-
+	
 	setMinMaxforAxis(data);
 
 	//var legendSpace = WIDTH/data.length; // spacing for the legend
@@ -105,8 +105,8 @@ path.line {
 			"translate(" + (MARGINS.left) + ",0)").call(yAxis);
 	var sideLegend = vis.append('g').attr('class', 'sideLegend');
 
-	/*var tip = d3.select("body").append("div")	
-	.attr("class", "tooltip")				
+	/*var tip = d3.select("body").append("div")
+	.attr("class", "tooltip")
 	.style("opacity", 0);*/
 
 	vis.append("defs").append("clipPath").attr("id", "clip").append("rect")
@@ -320,18 +320,18 @@ path.line {
 	/*	function handleMouseOver() {
 	 var xValue = timestampToTime(Math.round(xScale.invert(d3.mouse(this)[0])));
 	 var yValue = yScale.invert(d3.mouse(this)[1]).toFixed(2);
-	 tip.transition()		
-	 .duration(200)		
-	 .style("opacity", .9);		
-	
-	 tip.html(xValue + "<br/>"  + yValue)	
-	 .style("left", (d3.event.pageX) + "px")		
-	 .style("top", (d3.event.pageY - 28) + "px");	
+	 tip.transition()
+	 .duration(200)
+	 .style("opacity", .9);
+
+	 tip.html(xValue + "<br/>"  + yValue)
+	 .style("left", (d3.event.pageX) + "px")
+	 .style("top", (d3.event.pageY - 28) + "px");
 	 }
-	
+
 	 function handleMouseOut(){
-	 tip.transition()		
-	 .duration(200)		
+	 tip.transition()
+	 .duration(200)
 	 .style("opacity", 0)
 	 .style("pointer-events", 'none');
 	 }*/

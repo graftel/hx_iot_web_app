@@ -33,7 +33,8 @@
 <script type="text/javascript">
 	$( document ).ready(function() {
 		var refreshIntervalId =	setInterval(function(){
-		getLiveData();
+	//	getLiveData();
+  //  getProgressBarData();
 	},10 * 1000);
 
 	 function getLiveData(){
@@ -47,11 +48,28 @@
             error: function(err){
             	clearInterval(refreshIntervalId);
             	console.log("Error in ajax");
-				alert("Live streaming stopped");
+				//alert("Live streaming stopped");
             }
 
         });
 	} })
+
+/*function getProgressBarData(){
+  $.ajax({
+        type: 'POST',
+        url:  'http://localhost:5000/instData',
+        success:function(data) {
+              updateProgressBar(data);
+              console.log(data);
+        },
+        error: function(err){
+          clearInterval(refreshIntervalId);
+          console.log("Error in ajax");
+        }
+  })
+}*/
+
+
 	</script>
 
 </html>

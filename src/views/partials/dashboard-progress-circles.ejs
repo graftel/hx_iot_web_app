@@ -1,3 +1,11 @@
+<!--> <% for(var i = 0; i < JSON.stringify(instData.Items).length; i++) { %>
+	<h2 class="chart-heading"><%= instData.Items[i].DisplayName %></h2>
+	<div class="row">
+			<% for(var j = 0; j < Object.keys(JSON.stringify(instData.Parameters)).length; j++ )  { %>
+					<div id="progress-circle" class="col-md-2"></div>
+			<% } %>
+	</div>
+<% } %><!-->
 
 <h2 class="chart-heading">Instant Data</h2>
 <div class="row">
@@ -6,6 +14,7 @@
 	<div id="progress-circle" class="col-md-2"></div>
 	<div id="progress-circle" class="col-md-2"></div>
 </div>
+
 <style>
 .progress-meter text {
 	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -27,6 +36,9 @@
 	var boxSize = (radius + padding) * 2;
 	var count = Math.abs((endPercent - startPercent) / 0.01);
 	var step = endPercent < startPercent ? -0.01 : 0.01;
+	var data = JSON.stringify(instData);
+
+	console.log(data);
 
 	var arc = d3.arc()
 	    .startAngle(0)
