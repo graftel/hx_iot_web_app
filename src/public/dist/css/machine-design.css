@@ -168,6 +168,10 @@
 	width: 12%; margin-left: 20%;display: none; position:fixed;
 }
 
+#hot_in_info div.panel-heading, #hot_out_info div.panel-heading{
+	background-color: #ffb399;
+}
+
 #hot_out_info{
 	width: 12%; margin-top:25%; margin-left:50%;display: none;position:fixed;
 }

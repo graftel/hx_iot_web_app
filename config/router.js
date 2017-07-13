@@ -123,15 +123,15 @@ module.exports = function(app,options){
 				res.redirect('/login');
 			}
 			else{
-				var asset = req.query.asset;
-				if(typeof asset == 'undefined'){
+				var assetid = req.query.asset;
+				if(typeof assetid == 'undefined'){
 					return false;
 				}
 				var params = {
 						TableName : tables.calculatedData,
 						KeyConditionExpression: "AssetID = :v1",
 						ExpressionAttributeValues: {
-					        ":v1": asset
+					        ":v1": assetid
 					    },
 					    ScanIndexForward: false,
 					    Limit: 1
@@ -142,8 +142,8 @@ module.exports = function(app,options){
 				    } else {
 				        if(data.Items.length == 1){
 							res.render('pages' + path.sep + 'asset',{
-								assets: assetIDs,
-								asset: asset,
+								assets: assets,
+								asset: assetid,
 								values: data.Items[0]
 							});
 				        }else{
@@ -159,9 +159,9 @@ module.exports = function(app,options){
 				return false;
 			}
 			else{
-			 	var asset = req.body.asset;
+			 	var assetid = req.body.asset;
 				var tube = req.body.tube;
-				if(typeof asset == 'undefined'){
+				if(typeof assetid == 'undefined'){
 					return false;
 				}
 				var result = { latest: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7} ,
