@@ -22,6 +22,35 @@ body {
     border-left: 1px solid #e7e7e7;
   }
 }
+
+#navbar-header-img, #navbar-header-title, #navbar-header-user {display: inline-block; *display: inline; zoom: 1; vertical-align: top;}
+
+#navbar-header-img{
+    width: 20%;
+    align-content: center;
+    margin: auto;
+    height: 60px;
+}
+
+#navbar-header-title {
+    width: 60%;
+    line-height: 60px;
+    text-align: center;
+    vertical-align: middle;
+    height: 60px;
+    font-size: 20px;
+    font-weight: bold;
+  }
+#navbar-header-user {
+    width: 20%;
+    height: 60px;
+}
+
+.navbar-default{
+      border-color: #ffbcbc;
+      height: 60px;
+}
+
 .navbar-top-links {
   margin-right: 0;
 }
@@ -104,7 +133,7 @@ body {
     z-index: 1;
     position: absolute;
     width: 250px;
-    margin-top: 51px;
+    margin-top: 60px;
   }
   .navbar-top-links .dropdown-messages,
   .navbar-top-links .dropdown-tasks,
@@ -235,8 +264,13 @@ table.dataTable thead .sorting:after {
   margin: 15px 0;
 }
 .huge {
-  font-size: 40px;
+  font-size: 20px;
 }
+
+.message-board-text{
+  font-size: 15px;
+}
+
 .panel-green {
   border-color: #5cb85c;
 }
@@ -254,6 +288,7 @@ table.dataTable thead .sorting:after {
 .panel-red {
   border-color: #d9534f;
 }
+
 .panel-red > .panel-heading {
   border-color: #d9534f;
   color: white;
@@ -279,6 +314,23 @@ table.dataTable thead .sorting:after {
 .panel-yellow > a:hover {
   color: #df8a13;
 }
+
+.panel-blue {
+  border-color: #337ab7;
+}
+.panel-blue > .panel-heading {
+  border-color: #337ab7;
+  color: white;
+  background-color: #337ab7;
+}
+.panel-blue > a {
+  color: #337ab7;
+}
+.panel-blue > a:hover {
+  color: #337ab7;
+}
+
+
 .timeline {
   position: relative;
   padding: 20px 0 20px;

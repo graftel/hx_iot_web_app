@@ -22,7 +22,7 @@
 				<div><%- include ../partials/chart.ejs %></div>
 			</div>
 			<div class="row">
-				<div><%- include ../partials/graph.ejs %></div>
+				<div><%- include ../partials/dashboard-progress-circles.ejs %></div>
 			</div>
 			<!-- /#page-wrapper -->
 		</div>
@@ -34,22 +34,23 @@
 	$( document ).ready(function() {
 		var refreshIntervalId =	setInterval(function(){
 		getLiveData();
-	},10 * 1000); 
-	
+	},10 * 1000);
+
 	 function getLiveData(){
 		$.ajax({
 			type: 'POST',
-            url: 'http://localhost:5000/live',						
+            url: 'http://localhost:5000/live',
             success: function(data) {
                 updateGraph(data);
+                console.log(data);
             },
             error: function(err){
             	clearInterval(refreshIntervalId);
             	console.log("Error in ajax");
 				alert("Live streaming stopped");
             }
-		
-        }); 
+
+        });
 	} })
 	</script>
 
