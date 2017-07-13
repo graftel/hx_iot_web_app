@@ -3,13 +3,13 @@ module.exports = function(app,options){
 	var tables = {
 			company: "Hx.Company",
 			users: "Hx.Users",
-			assets: "Hx.Assets", 
-			deviceConfig: "Hx.DeviceConfiguration", 
-			rawData: "Hx.RawData", 
+			assets: "Hx.Assets",
+			deviceConfig: "Hx.DeviceConfiguration",
+			rawData: "Hx.RawData",
 			calculatedData: "Hx.CalculatedData",
 			alerts: "Hx.Alerts"
 	};
-	
+
 	var HBEdetails = [], assets=[], assetIDs = [];
 	var today = new Date();
 	today.setHours(0,0,0,0);
@@ -23,28 +23,28 @@ module.exports = function(app,options){
 	};
 	var startTime=0;
 	var currTime;
-	getStartTime();	
+	getStartTime();
 	var counter = 60*60;
 	var dynamodb = new options.AWS.DynamoDB();
 	const path = require("path");
 	var simpleCallback;
-	
+
 	// User Management Routes
 	app.get('/login', function (req, res) {
 		 res.render('pages' + path.sep + 'login');
 	});
-	
+
 	app.post('/login',
 			  options.passport.authenticate('local'),
 			  function(req, res) {
 			    res.redirect('/');
 	});
-	
+
 	app.get('/logout', function(req, res){
 		  req.logout();
 		  res.redirect('/login');
 	});
-	
+
 	app.post('/register', function(req, res){
 		 var username = req.body.username;
 		 var password = req.body.password;
@@ -65,7 +65,7 @@ module.exports = function(app,options){
 			});
 		 res.redirect('/login');
 	});
-	
+
 	// Dashboard page routes
 	app.get('/', function (req, res) {
 		if(typeof req.session.passport == 'undefined'){
@@ -74,7 +74,7 @@ module.exports = function(app,options){
 		else{
 			getAssets(getCalculatedValues);
 			simpleCallback = function(){
-				if(HBEdetails.length == assetIDs.length){		
+				if(HBEdetails.length == assetIDs.length){
 					res.render('pages' + path.sep + 'index', {
 						assets: assets,
 						warnings: 0,
@@ -92,7 +92,7 @@ module.exports = function(app,options){
 	//	if(currTime>=endTime){
 		//	res.status(404).send("Oh uh, something went wrong");
 	//	}
-		
+
 		getCalculatedValues(simpleCallback = function(){
 			if(HBEdetails.length == 0 ){
 				res.status(404).send("Oh uh, something went wrong");
@@ -102,7 +102,22 @@ module.exports = function(app,options){
 			}
 		});
 	});
-	
+
+	app.post('/getInstantData', function (req, res) {
+	//	if(currTime>=endTime){
+		//	res.status(404).send("Oh uh, something went wrong");
+	//	}
+
+		getCalculatedValues(simpleCallback = function(){
+			if(HBEdetails.length == 0 ){
+				res.status(404).send("Oh uh, something went wrong");
+			}
+			if(HBEdetails.length == assetIDs.length){
+				res.end(JSON.stringify( HBEdetails ));
+			}
+		});
+	});
+
 	// Assets page routes
 	app.get('/asset', function (req, res) {
 		 if(typeof req.user == 'undefined'){
@@ -139,7 +154,7 @@ module.exports = function(app,options){
 			});
 			}
 		});
-	 
+
 	 app.post('/asset/detail', function (req, res) {
 		 if(typeof req.user == 'undefined'){
 				return false;
@@ -150,28 +165,28 @@ module.exports = function(app,options){
 				if(typeof asset == 'undefined'){
 					return false;
 				}
-				var result = { latest: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7} , 
-							   max: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
-							   min: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
-							   mean: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
-							   measurement: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
-							   sd: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}, 
+				var result = { latest: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7} ,
+							   max: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7},
+							   min: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7},
+							   mean: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7},
+							   measurement: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7},
+							   sd: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7},
 							   stability: {T1: 79.50, T2: 78.50, T3: 77.60, T4: 56.7}
-							 }; 			
+							 };
 				res.end(JSON.stringify(result));
 				}
 		});
-	 
+
 	 // Settings route
 	 app.get('/settings', function(req,res){
 		 res.render('pages' + path.sep + 'settings');
 	 });
-	
+
 	// Helper Methods
-	var getCalculatedValues = function(callback) { 
+	var getCalculatedValues = function(callback) {
 		 var params;
 		 HBEdetails=[];
-		 
+
 		 for(device of assetIDs)(function(device){
 		 	 var obj = new Object();
 			 params = {
@@ -199,9 +214,9 @@ module.exports = function(app,options){
 		 })(device)
 		 currTime += counter;
 	 }
-	 
+
 	 function getAssets(callback) {
-		 HBEdetails = [], assets = {}, assetIDs = []; // to empty any previous values stored 
+		 HBEdetails = [], assets = {}, assetIDs = []; // to empty any previous values stored
 		 var params = {
 				    TableName : tables.assets,
 				    ProjectionExpression: ["AssetID","DisplayName"]
@@ -216,11 +231,11 @@ module.exports = function(app,options){
 			    		assets[data.Items[item].AssetID] = data.Items[item].DisplayName;
 			    		assetIDs.push(data.Items[item].AssetID);
 			    	}
-				    callback(simpleCallback);		
+				    callback(simpleCallback);
 			    }
 			});
 		}
-	 
+
 		function getStartTime(){
 			options.docClient.scan(params, function (err, data) {
 			    if (err) {
