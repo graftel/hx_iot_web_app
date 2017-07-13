@@ -42,11 +42,11 @@
   	background-repeat: repeat;
 }
 
-.ss_in_part1_svg {
+.hot_in_part1_svg {
 	border-style: solid;
 	border-width: 2px;
 	border-color: rgb(0, 0, 0);
-	background-color: rgb(255, 255, 255);
+	background-color: #ffb399;
 	position: absolute;
 	left: 681px;
 	top: 296px;
@@ -55,11 +55,11 @@
 	z-index: 6;
 }
 
-.ss_in_part2_svg {
+.hot_in_part2_svg {
 	border-width: 1px;
 	border-color: rgb(0, 0, 0);
 	border-style: solid;
-	background-color: rgb(255, 255, 255);
+	background-color: #ffb399;
 	position: absolute;
 	left: 679px;
 	top: 293px;
@@ -68,11 +68,11 @@
 	z-index: 3;
 }
 
-.ss_in_part3_svg {
+.hot_in_part3_svg {
 	border-width: 2px;
 	border-color: rgb(0, 0, 0);
 	border-style: solid;
-	background-color: rgb(255, 255, 255);
+	background-color: #ffb399;
 	position: absolute;
 	left: 665px;
 	top: 282px;
@@ -81,11 +81,11 @@
 	z-index: 4;
 }
 
-.ss_out_part1_svg {
+.hot_out_part1_svg {
 	border-style: solid;
 	border-width: 2px;
 	border-color: rgb(0, 0, 0);
-	background-color: rgb(255, 255, 255);
+	background-color: #ffb399;
 	position: absolute;
 	left: 1385px;
 	top: 575px;
@@ -94,11 +94,11 @@
 	z-index: 12;
 }
 
-.ss_out_part2_svg {
+.hot_out_part2_svg {
 	border-width: 1px;
 	border-color: rgb(0, 0, 0);
 	border-style: solid;
-	background-color: rgb(255, 255, 255);
+	background-color: #ffb399;
 	position: absolute;
 	left: 1383px;
 	top: 649px;
@@ -107,11 +107,11 @@
 	z-index: 10;
 }
 
-.ss_out_part3_svg {
+.hot_out_part3_svg {
 	border-width: 2px;
 	border-color: rgb(0, 0, 0);
 	border-style: solid;
-	background-color: rgb(255, 255, 255);
+	background-color: #ffb399;
 	position: absolute;
 	left: 1370px;
 	top: 653px;
@@ -120,8 +120,7 @@
 	z-index: 11;
 }
 
-.ts_in_part1_svg {
-
+.cold_in_part1_svg {
   position: absolute;
   left: 359px;
   top: 356px;
@@ -130,7 +129,7 @@
   z-index: 7;
 }
 
-.ts_in_part2_svg {
+.cold_in_part2_svg {
   position: absolute;
   left: 350px;
   top: 346px;
@@ -139,33 +138,37 @@
   z-index: 5;
 }
 
-.ts_out_part1_svg {
+.cold_out_part1_svg {
   position: absolute;
   left: 1733px;
   top: 519px;
   z-index: 9;
 }
 
-.ts_out_part2_svg {
+.cold_out_part2_svg {
   position: absolute;
   left: 1758px;
   top: 548px;
   z-index: 8;
 }
 
-#ts_in_info{
+.cold_in_part1_svg path, .cold_in_part2_svg path, .cold_out_part1_svg path, .cold_out_part2_svg path{
+	fill: #99ebff
+}
+
+#cold_in_info{
 	width: 12%; margin-top: 2%; display: none;position:fixed;
 }
 
-#ts_out_info{
+#cold_out_info{
 	width: 12%; margin-left:65%; margin-top: 20%;display: none;position:fixed;
 }
 
-#ss_in_info{
+#hot_in_info{
 	width: 12%; margin-left: 20%;display: none; position:fixed;
 }
 
-#ss_out_info{
+#hot_out_info{
 	width: 12%; margin-top:25%; margin-left:50%;display: none;position:fixed;
 }
 
