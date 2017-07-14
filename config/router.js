@@ -81,6 +81,7 @@ module.exports = function(app,options){
 							console.log(err);
 						}
 						else {
+								console.log(res_inst);
 							res.render('pages' + path.sep + 'index', {
 								assets: assets,
 								warnings: 0,

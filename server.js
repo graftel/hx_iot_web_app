@@ -1,15 +1,15 @@
 /**
- * 
+ *
  */
 
 var express = require('express');
 var bodyParser = require("body-parser");
 
 var AWS = require("aws-sdk");
-AWS.config.loadFromPath('C:/Users/kangm/.aws/config.json');
+AWS.config.loadFromPath('C:/Users/xukan/.aws/config.json');
 
 var session = require('express-session');
-var passport = require('passport'), 
+var passport = require('passport'),
 LocalStrategy = require('passport-local').Strategy;
 var docClient = new AWS.DynamoDB.DocumentClient();
 
@@ -36,7 +36,7 @@ app.use(passport.session());
  * "AKIAIVEUI3YY5KBA", "secretAccessKey":
  * "HPEk0vf3ps34L0fQxVJMqDR8yuDISX1/IYEL", "region":"us-east-1", "endpoint":
  * "http://192.168.0.100:8000" };
- * 
+ *
  * var dynamodb = new AWS.DynamoDB(config);
  */
  require('./config/router')(app,{session: session, AWS: AWS, passport: passport, docClient: docClient});
