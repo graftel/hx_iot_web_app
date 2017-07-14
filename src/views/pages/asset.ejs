@@ -131,37 +131,36 @@
 				<div class="panel panel-info col-md-3" id="cold_in_info" style="">
 					<div class="panel-heading">Cold Side In</div>
 					<div class="panel-body">
-						<a src="#" class="temperature-data" id="cold_in_temp" onclick="getData(this)"> Temperature: <%= values["Ave_COLD_Inlet(F)"].toFixed(2) %> F </a> <br> <a
-							src="#" class="flow-data" id="cold_in_flow" onclick="getData(this)">  Flow: <%= values["COLD_Flow(gpm)"].toFixed(2) %> GPM</a>
+						<a src="#"  data-type="Temperature" data-location="COLD_IN" id="cold_in_temp" onclick="getData(this)"> Temperature: <%= values["Ave_COLD_Inlet(F)"].toFixed(2) %> F </a> <br> <a
+							src="#"  data-type="FlowMeter" data-location="COLD_FLOW_IN" id="cold_in_flow" onclick="getData(this)">  Flow: <%= values["COLD_Flow(gpm)"].toFixed(2) %> GPM</a>
 					</div>
 				</div>
 				<div class="panel panel-info col-md-3" id="hot_in_info" style="">
 					<div class="panel-heading">Hot Side In</div>
 					<div class="panel-body">
-						<a src="#" class="temperature-data" id="hot_in_temp" onclick="getData(this)"> Temperature: <%= values["Ave_HOT_Inlet(F)"].toFixed(2) %> F</a> <br> <a
-							src="#" class="flow-data" id="hot_in_flow" onclick="getData(this)">  Flow: <%= values["HOT_Flow(gpm)"].toFixed(2) %> GPM </a>
+						<a src="#" data-type="Temperature" data-location="HOT_IN" id="hot_in_temp" onclick="getData(this)"> Temperature: <%= values["Ave_HOT_Inlet(F)"].toFixed(2) %> F</a> <br> <a
+							src="#" data-type="FlowMeter" data-location="HOT_FLOW_IN" id="hot_in_flow" onclick="getData(this)">  Flow: <%= values["HOT_Flow(gpm)"].toFixed(2) %> GPM </a>
 					</div>
 				</div>
 
 				<div class="panel panel-info col-md-3" id="hot_out_info" style="">
 					<div class="panel-heading">Hot Side Out</div>
 					<div class="panel-body">
-						<a src="#" class="temperature-data" id="hot_out_temp" onclick="getData(this)"> Temperature: <%= values["Ave_HOT_Outlet(F)"].toFixed(2) %> F </a> <br> <a
-							src="#" class="flow-data" id="hot_out_flow" onclick="getData(this)">  Flow: <%= values["HOT_Flow(gpm)"].toFixed(2) %> GPM </a>
+						<a src="#" data-type="Temperature" data-location="HOT_OUT" id="hot_out_temp" onclick="getData(this)"> Temperature: <%= values["Ave_HOT_Outlet(F)"].toFixed(2) %> F </a> <br> <a
+							src="#" data-type="FlowMeter" data-location="HOT_FLOW_OUT" id="hot_out_flow" onclick="getData(this)">  Flow: <%= values["HOT_Flow(gpm)"].toFixed(2) %> GPM </a>
 					</div>
 				</div>
 
 				<div class="panel panel-info col-md-3" id="cold_out_info" style="">
 					<div class="panel-heading">Cold Side Out</div>
 					<div class="panel-body">
-						<a src="#" class="temperature-data" id="cold_out_temp" onclick="getData(this)"> Temperature: <%= values["Ave_COLD_Outlet(F)"].toFixed(2) %> F</a> <br> <a
-							src="#" class="flow-data" id="cold_out_flow" onclick="getData(this)">  Flow: <%= values["COLD_Flow(gpm)"].toFixed(2) %> GPM </a>
+						<a src="#" data-type="Temperature" data-location="COLD_OUT" id="cold_out_temp" onclick="getData(this)"> Temperature: <%= values["Ave_COLD_Outlet(F)"].toFixed(2) %> F</a> <br> <a
+							src="#" data-type="FlowMeter"  data-location="COLD_FLOW_OUT" id="cold_out_flow" onclick="getData(this)">  Flow: <%= values["COLD_Flow(gpm)"].toFixed(2) %> GPM </a>
 					</div>
 				</div>
 			</div>
 			<div id="showDetails" style="display:none;"> 
-				<%- include ../partials/machineReadings.ejs %>
-				
+				<%- include ../partials/machineReadings.ejs %>				
 			</div>
 			
 		</div>
@@ -187,20 +186,22 @@
 		$("#hot_out_info").toggle();
 	})
 	var result;
-	function getData(ele) {
-		var id = ele.id;
-		
+	function getData(element) {
+		var parameter = element.getAttribute("data-type");
+		var location = element.getAttribute("data-location");
 		 $.ajax({
 			type : 'POST',
 			url : 'http://localhost:5000/asset/detail',
 			data : {
 				asset : "<%- asset %>",
-				tube : id
+				parameter : parameter,
+				location : location
 			},
 			success : function(data) {
 				$("#content").hide();
 				$("#showDetails").show();
 				$("#showDetails").append(populateTable(JSON.parse(data)));
+				buildPlot(data);
 			},
 			error : function(err) {
 				console.log(err);
@@ -208,13 +209,33 @@
 		}); 
 	}
 
-	
 	function populateTable(data){
+		var latestValues = data[0];
+		var calculatedValues = data[1];
 		$(".nav.nav-pills li a").removeClass("active");
-		for(key in data){
-			for(value in data[key]){
-				$("#details #"+key.toLowerCase()+"_"+value.toLowerCase()).text(data[key][value]);
-			}
+		var keys = Object.keys(calculatedValues);
+		var table = $("#details table");
+		var tableStructure = "";
+		tableStructure = tableStructure + "<thead><tr> <th> Sensor ID </th>";
+		keys.map(function(key){ tableStructure = tableStructure+"<th>"+key+"</th>"; });
+		tableStructure = tableStructure + "</tr></thead>";
+		tableStructure = tableStructure + '<tbody><tr  id="LatestValue"> <td> Latest Value(GPM) </td></tr>'
+										+ '<tr id="Max"> <td> Maximum (GPM)</tr>'
+										+ '<tr id="Min"> <td> Minimum(GPM) </td> </tr>'
+										+ '<tr id="Mean"> <td> Mean(GPM) </td></tr>'
+										+ '<tr id="Uncertainity"> <td> Measurement Uncertainity(GPM) </td></tr>'
+										+ '<tr id="Std"> <td> Standard Deviation(GPM) </td></tr>'
+										+ '<tr id="Stability"> <td> Stability(GPM/min) </td></tr></tbody>';
+		table.append(tableStructure);
+		for(key of keys){
+			var values = calculatedValues[key];
+			table.find("tr#LatestValue td").last().after("<td>" + latestValues[key].toFixed(3) + "</td>");
+			table.find("tr#Max td").last().after("<td>" + values["Max"].toFixed(3) + "</td>");
+			table.find("tr#Min td").last().after("<td>" + values["Min"].toFixed(3) + "</td>");
+			table.find("tr#Mean td").last().after("<td>" + values["Mean"].toFixed(3) + "</td>");
+			table.find("tr#Uncertainity td").last().after("<td>" + values["Uncertainity"].toFixed(3) + "</td>");
+			table.find("tr#Std td").last().after("<td>" + values["Std"].toFixed(3) + "</td>");
+			table.find("tr#Stability td").last().after("<td>" + values["Stability"].toFixed(3) + "</td>");
 		}
 	}
 </script>

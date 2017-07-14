@@ -1,0 +1,138 @@
+<div width="700" height="800"> <svg id="calculationsChart"></svg> </div>
+
+<style>
+#calculationsChart{
+	overflow: visible;
+}
+.xaxis text, .yaxis text {
+	color: black;
+	font-size: 150%;
+}
+</style>
+
+<script src="js/d3.min.js"></script>
+<script src="vendor/jquery/jquery.min.js"></script>
+<script src="js/sensor-map.js"></script>
+
+<script type="text/javascript">
+
+	var plot = d3.select("#calculationsChart"), WIDTH = 700, HEIGHT = 400, MARGINS = {
+		top : 20,
+		right : 20,
+		bottom : 20,
+		left : 50
+	};
+	
+	function buildPlot(data){
+		data = JSON.parse(data);
+		var latestVals = data[0]; 
+		var calculatedVals = data[1]; 
+		var rawValues = data[2];
+		var latestTimeStamp = data[3];
+		var domainX = { min: latestTimeStamp - 600, max: latestTimeStamp };
+		var domainY = setMinMaxforAxis(calculatedVals);
+		
+		drawSensorMap(latestVals);
+		
+		var colors = assignColor(latestVals);
+		var xScale = d3.scaleLinear().range(
+				[ MARGINS.left, WIDTH - MARGINS.right - 50 ])
+				.domain([ domainX.min, domainX.max ]);
+		var yScale = d3.scaleLinear().range(
+				[ HEIGHT - MARGINS.top, MARGINS.bottom ]).domain(
+				[ domainY.min, domainY.max ]);
+	
+		var xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(function(d) {
+			return timestampToTime(d);
+		});
+		var yAxis = d3.axisLeft(yScale);
+	
+		var gX = plot.append("g").attr("class", "xaxis").attr("transform",
+				"translate(0," + (HEIGHT - MARGINS.bottom) + ")");
+	
+		gX.call(xAxis).selectAll("text").attr("y", 0).attr("x", 9).attr("dy",
+				".35em").attr("transform", "rotate(90)").style("text-anchor",
+				"start");
+	
+		var gY = plot.append("g").attr("class", "yaxis").attr("transform",
+				"translate(" + (MARGINS.left) + ",0)").call(yAxis);
+		
+		var lineGen = d3.line().x(function(d) {
+			return xScale(d.EpochTimeStamp);
+		}).y(function(d) {
+			return yScale(d.Value);
+		});
+		rawValues.forEach(function(d) {
+			var key = Object.keys(d)[0];
+			var values = d[key];
+				plot.append('path').attr('d', lineGen(values)).attr('stroke',
+						colors[key]).attr('stroke-width', 2).attr('class', 'line')
+						.attr('fill', 'none');
+		});
+	}
+	
+	function timestampToTime(timestamp) {
+		var date = new Date(timestamp * 1000);
+		var hours = date.getHours();
+		var minutes = "0" + date.getMinutes();
+		return hours + ':' + minutes.substr(-2);
+	}
+	function assignColor(devices) {
+		var colors = {};
+		Object.keys(devices).forEach(function(key) {
+			colors[key] = getRandomColor();
+		});
+		return colors;
+	}
+	
+	function getRandomColor() {
+		var letters = '0123456789ABCDEF';
+		var color = '#';
+		for (var i = 0; i < 6; i++) {
+			color += letters[Math.floor(Math.random() * 16)];
+		}
+		return color;
+	}
+	
+	function setMinMaxforAxis(values) {
+		var domain = { min: 10000, max: 1 };
+		var keys = Object.keys(values);
+		for(var i=0; i< keys.length;i++){
+			if(values[keys[i]].Min < domain.min)
+				domain.min = Math.round(values[keys[i]].Min) - 0.5;	
+			if(values[keys[i]].Max > domain.max)
+				domain.max = Math.round(values[keys[i]].Max) + 0.5;		
+		}
+		return domain;
+	}
+
+	
+	function drawSensorMap(latestValues){
+		var width = 300,
+		height = 300;
+		var svg = d3.select('#sensor-chart')
+			.selectAll('svg')
+			.append('svg')
+			.attr("width", width)
+			.attr("height", height);
+		
+		//Config for the Radar chart
+		var config = {
+			w: width,
+			h: height,
+			minValue: 95,
+			maxValue: 96,
+			levels: 5,
+			ExtraWidthX: 300
+		}
+		
+		var data = [];
+		var devices = Object.keys(latestValues) ;
+		for(i in devices){
+			console.log(devices[i]);
+			data.push({deviceid: devices[i], value: latestValues[devices[i]]});
+		}
+		RadarChart.draw("#sensor-chart",[ data ], config);
+	}
+
+</script>
