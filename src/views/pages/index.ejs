@@ -20,8 +20,8 @@
 				<hr>
 				<div><%- include ../partials/chart.ejs %></div>
 			</div>
-			<div class="row">
-				<div><%- include ../partials/dashboard-progress-circles.ejs %></div>
+			<div class="row" >
+				<div id="dashboard-instant-data-div"><%- include ../partials/dashboard-instant-data.ejs %></div>
 			</div>
 			<!-- /#page-wrapper -->
 		</div>
@@ -33,7 +33,7 @@
 	$( document ).ready(function() {
 		var refreshIntervalId =	setInterval(function(){
 	//	getLiveData();
-  //  getProgressBarData();
+    getInstData();
 	},10 * 1000);
 
 	 function getLiveData(){
@@ -53,20 +53,43 @@
         });
 	} })
 
-/*function getProgressBarData(){
+function getInstData(){
   $.ajax({
         type: 'POST',
         url:  'http://localhost:5000/instData',
         success:function(data) {
-              updateProgressBar(data);
-              console.log(data);
+            //  console.log(data);
+            // $.get('dashboard-instant-data.ejs', function(template) {
+            //    console.log(template);
+            //     var html = ejs.render(template, {instData: data});
+            //     console.log(html);
+                 //$('#dashboard-instant-data-div').html(html);
+          ///       document.getElementById('dashboard-instant-data-div').innerHTML = html;
+
+          //   });
+            //  new EJS({url: 'dashboard-instant-data.ejs'}).update('dashboard-instant-data-div',{instData: data});
+              var data1 =	['mop', 'broom', 'duster']
+              var template = new EJS({
+              text: `
+                <ul>
+                  <% for(var i = 0; i < the_list.length; i++) { %>
+                    <li> <%= the_list[i] %></li>
+                  <% } %>
+                </ul>
+              `
+            });
+
+            var html = template.render({ the_list: data1 });
+
+            console.log(html);
+
         },
         error: function(err){
           clearInterval(refreshIntervalId);
           console.log("Error in ajax");
         }
   })
-}*/
+}
 
 
 	</script>

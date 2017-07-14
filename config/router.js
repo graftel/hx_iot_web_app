@@ -81,7 +81,6 @@ module.exports = function(app,options){
 							console.log(err);
 						}
 						else {
-								console.log(res_inst);
 							res.render('pages' + path.sep + 'index', {
 								assets: assets,
 								warnings: 0,
@@ -158,12 +157,13 @@ module.exports = function(app,options){
 												if (dataq.Count == 1) // verify there is actually data inside
 												{
 													dataq.Items[0].DisplayName = data.Items[item].DisplayName;
-													instData.push(dataq.Items[0]);
+													instData[item] = dataq.Items[0];
 													if (datacount == data.Items.length - 1)
 													{
 														//res.end(JSON.stringify(instData));
 														output.Items = instData;
 														output.Parameters = req;
+														output.Count = data.Items.length;
 														res(null,output);
 													}
 													datacount++;
@@ -193,7 +193,8 @@ module.exports = function(app,options){
 					console.error(err);
 				}
 				else{
-					res.end(JSON.stringify(res1));
+				//	new EJS({url: 'comments.ejs'}).update('element_id', '/comments.json')
+						res.end(JSON.stringify(res1));
 				}
 			});
 	});

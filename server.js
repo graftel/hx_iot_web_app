@@ -6,7 +6,7 @@ var express = require('express');
 var bodyParser = require("body-parser");
 
 var AWS = require("aws-sdk");
-AWS.config.loadFromPath('C:/Users/xukan/.aws/config.json');
+AWS.config.loadFromPath('C:/Users/kangm/.aws/config.json');
 
 var session = require('express-session');
 var passport = require('passport'),
@@ -25,6 +25,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
 app.set('views', views_path);
 app.use(express.static('src/public'));
+app.use(express.static('src/views/partials'));
 app.use(session({ secret: 'anything', cookie: { maxAge: 600000 },resave: true,
     saveUninitialized: true }));
 app.use(cookieParser());
