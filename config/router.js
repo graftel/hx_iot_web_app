@@ -74,7 +74,15 @@ module.exports = function(app,options){
 			getAssets(getCalculatedValues);
 			simpleCallback = function(){
 				if(HBEdetails.length == assetIDs.length){
-					var parameterlist = {"#HBP": "Heat_Balance_Error(%)", "#HBE": "Heat_Balance_Error(Btu/hr)"};
+					var parameterlist = {"#HBP": "Heat_Balance_Error(%)",
+															 "#HBE": "Heat_Balance_Error(Btu/hr)",
+															 "#HMF":"HOT_Mass_Flow_(lbm/hr)",
+															 "#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
+															 "#HHL":"HOT_Heat_Loss_(Btu/hr)",
+															 "#CMF":"COLD_Mass_Flow(lbm/hr)",
+															 "#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
+															 "#CHG":"COLD_Heat_Gain(Btu/hr)"
+														 };
 					getInstData(parameterlist,function(err, res_inst){
 						if (err)
 						{
@@ -186,7 +194,15 @@ module.exports = function(app,options){
 	//	if(currTime>=endTime){
 		//	res.status(404).send("Oh uh, something went wrong");
 	//	}
-			var parameterlist = {"#HBP": "Heat_Balance_Error(%)", "#HBE": "Heat_Balance_Error(Btu/hr)"};
+			var parameterlist = {"#HBP": "Heat_Balance_Error(%)",
+													 "#HBE": "Heat_Balance_Error(Btu/hr)",
+													 "#HMF":"HOT_Mass_Flow_(lbm/hr)",
+												 	 "#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
+											     "#HHL":"HOT_Heat_Loss_(Btu/hr)",
+										 		   "#CMF":"COLD_Mass_Flow(lbm/hr)",
+									 			 	 "#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
+													 "#CHG":"COLD_Heat_Gain(Btu/hr)"
+												 };
 			getInstData(parameterlist, function(err, res1) {
 				if (err)
 				{
@@ -269,31 +285,45 @@ module.exports = function(app,options){
 		 HBEdetails=[];
 
 		 for(device of assetIDs)(function(device){
-		 	 var obj = new Object();
-			 params = {
-					 	TableName : tables.calculatedData,
-					    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": "Heat_Balance_Error(%)"},
-					    ProjectionExpression: "AssetID, #T, #E",
-					    KeyConditionExpression: "AssetID = :v1 AND #T BETWEEN :v2a and :v2b",
-					    ExpressionAttributeValues: {
-					        ":v1": device,
-					        ":v2a": 1499957021 - 3600,
-					        ":v2b": 1499957021
-					    },
-					    Select: "SPECIFIC_ATTRIBUTES"
+			 var scan_params = {
+				 	TableName: tables.assets,
+					FilterExpression: "AssetID = :v1",
+					ExpressionAttributeValues: {
+						":v1": device
+					}
 			 };
-			 options.docClient.query(params, function (err, data) {
-			 	    if (err) {
-				        console.error("Unable to query the table. Error JSON:", JSON.stringify(err, null, 2));
-				    } else {
-				        console.log("Device Details query successful");
-				        obj[device] = data.Items;
-				        HBEdetails.push(obj);
-				        callback();
-				    }
-			 });
+			 console.log(scan_params);
+			 options.docClient.scan(scan_params, function(err,data_assets){
+				 if (err) {
+						console.error("unbable to scan the query . ERROR JSON:", JSON.stringify(err, null, 2));
+						res(err,null);
+				 } else {
+					 					 var obj = new Object();
+										 params = {
+												 	TableName : tables.calculatedData,
+												    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": "Heat_Balance_Error(%)"},
+												    ProjectionExpression: "AssetID, #T, #E",
+												    KeyConditionExpression: "AssetID = :v1 AND #T BETWEEN :v2a and :v2b",
+												    ExpressionAttributeValues: {
+												        ":v1": device,
+												        ":v2a": data_assets.Items[0].LastestTimeStamp - 3600,
+												        ":v2b": data_assets.Items[0].LastestTimeStamp
+												    },
+												    Select: "SPECIFIC_ATTRIBUTES"
+										 };
+										 options.docClient.query(params, function (err, data) {
+										 	    if (err) {
+											        console.error("Unable to query the table. Error JSON:", JSON.stringify(err, null, 2));
+											    } else {
+											        console.log("Device Details query successful");
+											        obj[device] = data.Items;
+											        HBEdetails.push(obj);
+											        callback();
+											    }
+										 });
+					 }
+				 });
 		 })(device)
-		 currTime += 10*60;
 	 }
 
 	 function getAssets(callback) {

@@ -32,7 +32,7 @@
 <script type="text/javascript">
 	$( document ).ready(function() {
 		var refreshIntervalId =	setInterval(function(){
-	//	getLiveData();
+		getLiveData();
     getInstData();
 	},10 * 1000);
 
@@ -41,8 +41,9 @@
 			type: 'POST',
             url: 'http://localhost:5000/live',
             success: function(data) {
+                //drawDashBoardGraph(data);
                 updateGraph(data);
-                console.log(data);
+                //console.log(data);
             },
             error: function(err){
             	clearInterval(refreshIntervalId);
@@ -58,31 +59,12 @@ function getInstData(){
         type: 'POST',
         url:  'http://localhost:5000/instData',
         success:function(data) {
-            //  console.log(data);
-            // $.get('dashboard-instant-data.ejs', function(template) {
-            //    console.log(template);
-            //     var html = ejs.render(template, {instData: data});
-            //     console.log(html);
-                 //$('#dashboard-instant-data-div').html(html);
-          ///       document.getElementById('dashboard-instant-data-div').innerHTML = html;
+            $.get('dashboard-instant-data.ejs',function(template){
 
-          //   });
-            //  new EJS({url: 'dashboard-instant-data.ejs'}).update('dashboard-instant-data-div',{instData: data});
-              var data1 =	['mop', 'broom', 'duster']
-              var template = new EJS({
-              text: `
-                <ul>
-                  <% for(var i = 0; i < the_list.length; i++) { %>
-                    <li> <%= the_list[i] %></li>
-                  <% } %>
-                </ul>
-              `
+              var instData = JSON.parse(data);
+              var html = ejs.render(template, {instData:instData});
+              $('#dashboard-instant-data-div').html(html);
             });
-
-            var html = template.render({ the_list: data1 });
-
-            console.log(html);
-
         },
         error: function(err){
           clearInterval(refreshIntervalId);

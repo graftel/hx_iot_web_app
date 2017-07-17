@@ -1,8 +1,8 @@
 
-<h2 class="chart-heading">Overall Heat Transfer Rate</h2>
-<div width="1000" height="600" class="row">
-	<svg id="visualisation" width="1000" height="600"
-		class="col col-md-9 col-md-offset-3"></svg>
+<h2 class="chart-heading">Heat Balance Error</h2>
+<div class="row" id="dashboard-line-chart-div">
+	<svg id="visualisation" width="1000" height="400"
+		class="col col-md-10"></svg>
 </div>
 <!-- <div class="row">
 	<table class="table col col-md-9 col-md-offset-3" id="legend"></table>
@@ -28,7 +28,7 @@
 }
 
 path.line {
-	width: 580px;
+	width: 600px;
 	height: 351px;
 	overflow: hidden;
 }
@@ -67,7 +67,7 @@ path.line {
 	var colors = {};
 	var minX = -1, maxX = -1, minY = -1, maxY = -1;
 
-	var vis = d3.select("#visualisation"), WIDTH = 700, HEIGHT = 400, MARGINS = {
+	var vis = d3.select("#visualisation"), WIDTH = 800, HEIGHT = 300, MARGINS = {
 		top : 20,
 		right : 20,
 		bottom : 20,
@@ -76,18 +76,18 @@ path.line {
 	var data = <%-JSON.stringify(data)%>;
 	var assets = <%- JSON.stringify(assets) %>;
 	var res = reformatData(data);
-	
+
 	setMinMaxforAxis(data);
 
 	//var legendSpace = WIDTH/data.length; // spacing for the legend
-	var zoom = d3.zoom().scaleExtent([ 0.5, 2 ]).on("zoom", zoomFunction);
+	//var zoom = d3.zoom().scaleExtent([ 0.5, 2 ]).on("zoom", zoomFunction);
 
 	var xScale = d3.scaleLinear().range(
-			[ MARGINS.left, WIDTH - MARGINS.right - 50 ])
+			[ MARGINS.left, WIDTH - MARGINS.right - 50])
 			.domain([ minX, maxX ]);
 	var yScale = d3.scaleLinear().range(
 			[ HEIGHT - MARGINS.top, MARGINS.bottom ]).domain(
-			[ minY - 0.2, maxY + 0.2 ]);
+			[ 0, maxY * 1.2 ]);
 
 	var xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(function(d) {
 		return timestampToTime(d);
@@ -105,6 +105,16 @@ path.line {
 			"translate(" + (MARGINS.left) + ",0)").call(yAxis);
 	var sideLegend = vis.append('g').attr('class', 'sideLegend');
 
+	vis.append("g")
+		.attr("class", "yaxis")
+		.append("text")
+		.attr("transform", "rotate(-90)")
+		.attr("y", 6)
+		.attr("dy", ".71em")
+		.style("text-anchor", "end")
+		.style("font-size", "10pt")
+		.text("Heat Balance Error (%)");
+
 	/*var tip = d3.select("body").append("div")
 	.attr("class", "tooltip")
 	.style("opacity", 0);*/
@@ -113,19 +123,19 @@ path.line {
 			.attr("x", "50").attr("y", "-20").attr("width", WIDTH - 120).attr(
 					"height", HEIGHT);
 
-	var view = vis
-	//	 .attr("class", "zoom")
-	.attr("x", 9).attr("y", 0).attr("width", WIDTH - 50).attr("height",
-			HEIGHT + 50).call(zoom);
+//	var view = vis
+//	.attr("x", 9).attr("y", 0).attr("width", WIDTH - 50).attr("height",
+//			HEIGHT + 50).call(zoom);
+
 	var chartBody = vis.append("g").attr("clip-path", "url(#clip)");
 
 	assignColor();
 
 	var dataGroup = res;
-	var lineGen = d3.line().x(function(d) {
-		return xScale(d.xV);
-	}).y(function(d) {
-		return yScale(d.yV);
+	var lineGen = d3.line()
+									.curve(d3.curveBasis)
+									.x(function(d) { return xScale(d.xV);})
+									.y(function(d) { return yScale(d.yV);
 	});
 
 	dataGroup.forEach(function(d, i) {
@@ -208,8 +218,8 @@ path.line {
 					function() { // mouse moving over canvas
 						var mouse = d3.mouse(this);
 						d3.select(".mouse-line").attr("d", function() {
-							var d = "M" + mouse[0] + "," + HEIGHT;
-							d += " " + mouse[0] + "," + 0;
+							var d = "M" + mouse[0] + "," + (HEIGHT - 20);
+							d += " " + mouse[0] + "," + 20;
 							return d;
 						});
 
@@ -279,7 +289,7 @@ path.line {
 		chartBody.selectAll(".line").remove();
 
 		xScale.domain([ minX, maxX ]);
-		yScale.domain([ minY - 0.5, maxY + 0.5 ]);
+		yScale.domain([ 0, maxY * 1.2 ]);
 
 		xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(function(d) {
 			return timestampToTime(d);
@@ -291,6 +301,16 @@ path.line {
 		gX = vis.append("g").attr("transform",
 				"translate(0," + (HEIGHT - MARGINS.bottom) + ")").attr("class",
 				"xaxis");
+
+		vis.append("g")
+	   		.attr("class", "yaxis")
+				.append("text")
+				.attr("transform", "rotate(-90)")
+				.attr("y", 6)
+				.attr("dy", ".71em")
+				.style("text-anchor", "end")
+				.style("font-size", "10pt")
+				.text("Heat Balance Error (%)");
 
 		gX.call(xAxis).selectAll("text").attr("y", 0).attr("x", 9).attr("dy",
 				".35em").attr("transform", "rotate(90)").style("text-anchor",
