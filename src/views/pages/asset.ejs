@@ -606,7 +606,7 @@
 		   var table = $("#details table");
 		   var element = document.getElementById(table.data("showing"));
 		   if(element == null)
-			   return;
+			   return document.location.reload(true);
 		   getData(element);
 		}, 1 * 60 * 1000);
 </script>
