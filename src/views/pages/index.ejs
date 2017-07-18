@@ -39,7 +39,7 @@
 	 function getLiveData(){
 		$.ajax({
 			type: 'POST',
-            url: 'http://localhost:5000/live',
+            url: '/live',
             success: function(data) {
                 var data = JSON.parse(data);
                 drawLineChart(data.data, data.assets);
@@ -59,7 +59,7 @@
 function getInstData(){
   $.ajax({
         type: 'POST',
-        url:  'http://localhost:5000/instData',
+        url:  '/instData',
         success:function(data) {
             $.get('dashboard-instant-data.ejs',function(template){
 
