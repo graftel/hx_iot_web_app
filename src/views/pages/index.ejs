@@ -34,7 +34,7 @@
 		var refreshIntervalId =	setInterval(function(){
 		getLiveData();
     getInstData();
-	},10 * 1000);
+	},1 * 60 * 1000);  // refresh every 1 minute
 
 	 function getLiveData(){
 		$.ajax({
@@ -48,6 +48,8 @@
                 //updateGraph(data);
             },
             error: function(err){
+                if(err.status == 440)
+              	  document.location.reload(true);
             	clearInterval(refreshIntervalId);
             	console.log("Error in ajax");
 				//alert("Live streaming stopped");
@@ -69,6 +71,8 @@ function getInstData(){
             });
         },
         error: function(err){
+          if(err.status == 440)
+        	  document.location.reload(true);
           clearInterval(refreshIntervalId);
           console.log("Error in ajax");
         }

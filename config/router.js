@@ -112,7 +112,9 @@ module.exports = function(app,options){
 	//	if(currTime>=endTime){
 		//	res.status(404).send("Oh uh, something went wrong");
 	//	}
-
+		if(typeof req.session.passport == 'undefined'){
+			res.status(440).send("Session expired!");
+		}
 		getCalculatedValues(simpleCallback = function(){
 			if(HBEdetails.length == 0 ){
 				res.status(404).send("Oh uh, something went wrong");
@@ -193,9 +195,9 @@ module.exports = function(app,options){
 	};
 
 	app.post('/instData', function (req, res) {
-	//	if(currTime>=endTime){
-		//	res.status(404).send("Oh uh, something went wrong");
-	//	}
+		if(typeof req.session.passport == 'undefined'){
+			return res.status(440).send("Session expired!");
+		}
 			var parameterlist = {"#HBP": "Heat_Balance_Error(%)",
 													 "#HBE": "Heat_Balance_Error(Btu/hr)",
 													 "#HMF":"HOT_Mass_Flow_(lbm/hr)",
@@ -219,9 +221,9 @@ module.exports = function(app,options){
 
 	// Assets page routes
 	app.get('/asset', function (req, res) {
-		 if(typeof req.user == 'undefined'){
-				res.redirect('/login');
-			}
+		if(typeof req.session.passport == 'undefined'){
+			res.status(440).send("Session expired!");
+		}
 			else{
 				var assetid = req.query.asset;
 				if(typeof assetid == 'undefined'){
@@ -257,8 +259,8 @@ module.exports = function(app,options){
 	var latestTimeStamp = 0, deviceids, calculations, rawValues = [], latestRawValues = [], calculations = {};
 	
 	 app.post('/asset/detail', function (req, res) {
-		 if(typeof req.user == 'undefined'){
-				return false;
+			if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired!");
 			}
 			else{
 				 	var assetid = req.body.asset;
@@ -281,7 +283,12 @@ module.exports = function(app,options){
 
 	 // Settings route
 	 app.get('/settings', function(req,res){
-		 res.render('pages' + path.sep + 'settings');
+			if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired!");
+			}
+		 res.render('pages' + path.sep + 'settings', {
+				assets: assets
+			});
 	 });
 
 	// Helper Methods
