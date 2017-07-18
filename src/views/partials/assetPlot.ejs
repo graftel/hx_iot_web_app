@@ -39,12 +39,12 @@
 			min : latestTimeStamp - (15*60),
 			max : latestTimeStamp
 		};
-		domainY = setMinMaxforAxis(calculatedVals);
+		domainY = setMinMaxforYAxis(calculatedVals);
 
 		drawSensorMap(latestVals);
 
 		if(Object.keys(colors).length == 0)
-			colors = assignColor(latestVals);
+			colors = assignColorCode(latestVals);
 		var sideLegend = plot.append('g').attr('class', 'sideLegend');
 		
 		var xScale = d3.scaleLinear().range(
@@ -69,12 +69,13 @@
 		var gY = plot.append("g").attr("class", "yaxis").attr("transform",
 				"translate(" + (MARGINS.left) + ",0)").call(yAxis);
 
-		var lineGen = d3.line().x(function(d) {
-			return xScale(d.EpochTimeStamp);
-		}).y(function(d) {
-			return yScale(d.Value);
-		});//.curve(d3.curveCardinal);
-		;
+		var lineGen = d3.line().curve(d3.curveBasis)
+			.x(function(d) {
+				return xScale(d.EpochTimeStamp);
+			}).y(function(d) {
+				return yScale(d.Value);
+			});
+		
 		rawValues.forEach(function(d,i) {
 			var key = Object.keys(d)[0];
 			var values = d[key];
@@ -182,10 +183,10 @@
 		return hours + ':' + minutes.substr(-2);
 	}
 	
-	function assignColor(devices) {
+	function assignColorCode(devices) {
 		var colorCodes = {};
-		Object.keys(devices).forEach(function(key) {
-			colorCodes[key] = getRandomColor();
+		Object.keys(devices).forEach(function(key,index) {
+			colorCodes[key] = getFixedColor(index,Object.keys(devices).length);
 		});
 		return colorCodes;
 	}
@@ -199,7 +200,7 @@
 		return color;
 	}
 
-	function setMinMaxforAxis(values) {
+	function setMinMaxforYAxis(values) {
 		var domain = {
 			min : 10000,
 			max : 1

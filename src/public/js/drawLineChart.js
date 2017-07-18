@@ -42,7 +42,6 @@ function getFixedColor(index, total_num)
    var calcolor = startcolor + index * steps
 
    var hexstr = ("000000" + calcolor.toString(16)).substr(-6);
-   console.log(hexstr);
    return "#" + hexstr;
 }
 
