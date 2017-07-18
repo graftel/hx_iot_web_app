@@ -8,7 +8,7 @@
 		     factor: 1,
 		     factorLegend: .85,
 		     levels: 3,
-		     maxValue: 0,
+		     maxValue:2,
 		     radians: 2 * Math.PI,
 		     opacityArea: 0.5,
 		     ToRight: 5,
@@ -26,10 +26,12 @@
 		      }
 		      }
 		    }
-		    
-		    cfg.maxValue = 100;
-		    
-		    var allAxis = (d[0].map(function(i, j){return i.area}));
+		   if((domainY.max+0.5) - (domainY.min+0.5) > 1)
+			   cfg.maxValue = 2;
+		   else 
+			   cfg.maxValue = 1;
+
+		    var allAxis = (d[0].map(function(i, j){return i.deviceid}));
 		    var total = allAxis.length;
 		    var radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
 		    var Format = d3.format('%');
@@ -76,7 +78,9 @@
 		       .style("font-size", "10px")
 		       .attr("transform", "translate(" + (cfg.w/2-levelFactor + cfg.ToRight) + ", " + (cfg.h/2-levelFactor) + ")")
 		       .attr("fill", "#737373")
-		       .text((j+1)*100/cfg.levels);
+		       .text(function(d){
+		    	 return  domainY.min+((j+1)*cfg.maxValue/cfg.levels);
+		       });
 		    }
 
 		    series = 0;
@@ -171,17 +175,16 @@
 		      .attr("cy", function(j, i){
 		        return cfg.h/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total));
 		      })
-		      .attr("data-id", function(j){return j.area})
+		      .attr("data-id", function(j){return j.deviceid})
 		      .style("fill", "#fff")
 		      .style("stroke-width", "2px")
 		      .style("stroke", cfg.color(series)).style("fill-opacity", .9)
 		      .on('mouseover', function (d){
-		        console.log(d.area)
 		            tooltip
 		              .style("left", d3.event.pageX - 40 + "px")
 		              .style("top", d3.event.pageY - 80 + "px")
 		              .style("display", "inline-block")
-		      				.html((d.area) + "<br><span>" + (d.value) + "</span>");
+		      				.html((d.deviceid) + "<br><span>" +((domainY.min+d.value).toFixed(3)) + "</span>");
 		            })
 		    		.on("mouseout", function(d){ tooltip.style("display", "none");});
 

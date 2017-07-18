@@ -1,5 +1,6 @@
 <link href="dist/css/sensor-map.css" rel="stylesheet">
 
+<i><h3 id="locationHeading" ></h3></i>
 <div id="sensorDetails" class="row">
 	<div class="col-md-8">
 		<ul class="nav nav-pills">
@@ -11,105 +12,10 @@
 
 		<div class="tab-content">
 			<div class="table-responsive tab-pane active" id="details">
-				<table class="table">
-					<thead>
-						<tr>
-							<th>Sensor ID</th>
-							<th>T1</th>
-							<th>T2</th>
-							<th>T3</th>
-							<th>T4</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td>Latest Value (F)</td>
-							<td id="latest_t1"></td>
-							<td id="latest_t2"></td>
-							<td id="latest_t3"></td>
-							<td id="latest_t4"></td>
-						</tr>
-						<tr>
-							<td>Max (F)</td>
-							<td id="max_t1"></td>
-							<td id="max_t2"></td>
-							<td id="max_t3"></td>
-							<td id="max_t4"></td>
-						</tr>
-						<tr>
-							<td>Min (F)</td>
-							<td id="min_t1"></td>
-							<td id="min_t2"></td>
-							<td id="min_t3"></td>
-							<td id="min_t4"></td>
-						</tr>
-						<tr>
-							<td>Mean (F)</td>
-							<td id="mean_t1"></td>
-							<td id="mean_t2"></td>
-							<td id="mean_t3"></td>
-							<td id="mean_t4"></td>
-						</tr>
-						<tr>
-							<td>Measurement Uncertainity (F)</td>
-							<td id="min_t1"></td>
-							<td id="min_t2"></td>
-							<td id="min_t3"></td>
-							<td id="min_t4"></td>
-						</tr>
-						<tr>
-							<td>Standard Deviation (F)</td>
-							<td id="measurement_t1"></td>
-							<td id="measurement_t2"></td>
-							<td id="measurement_t3"></td>
-							<td id="measurement_t4"></td>
-						</tr>
-						<tr>
-							<td>Stability(%/min)</td>
-							<td id="stability_t1"></td>
-							<td id="stability_t2"></td>
-							<td id="stability_t3"></td>
-							<td id="stability_t4"></td>
-						</tr>
-					</tbody>
-				</table>
+				<table class="table"></table>
 			</div>
-			<div id="plot" class="tab-pane">plot</div>
+			<div id="plot" class="tab-pane"><%- include ../partials/assetPlot.ejs %></div>
 		</div>
 	</div>
-	<div id="sensor-chart" class="col-md-4"></div>
+	<div id="sensor-chart" class="col-md-4" style="padding-top: 3%;"></div>
 </div>
-<script src="js/d3.min.js"></script>
-<script src="js/sensor-map.js"></script>
-
-<script type="text/javascript">
-	 var width = 300,
-	 height = 300;
-	 var svg = d3.select('#sensor-chart')
-		.selectAll('svg')
-		.append('svg')
-		.attr("width", width)
-		.attr("height", height);
-	 
-	//Config for the Radar chart
-	var config = {
-	 w: width,
-	 h: height,
-	 maxValue: 100,
-	 levels: 5,
-	 ExtraWidthX: 300
-	}
-	
-	//Call function to draw the Radar chart
-	var data = [
-	    [
-	        {"area": "Central ", "value": 80},
-	        {"area": "Kirkdale", "value": 40},
-	        {"area": "Kensington ", "value": 40},
-	        {"area": "Everton ", "value": 90},
-	        {"area": "Picton ", "value": 60},
-	        {"area": "Riverside ", "value": 80}
-	    ]
-	 ];
-	 RadarChart.draw("#sensor-chart", data, config);
- </script>
