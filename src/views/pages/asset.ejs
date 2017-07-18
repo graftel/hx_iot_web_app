@@ -198,6 +198,7 @@
 		$("#hot_out_info").toggle();
 	})
 	var result;
+
 	function getData(element) {
 		console.log("clicked "+element.id);
 		var parameter = element.getAttribute("data-type");
@@ -220,8 +221,9 @@
 			error : function(err) {
 				console.log(err);
 			}
-		}); 
+		});
 	}
+
 
 	function populateTable(data,element){
 		var latestValues = data[0];

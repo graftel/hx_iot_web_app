@@ -1,0 +1,41 @@
+<%
+	ToLocalDate = function(inDate) {
+		var utcSeconds = inDate;
+		var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+		d.setUTCSeconds(utcSeconds);
+		return d;
+	}
+	GetParamValue = function(strParam, item) {
+		var value = item[strParam];
+		return value.toFixed(2);
+	}
+%>
+<hr />
+<% for(var i = 0; i < instData.Count; i++) { %>
+	<h2 class="chart-heading"> Instant Data For <%= instData.Items[i].DisplayName %></h2>
+  <p id="instData-Last-Update-Time">Last Updated: <%=ToLocalDate(instData.Items[i].EpochTimeStamp) %> </p>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th class="col-md-1">
+					Parameters
+				</th>
+				<th class="col-md-1">
+					Values
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+			<% Object.keys(instData.Parameters).forEach(function(prop) { %>
+				<tr>
+					<td class="col-md-1">
+							<%- instData.Parameters[prop] %>
+					</td>
+					<td class="col-md-1">
+							<%=GetParamValue(instData.Parameters[prop],instData.Items[i]) %>
+					</td>
+				</tr>
+			<% }); %>
+		</tbody>
+	</table>
+<% } %>

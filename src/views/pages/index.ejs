@@ -1,4 +1,5 @@
  <%- include ../partials/header.ejs %>
+ <%- include ../partials/scripts.ejs %>
 <body>
 
 	<div id="wrapper">
@@ -15,25 +16,24 @@
 			</div>
 			<!-- /.row -->
 
-			<div class="row"><%- include ../partials/dashboard-panels.ejs
-				%></div>
+			<div class="row"><%- include ../partials/dashboard-panels.ejs %></div>
 			<div class="row">
 				<hr>
 				<div><%- include ../partials/chart.ejs %></div>
 			</div>
-			<div class="row">
-				<div><%- include ../partials/dashboard-progress-circles.ejs %></div>
+			<div class="row" >
+				<div id="dashboard-instant-data-div"><%- include ../partials/dashboard-instant-data.ejs %></div>
 			</div>
 			<!-- /#page-wrapper -->
 		</div>
 	</div>
 	<!-- /#wrapper -->
 </body>
-<%- include ../partials/scripts.ejs %>
 <script type="text/javascript">
 	$( document ).ready(function() {
 		var refreshIntervalId =	setInterval(function(){
 		getLiveData();
+    getInstData();
 	},10 * 1000);
 
 	 function getLiveData(){
@@ -41,17 +41,41 @@
 			type: 'POST',
             url: 'http://localhost:5000/live',
             success: function(data) {
-                updateGraph(data);
-                console.log(data);
+                var data = JSON.parse(data);
+                drawLineChart(data.data, data.assets);
+
+                //drawDashBoardGraph(data);
+                //updateGraph(data);
             },
             error: function(err){
             	clearInterval(refreshIntervalId);
             	console.log("Error in ajax");
-				alert("Live streaming stopped");
+				//alert("Live streaming stopped");
             }
 
         });
 	} })
+
+function getInstData(){
+  $.ajax({
+        type: 'POST',
+        url:  'http://localhost:5000/instData',
+        success:function(data) {
+            $.get('dashboard-instant-data.ejs',function(template){
+
+              var instData = JSON.parse(data);
+              var html = ejs.render(template, {instData:instData});
+              $('#dashboard-instant-data-div').html(html);
+            });
+        },
+        error: function(err){
+          clearInterval(refreshIntervalId);
+          console.log("Error in ajax");
+        }
+  })
+}
+
+
 	</script>
 
 </html>
