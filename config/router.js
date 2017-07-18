@@ -315,7 +315,7 @@ module.exports = function(app,options){
 											        console.error("Unable to query the table. Error JSON:", JSON.stringify(err, null, 2));
 											    } else {
 											        console.log("Device Details query successful");
-															console.log(data);
+															//console.log(data);
 												        obj[device] = data.Items;
 												        HBEdetails.push(obj);
 											        callback();

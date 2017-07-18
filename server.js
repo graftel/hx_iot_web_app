@@ -4,9 +4,10 @@
 
 var express = require('express');
 var bodyParser = require("body-parser");
+const os = require('os');
 
 var AWS = require("aws-sdk");
-AWS.config.loadFromPath('C:/Users/kangmin/.aws/config.json');
+AWS.config.loadFromPath(os.homedir() + '/.aws/config.json');
 
 var session = require('express-session');
 var passport = require('passport'),

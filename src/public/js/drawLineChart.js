@@ -15,10 +15,35 @@ function setLegendEnability(key, itemsLength) {
 
 function assignColor(colors) {
 //  var assets = <%-JSON.stringify(assets)%>;
+//  console.log(Object.keys(assets).length);
+  var index = 0;
   Object.keys(assets).forEach(function(key) {
-    colors[key] = getRandomColor();
+//    console.log(key);
+//    colors[key] = getRandomColor();
+      colors[key] = getFixedColor(index, Object.keys(assets).length);
+      index++;
   });
   return colors;
+}
+
+function getFixedColor(index, total_num)
+{
+   var startcolor = 0x00FF00;
+   var endcolor = 0xFF0000;
+   var steps = 0x000000;
+
+   if (total_num <= 1){
+      steps = startcolor;
+   }
+   else {
+     steps = (endcolor - startcolor) / (total_num - 1);
+   }
+
+   var calcolor = startcolor + index * steps
+
+   var hexstr = ("000000" + calcolor.toString(16)).substr(-6);
+   console.log(hexstr);
+   return "#" + hexstr;
 }
 
 function getRandomColor() {
@@ -227,6 +252,7 @@ function drawLineChart(data, assets) {
 
   var dataGroup = res;
   var lineGen = d3.line()
+                  .curve(d3.curveBasis)
                   .x(function(d) { return xScale(d.xV);})
                   .y(function(d) { return yScale(d.yV);
   });

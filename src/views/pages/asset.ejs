@@ -159,11 +159,11 @@
 					</div>
 				</div>
 			</div>
-			<div id="showDetails" style="display:none;"> 
+			<div id="showDetails" style="display:none;">
 				<%- include ../partials/machineReadings.ejs %>
-				
+
 			</div>
-			
+
 		</div>
 </body>
 <%- include ../partials/scripts.ejs %>
@@ -189,7 +189,7 @@
 	var result;
 	function getData(ele) {
 		var id = ele.id;
-		
+
 		 $.ajax({
 			type : 'POST',
 			url : 'http://localhost:5000/asset/detail',
@@ -205,10 +205,10 @@
 			error : function(err) {
 				console.log(err);
 			}
-		}); 
+		});
 	}
 
-	
+
 	function populateTable(data){
 		$(".nav.nav-pills li a").removeClass("active");
 		for(key in data){
