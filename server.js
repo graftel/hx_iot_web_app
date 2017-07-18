@@ -6,7 +6,7 @@ var express = require('express');
 var bodyParser = require("body-parser");
 
 var AWS = require("aws-sdk");
-AWS.config.loadFromPath('C:/Users/kangm/.aws/config.json');
+AWS.config.loadFromPath('C:/Users/kangmin/.aws/config.json');
 
 var session = require('express-session');
 var passport = require('passport'),
