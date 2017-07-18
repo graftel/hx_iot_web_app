@@ -1,12 +1,12 @@
 #machine {
 	width: 70%;
-	height: 30%
+	height: 40%
 }
 
 .part1_svg {
 	position: absolute;
 	left: 313px;
-	top: 371px;
+	top: 401px;
 	width: 1563px;
 	height: 207px;
 	z-index: 1;
@@ -19,7 +19,7 @@
 	opacity: 0.988;
 	position: absolute;
 	left: 475px;
-	top: 373px;
+	top: 403px;
 	width: 1136px;
 	height: 202px;
 	z-index: 2;
@@ -34,7 +34,7 @@
 	border-radius: 5px;
 	position: absolute;
 	left: 574px;
-	top: 372px;
+	top: 402px;
 	width: 934px;
 	height: 204px;
 	z-index: 13;
@@ -49,7 +49,7 @@
 	background-color: #ffb399;
 	position: absolute;
 	left: 681px;
-	top: 296px;
+	top: 326px;
 	width: 80px;
 	height: 76px;
 	z-index: 6;
@@ -62,7 +62,7 @@
 	background-color: #ffb399;
 	position: absolute;
 	left: 679px;
-	top: 293px;
+	top: 323px;
 	width: 85px;
 	height: 4px;
 	z-index: 3;
@@ -75,7 +75,7 @@
 	background-color: #ffb399;
 	position: absolute;
 	left: 665px;
-	top: 282px;
+	top: 312px;
 	width: 110px;
 	height: 12px;
 	z-index: 4;
@@ -88,7 +88,7 @@
 	background-color: #ffb399;
 	position: absolute;
 	left: 1385px;
-	top: 575px;
+	top: 605px;
 	width: 80px;
 	height: 76px;
 	z-index: 12;
@@ -101,7 +101,7 @@
 	background-color: #ffb399;
 	position: absolute;
 	left: 1383px;
-	top: 649px;
+	top: 679px;
 	width: 84px;
 	height: 4px;
 	z-index: 10;
@@ -114,7 +114,7 @@
 	background-color: #ffb399;
 	position: absolute;
 	left: 1370px;
-	top: 653px;
+	top: 683px;
 	width: 110px;
 	height: 12px;
 	z-index: 11;
@@ -123,7 +123,7 @@
 .cold_in_part1_svg {
   position: absolute;
   left: 359px;
-  top: 356px;
+  top: 386px;
   width: 41px;
   height: 49px;
   z-index: 7;
@@ -132,7 +132,7 @@
 .cold_in_part2_svg {
   position: absolute;
   left: 350px;
-  top: 346px;
+  top: 376px;
   width: 48px;
   height: 28px;
   z-index: 5;
@@ -141,14 +141,14 @@
 .cold_out_part1_svg {
   position: absolute;
   left: 1733px;
-  top: 519px;
+  top: 549px;
   z-index: 9;
 }
 
 .cold_out_part2_svg {
   position: absolute;
   left: 1758px;
-  top: 548px;
+  top: 578px;
   z-index: 8;
 }
 
@@ -157,7 +157,7 @@
 }
 
 #cold_in_info{
-	width: 12%; margin-top: 2%; display: none;position:fixed;
+	width: 12%; margin-top: 0%; display: none;position:fixed;
 }
 
 #cold_out_info{
@@ -165,7 +165,7 @@
 }
 
 #hot_in_info{
-	width: 12%; margin-left: 20%;display: none; position:fixed;
+	width: 12%; margin-left: 8%;display: none; position:fixed;
 }
 
 #hot_in_info div.panel-heading, #hot_out_info div.panel-heading{

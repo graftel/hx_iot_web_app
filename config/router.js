@@ -169,6 +169,7 @@ module.exports = function(app,options){
 					if(typeof assetid == 'undefined' || typeof parameter == 'undefined'){
 						return false;
 					}
+					 rawValues = []; calculations = {}; latestRawValues = {};
 					// step 1 - get latest timestamp from assets table for given asset
 					// step 2 - get device ids with given asset id and clicked parameter
 					// step 3 - get last one hour raw data from given timestamp
@@ -255,6 +256,7 @@ module.exports = function(app,options){
 			        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	   latestTimeStamp = data.Items[0].LastestTimeStamp;
+			    	   console.log("got latest timestamp "+data.Items[0].LastestTimeStamp);
 			  		   callback(assetid,parameter,location,getRecentRawdata,sendData);
 			    }
 		 });
@@ -282,11 +284,14 @@ module.exports = function(app,options){
 			    }
 		 });
 	 }
-	 var res= [];
 
 	 function getRecentRawdata(callback,sendData){
 		 rawValues = []; 
 		 var counter = 0;
+		 if(deviceids.length == 0){
+			 console.log("Length of deviceids is 0");
+			 sendData();
+		 }
 		 deviceids.forEach(function(deviceid,index){
 			 var params = {
 					 TableName : tables.rawData,
@@ -295,7 +300,7 @@ module.exports = function(app,options){
 					 ProjectionExpression: "EpochTimeStamp, #V",
 					 ExpressionAttributeValues: {
 					        ":v1": deviceid, 
-					        ":v2": latestTimeStamp - (10*60),
+					        ":v2": latestTimeStamp - (15*60),
 					        ":v3": latestTimeStamp
 					 },
 					 Select: "SPECIFIC_ATTRIBUTES"
@@ -322,7 +327,7 @@ module.exports = function(app,options){
 		 		var vals = d[key];
 		 		vals.map(function(val){ if(val.EpochTimeStamp == latestTimeStamp ) { latestRawValues[key] = val.Value; } });
 		 		calculations[key] = {
-		 				"LatestValue": Math.max.apply(Math,vals.map(function(o){return o.Value;})),
+		 				"LatestValue": Math.max.apply(Math,vals.map(function(o){return o.Value+0.5;})),
 		 				"Max": Math.max.apply(Math,vals.map(function(o){return o.Value;})),
 		 				"Min": Math.min.apply(Math,vals.map(function(o){return o.Value;})),
 		 				"Mean": math.mean.apply(math,vals.map(function(o){return o.Value;})),

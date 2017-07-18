@@ -1,9 +1,12 @@
-<div width="700" height="800"> <svg id="calculationsChart"></svg> </div>
+<div width="700" height="800">
+	<svg id="calculationsChart"></svg>
+</div>
 
 <style>
-#calculationsChart{
+#calculationsChart {
 	overflow: visible;
 }
+
 .xaxis text, .yaxis text {
 	color: black;
 	font-size: 150%;
@@ -15,76 +18,178 @@
 <script src="js/sensor-map.js"></script>
 
 <script type="text/javascript">
-
 	var plot = d3.select("#calculationsChart"), WIDTH = 700, HEIGHT = 400, MARGINS = {
 		top : 20,
 		right : 20,
 		bottom : 20,
 		left : 50
 	};
-	
-	function buildPlot(data){
+	var domainX, domainY, colors = {};
+
+	function buildPlot(data) {
+		
+		plot.text("");		
 		data = JSON.parse(data);
-		var latestVals = data[0]; 
-		var calculatedVals = data[1]; 
+		var latestVals = data[0];
+		var calculatedVals = data[1];
 		var rawValues = data[2];
 		var latestTimeStamp = data[3];
-		var domainX = { min: latestTimeStamp - 600, max: latestTimeStamp };
-		var domainY = setMinMaxforAxis(calculatedVals);
-		
+				
+		domainX = {
+			min : latestTimeStamp - (15*60),
+			max : latestTimeStamp
+		};
+		domainY = setMinMaxforAxis(calculatedVals);
+
 		drawSensorMap(latestVals);
+
+		if(Object.keys(colors).length == 0)
+			colors = assignColor(latestVals);
+		var sideLegend = plot.append('g').attr('class', 'sideLegend');
 		
-		var colors = assignColor(latestVals);
 		var xScale = d3.scaleLinear().range(
-				[ MARGINS.left, WIDTH - MARGINS.right - 50 ])
-				.domain([ domainX.min, domainX.max ]);
+				[ MARGINS.left, WIDTH - MARGINS.right - 50 ]).domain(
+				[ domainX.min, domainX.max ]);
 		var yScale = d3.scaleLinear().range(
 				[ HEIGHT - MARGINS.top, MARGINS.bottom ]).domain(
 				[ domainY.min, domainY.max ]);
-	
+
 		var xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(function(d) {
 			return timestampToTime(d);
 		});
 		var yAxis = d3.axisLeft(yScale);
-	
+
 		var gX = plot.append("g").attr("class", "xaxis").attr("transform",
 				"translate(0," + (HEIGHT - MARGINS.bottom) + ")");
-	
+
 		gX.call(xAxis).selectAll("text").attr("y", 0).attr("x", 9).attr("dy",
 				".35em").attr("transform", "rotate(90)").style("text-anchor",
 				"start");
-	
+
 		var gY = plot.append("g").attr("class", "yaxis").attr("transform",
 				"translate(" + (MARGINS.left) + ",0)").call(yAxis);
-		
+
 		var lineGen = d3.line().x(function(d) {
 			return xScale(d.EpochTimeStamp);
 		}).y(function(d) {
 			return yScale(d.Value);
-		});
-		rawValues.forEach(function(d) {
+		});//.curve(d3.curveCardinal);
+		;
+		rawValues.forEach(function(d,i) {
 			var key = Object.keys(d)[0];
 			var values = d[key];
-				plot.append('path').attr('d', lineGen(values)).attr('stroke',
-						colors[key]).attr('stroke-width', 2).attr('class', 'line')
-						.attr('fill', 'none');
+			sideLegend.append('rect').attr('x', WIDTH - 20).attr('y', function() {
+				return (i * 20) + 10;
+			}).attr('width', 10).attr('height', 10).style('fill', function() {
+				return colors[key];
+			});
+
+			sideLegend.append('text').attr('x', WIDTH - 8).attr('y', function() {
+				return (i * 20) + 20;
+			}).text(function() {
+				return key;
+			});
+			
+			plot.append('path').attr('d', lineGen(values)).attr('stroke',
+					colors[key]).attr('stroke-width', 2).attr('class', 'line')
+					.attr('fill', 'none');
 		});
+
+		// mouse over event - start
+		var mouseG = plot.append("g").attr("class", "mouse-over-effects");
+
+		mouseG.append("path") // this is the black vertical line to follow mouse
+		.attr("class", "mouse-line").style("stroke", "black").style(
+				"stroke-width", "1px").style("opacity", "0");
+
+		var lines = document.getElementsByClassName('line');
+
+		var mousePerLine = mouseG.selectAll('.mouse-per-line').data(rawValues)
+				.enter().append("g").attr("class", "mouse-per-line");
+
+		mousePerLine.append("circle").attr("r", 7).style("stroke", "red")
+				.style("fill", "none").style("stroke-width", "1px").style(
+						"opacity", "0");
+
+		mousePerLine.append("text").attr("transform", "translate(10,3)");
+
+		mouseG.append('svg:rect')
+				// append a rect to catch mouse movements on canvas
+				.attr("x", "50")
+				.attr("y", "30")
+				.attr('width', WIDTH - 120)
+				// can't catch mouse events on a g element
+				.attr('height', HEIGHT - 50)
+				.attr('fill', 'none')
+				.attr('pointer-events', 'all')
+				.on('mouseout',
+						function() { // on mouse out hide line, circles and text
+							d3.select(".mouse-line").style("opacity", "0");
+							d3.selectAll(".mouse-per-line circle").style(
+									"opacity", "0");
+							d3.selectAll(".mouse-per-line text").style(
+									"opacity", "0");
+						})
+				.on('mouseover',
+						function() { // on mouse in show line, circles and text
+							d3.select(".mouse-line").style("opacity", "1");
+							d3.selectAll(".mouse-per-line circle").style(
+									"opacity", "1");
+							d3.selectAll(".mouse-per-line text").style(
+									"opacity", "1");
+						})
+				.on('mousemove',function() {
+							var mouse = d3.mouse(this);
+							d3.select(".mouse-line").attr("d", function() {
+								var d = "M" + mouse[0] + "," + HEIGHT;
+								d += " " + mouse[0] + "," + 0;
+								return d;
+							});
+
+				d3.selectAll(".mouse-per-line")
+					.attr("transform",function(d, i) {
+					var key = Object.keys(d)[0];
+					var xDate = xScale.invert(mouse[0]), 
+						bisect = d3.bisector(function(d) {  return d.EpochTimeStamp; }).right;
+						idx = bisect(d[key], xDate);
+					var beginning = 0, end = lines[i].getTotalLength(), target = null;
+						while (true) {
+								target = Math.floor((beginning + end) / 2);
+								pos = lines[i].getPointAtLength(target);
+								if ((target === end || target === beginning) && pos.x !== mouse[0]) {
+									break;
+								}
+								if(pos.x > mouse[0])
+									end = target;
+								else if (pos.x < mouse[0])
+									beginning = target;
+								else
+									break; //position found
+						}
+
+						d3.select(this).select('text')
+							.text(yScale.invert(pos.y).toFixed(2));
+
+						return "translate(" + mouse[0]+ "," + pos.y + ")";
+					});
+			});
 	}
-	
+
 	function timestampToTime(timestamp) {
 		var date = new Date(timestamp * 1000);
 		var hours = date.getHours();
 		var minutes = "0" + date.getMinutes();
 		return hours + ':' + minutes.substr(-2);
 	}
-	function assignColor(devices) {
-		var colors = {};
-		Object.keys(devices).forEach(function(key) {
-			colors[key] = getRandomColor();
-		});
-		return colors;
-	}
 	
+	function assignColor(devices) {
+		var colorCodes = {};
+		Object.keys(devices).forEach(function(key) {
+			colorCodes[key] = getRandomColor();
+		});
+		return colorCodes;
+	}
+
 	function getRandomColor() {
 		var letters = '0123456789ABCDEF';
 		var color = '#';
@@ -93,46 +198,44 @@
 		}
 		return color;
 	}
-	
+
 	function setMinMaxforAxis(values) {
-		var domain = { min: 10000, max: 1 };
+		var domain = {
+			min : 10000,
+			max : 1
+		};
 		var keys = Object.keys(values);
-		for(var i=0; i< keys.length;i++){
-			if(values[keys[i]].Min < domain.min)
-				domain.min = Math.round(values[keys[i]].Min) - 0.5;	
-			if(values[keys[i]].Max > domain.max)
-				domain.max = Math.round(values[keys[i]].Max) + 0.5;		
+		for (var i = 0; i < keys.length; i++) {
+			if (values[keys[i]].Min < domain.min)
+				domain.min = Math.round(values[keys[i]].Min) - 0.5;
+			if (values[keys[i]].Max > domain.max)
+				domain.max = Math.round(values[keys[i]].Max) + 0.5;
 		}
 		return domain;
 	}
 
-	
-	function drawSensorMap(latestValues){
-		var width = 300,
-		height = 300;
-		var svg = d3.select('#sensor-chart')
-			.selectAll('svg')
-			.append('svg')
-			.attr("width", width)
-			.attr("height", height);
-		
+	function drawSensorMap(latestValues) {
+		var width = 300, height = 300;
+		var svg = d3.select('#sensor-chart').selectAll('svg').append('svg')
+				.attr("width", width).attr("height", height);
+		svg.select("g").remove();
 		//Config for the Radar chart
 		var config = {
-			w: width,
-			h: height,
-			minValue: 95,
-			maxValue: 96,
-			levels: 5,
-			ExtraWidthX: 300
-		}
-		
-		var data = [];
-		var devices = Object.keys(latestValues) ;
-		for(i in devices){
-			console.log(devices[i]);
-			data.push({deviceid: devices[i], value: latestValues[devices[i]]});
-		}
-		RadarChart.draw("#sensor-chart",[ data ], config);
-	}
+			w : width,
+			h : height,
+			maxValue : 3,
+			levels : 5,
+			ExtraWidthX : 300
+		};
 
+		var data = [];
+		var devices = Object.keys(latestValues);
+		for (i in devices) {
+			data.push({
+				deviceid : devices[i],
+				value : latestValues[devices[i]] - domainY.min
+			});
+		}
+		RadarChart.draw("#sensor-chart", [ data ], config);
+	}
 </script>

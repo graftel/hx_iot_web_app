@@ -8,7 +8,7 @@
 		     factor: 1,
 		     factorLegend: .85,
 		     levels: 3,
-		     maxValue: 0,
+		     maxValue:2,
 		     radians: 2 * Math.PI,
 		     opacityArea: 0.5,
 		     ToRight: 5,
@@ -26,9 +26,11 @@
 		      }
 		      }
 		    }
-		    
-		    cfg.maxValue = 100;
-		    
+		   if((domainY.max+0.5) - (domainY.min+0.5) > 1)
+			   cfg.maxValue = 2;
+		   else 
+			   cfg.maxValue = 1;
+
 		    var allAxis = (d[0].map(function(i, j){return i.deviceid}));
 		    var total = allAxis.length;
 		    var radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
@@ -76,7 +78,9 @@
 		       .style("font-size", "10px")
 		       .attr("transform", "translate(" + (cfg.w/2-levelFactor + cfg.ToRight) + ", " + (cfg.h/2-levelFactor) + ")")
 		       .attr("fill", "#737373")
-		       .text((j+1)*100/cfg.levels);
+		       .text(function(d){
+		    	 return  domainY.min+((j+1)*cfg.maxValue/cfg.levels);
+		       });
 		    }
 
 		    series = 0;
@@ -180,7 +184,7 @@
 		              .style("left", d3.event.pageX - 40 + "px")
 		              .style("top", d3.event.pageY - 80 + "px")
 		              .style("display", "inline-block")
-		      				.html((d.deviceid) + "<br><span>" + (d.value.toFixed(2)) + "</span>");
+		      				.html((d.deviceid) + "<br><span>" +((domainY.min+d.value).toFixed(3)) + "</span>");
 		            })
 		    		.on("mouseout", function(d){ tooltip.style("display", "none");});
 
