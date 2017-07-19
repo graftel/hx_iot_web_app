@@ -1,9 +1,7 @@
 <%
 	ToLocalDate = function(inDate) {
-		var utcSeconds = inDate;
-		var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
-		d.setUTCSeconds(utcSeconds);
-		return d;
+		var m = moment.unix(inDate);
+		return m.format('dddd, MMMM Do YYYY, h:mm:ss a');
 	}
 	GetParamValue = function(strParam, item) {
 		var value = item[strParam];

@@ -194,7 +194,7 @@ function drawLineChart(data, assets) {
   maxX = getMaxX(data);
   maxY = getMaxY(data);
 
-  console.log(maxY);
+//  console.log(maxY);
 //  setMinMaxforAxis(data);
 
   //var legendSpace = WIDTH/data.length; // spacing for the legend
@@ -257,7 +257,6 @@ function drawLineChart(data, assets) {
   });
 //									.curve(d3.curveBasis)
   dataGroup.forEach(function(d, i) {
-
     sideLegend.append('rect').attr('x', WIDTH - 20).attr('y', function() {
       return (i * 20) + 10;
     }).attr('width', 10).attr('height', 10).style('fill', function() {
@@ -306,8 +305,12 @@ function drawLineChart(data, assets) {
   var mousePerLine = mouseG.selectAll('.mouse-per-line').data(data).enter()
       .append("g").attr("class", "mouse-per-line");
 
-  mousePerLine.append("circle").attr("r", 7).style("stroke", "red").style(
-      "fill", "none").style("stroke-width", "1px").style("opacity", "0");
+  mousePerLine.append("circle")
+              .attr("r", 7)
+              .style("stroke", "red")
+              .style("fill", "none")
+              .style("stroke-width", "1px")
+              .style("opacity", "0");
 
   mousePerLine.append("text").attr("transform", "translate(10,3)");
 

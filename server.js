@@ -32,6 +32,7 @@ app.use(session({ secret: 'anything', cookie: { maxAge: 600000 },resave: true,
 app.use(cookieParser());
 app.use(passport.initialize());
 app.use(passport.session());
+app.locals.moment = require('moment');
 
 /*
  * // switch to wifi - local db var config = { "accessKeyId":

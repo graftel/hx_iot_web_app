@@ -18,7 +18,7 @@
 		     ExtraWidthY: 100,
 		     color: d3.scaleOrdinal().range(["#6F257F", "#CA0D59"])
 		    };
-			
+
 		    if('undefined' !== typeof options){
 		      for(var i in options){
 		      if('undefined' !== typeof options[i]){
@@ -28,7 +28,7 @@
 		    }
 		   if((domainY.max+0.5) - (domainY.min+0.5) > 1)
 			   cfg.maxValue = 2;
-		   else 
+		   else
 			   cfg.maxValue = 1;
 
 		    var allAxis = (d[0].map(function(i, j){return i.deviceid}));
@@ -45,7 +45,7 @@
 		        .attr("transform", "translate(" + cfg.TranslateX + "," + cfg.TranslateY + ")");
 
 				var tooltip;
-			
+
 		    //Circular segments
 		    for(var j=0; j<cfg.levels; j++){
 		      var levelFactor = cfg.factor*radius*((j+1)/cfg.levels);
@@ -111,13 +111,13 @@
 		      .attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-60*Math.sin(i*cfg.radians/total);})
 		      .attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total);});
 
-		 
+
 		    d.forEach(function(y, x){
 		      dataValues = [];
 		      g.selectAll(".nodes")
 		      .data(y, function(j, i){
 		        dataValues.push([
-		        cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)), 
+		        cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)),
 		        cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
 		        ]);
 		      });
@@ -142,7 +142,7 @@
 		                      z = "polygon."+d3.select(this).attr("class");
 		                      g.selectAll("polygon")
 		                       .transition(200)
-		                       .style("fill-opacity", 0.1); 
+		                       .style("fill-opacity", 0.1);
 		                      g.selectAll(z)
 		                       .transition(200)
 		                       .style("fill-opacity", .7);
@@ -167,7 +167,7 @@
 		      .attr("alt", function(j){return Math.max(j.value, 0)})
 		      .attr("cx", function(j, i){
 		        dataValues.push([
-		        cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)), 
+		        cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)),
 		        cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
 		      ]);
 		      return cfg.w/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total));

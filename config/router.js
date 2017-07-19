@@ -257,7 +257,7 @@ module.exports = function(app,options){
 		});
 
 	var latestTimeStamp = 0, deviceids, calculations, rawValues = [], latestRawValues = [], calculations = {};
-	
+
 	 app.post('/asset/detail', function (req, res) {
 			if(typeof req.session.passport == 'undefined'){
 				res.status(440).send("Session expired!");
@@ -326,7 +326,7 @@ module.exports = function(app,options){
 										 	    if (err) {
 											        console.error("Unable to query the table. Error JSON:", JSON.stringify(err, null, 2));
 											    } else {
-											        console.log("Device Details query successful");
+											        //console.log("Device Details query successful");
 															//console.log(data);
 												        obj[device] = data.Items;
 												        HBEdetails.push(obj);
@@ -348,7 +348,7 @@ module.exports = function(app,options){
 			    if (err) {
 			        console.error("Unable to scan the devices. Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
-			    	console.log("Assets scan succesful.");
+			    	//console.log("Assets scan succesful.");
 			    	//assets = data.Items;
 			    	for(item in data.Items){
 			    		assets[data.Items[item].AssetID] = data.Items[item].DisplayName;
@@ -358,7 +358,7 @@ module.exports = function(app,options){
 			    }
 			});
 		}
-	 
+
 	 function getLatestRecordedTimeStamp(assetid,parameter,location,callback,sendData){
 		 var params = {
 				 TableName : tables.assets,
@@ -375,12 +375,12 @@ module.exports = function(app,options){
 			        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	   latestTimeStamp = data.Items[0].LastestTimeStamp;
-			    	   console.log("got latest timestamp "+data.Items[0].LastestTimeStamp);
+			    	   //console.log("got latest timestamp "+data.Items[0].LastestTimeStamp);
 			  		   callback(assetid,parameter,location,getRecentRawdata,sendData);
 			    }
 		 });
 	 }
-	 
+
 	 function getDevicesForAsset(assetid,parameter,location,callback,sendData){
 		 var params = {
 				 TableName : tables.deviceConfig,
@@ -388,9 +388,9 @@ module.exports = function(app,options){
 				 FilterExpression: "#Ty = :v1 and ASSETID = :v2 and #L = :v3",
 				 ProjectionExpression: "DeviceID",
 				 ExpressionAttributeValues: {
-				        ":v1": parameter, 
-				        ":v2": assetid, 
-				        ":v3": location 
+				        ":v1": parameter,
+				        ":v2": assetid,
+				        ":v3": location
 				 },
 				 Select: "SPECIFIC_ATTRIBUTES"
 		 }
@@ -405,7 +405,7 @@ module.exports = function(app,options){
 	 }
 
 	 function getRecentRawdata(callback,sendData){
-		 rawValues = []; 
+		 rawValues = [];
 		 var counter = 0;
 		 if(deviceids.length == 0){
 			 console.log("Length of deviceids is 0");
@@ -418,7 +418,7 @@ module.exports = function(app,options){
 					 KeyConditionExpression: "DeviceID = :v1 and EpochTimeStamp BETWEEN :v2 and :v3",
 					 ProjectionExpression: "EpochTimeStamp, #V",
 					 ExpressionAttributeValues: {
-					        ":v1": deviceid, 
+					        ":v1": deviceid,
 					        ":v2": latestTimeStamp - (15*60),
 					        ":v3": latestTimeStamp
 					 },
@@ -438,7 +438,7 @@ module.exports = function(app,options){
 			 });
 		 });
 	 }
-	 
+
 	 function calculateDeviceValues(values,callback){
 		 	calculations = {}; latestRawValues = {};
 		 	values.forEach(function(d){
@@ -457,7 +457,7 @@ module.exports = function(app,options){
 		 	});
 		 	callback();
 	 }
-	 
+
 	 function getStartTime(){
 /*			options.docClient.scan(params, function (err, data) {
 			    if (err) {
