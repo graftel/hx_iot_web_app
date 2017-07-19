@@ -19,20 +19,18 @@
 				<table class="table table-responsive table-striped">
 					<thead>
 						<tr>
-							<th>Heat Transfer Rate</th>
-							<th>Mean Overall Heat Transfer Coefficient</th>
-							<th>Overall Fouling Resistance</th>
-							<th>Total Measurement Uncertainty</th>
-							<th>Heat Balance Error</th>
+							<th>COLD Heat Gain(Btu/hour)</th>
+							<th>HOT Heat Loss(Btu/hour)</th>
+							<th>Heat Balance Error(Btu/hour)</th>
+							<th>Heat Balance Error(%)</th>
 						</tr>
 					</thead>
 					<tbody>
 						<tr>
-							<td>550 BTU/min</td>
-							<td>0.991</td>
-							<td>0.025</td>
-							<td>254 BTU/hour</td>
-							<td><%= values["Heat_Balance_Error(Btu/hr)"].toFixed(2) %>%</td>
+							<td><%= values["COLD_Heat_Gain(Btu/hr)"].toFixed(2) %></td>
+							<td><%= values["HOT_Heat_Loss_(Btu/hr)"].toFixed(2) %></td>
+							<td><%= values["Heat_Balance_Error(Btu/hr)"].toFixed(2) %></td>
+							<td><%= values["Heat_Balance_Error(%)"].toFixed(2) %></td>
 						</tr>
 					</tbody>
 				</table>
@@ -564,9 +562,9 @@
 										+ '<tr id="Max"> <td> Maximum (GPM)</tr>'
 										+ '<tr id="Min"> <td> Minimum(GPM) </td> </tr>'
 										+ '<tr id="Mean"> <td> Mean(GPM) </td></tr>'
-										+ '<tr id="Uncertainity"> <td> Measurement Uncertainity(GPM) </td></tr>'
+									//	+ '<tr id="Uncertainity"> <td> Measurement Uncertainity(GPM) </td></tr>'
 										+ '<tr id="Std"> <td> Standard Deviation(GPM) </td></tr>'
-										+ '<tr id="Stability"> <td> Stability(GPM/min) </td></tr></tbody>';
+										//+ '<tr id="Stability"> <td> Stability(GPM/min) </td></tr></tbody>';
 		table.append(tableStructure);
 		for(key of keys){
 			var values = calculatedValues[key];
@@ -574,9 +572,9 @@
 			table.find("tr#Max td").last().after("<td>" + values["Max"].toFixed(3) + "</td>");
 			table.find("tr#Min td").last().after("<td>" + values["Min"].toFixed(3) + "</td>");
 			table.find("tr#Mean td").last().after("<td>" + values["Mean"].toFixed(3) + "</td>");
-			table.find("tr#Uncertainity td").last().after("<td>" + values["Uncertainity"].toFixed(3) + "</td>");
+			//table.find("tr#Uncertainity td").last().after("<td>" + values["Uncertainity"].toFixed(3) + "</td>");
 			table.find("tr#Std td").last().after("<td>" + values["Std"].toFixed(3) + "</td>");
-			table.find("tr#Stability td").last().after("<td>" + values["Stability"].toFixed(3) + "</td>");
+			//table.find("tr#Stability td").last().after("<td>" + values["Stability"].toFixed(3) + "</td>");
 		}
 	}
 
