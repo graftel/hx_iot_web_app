@@ -34,7 +34,7 @@
 		var refreshIntervalId =	setInterval(function(){
 		getLiveData();
     getInstData();
-	},1 * 10 * 1000);  // refresh every 1 minute
+	},1 * 60 * 1000);  // refresh every 1 minute
 
 	 function getLiveData(){
 		$.ajax({
