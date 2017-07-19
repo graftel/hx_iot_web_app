@@ -27,7 +27,7 @@ app.set('view engine', 'ejs');
 app.set('views', views_path);
 app.use(express.static('src/public'));
 app.use(express.static('src/views/partials'));
-app.use(session({ secret: 'anything', cookie: { maxAge: 600000 },resave: true,
+app.use(session({ secret: 'anything', cookie: { maxAge: 86400000 },resave: true, // 1 day session, TODO: add option- rolling: true
     saveUninitialized: true }));
 app.use(cookieParser());
 app.use(passport.initialize());

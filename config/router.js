@@ -11,7 +11,20 @@ module.exports = function(app,options){
 			calculatedData: "Hx.CalculatedData",
 			alerts: "Hx.Alerts"
 	};
-
+	var plateNames = {
+			"GT_HX_170101" : {
+				"HOT_IN": "01A003",
+				"HOT_OUT": "01A004",
+				"COLD_IN": "01A001",
+				"COLD_OUT": "01A002"
+			},
+			"GT_HX_170102" : {
+				"HOT_IN": "01A007",
+				"HOT_OUT": "01A008",
+				"COLD_IN": "01A005",
+				"COLD_OUT": "01A006"
+			}
+	};
 	var HBEdetails = [], assets=[], assetIDs = [];
 	var today = new Date();
 	//today.setHours(0,0,0,0);
@@ -246,7 +259,8 @@ module.exports = function(app,options){
 							res.render('pages' + path.sep + 'asset',{
 								assets: assets,
 								asset: assetid,
-								values: data.Items[0]
+								values: data.Items[0],
+								plateNames: plateNames
 							});
 				        }else{
 				        	console.log("Data pulled not correct");
