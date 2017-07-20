@@ -26,10 +26,8 @@
 		      }
 		      }
 		    }
-		   if((domainY.max+0.5) - (domainY.min+0.5) > 1)
-			   cfg.maxValue = 2;
-		   else
-			   cfg.maxValue = 1;
+			
+		    cfg.maxValue = (domainY.max) - (domainY.min);
 
 		    var allAxis = (d[0].map(function(i, j){return i.deviceid}));
 		    var total = allAxis.length;
@@ -79,7 +77,7 @@
 		       .attr("transform", "translate(" + (cfg.w/2-levelFactor + cfg.ToRight) + ", " + (cfg.h/2-levelFactor) + ")")
 		       .attr("fill", "#737373")
 		       .text(function(d){
-		    	 return  domainY.min+((j+1)*cfg.maxValue/cfg.levels);
+		    	 return  (domainY.min+((j+1)*cfg.maxValue/cfg.levels)).toFixed(2);
 		       });
 		    }
 
