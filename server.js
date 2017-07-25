@@ -2,6 +2,7 @@
  *
  */
 
+var sgKey = require('./sg.js').SENDGRID_API_KEY;
 var express = require('express');
 var bodyParser = require("body-parser");
 const os = require('os');
@@ -42,7 +43,9 @@ app.locals.moment = require('moment');
  *
  * var dynamodb = new AWS.DynamoDB(config);
  */
- require('./config/router')(app,{session: session, AWS: AWS, passport: passport, docClient: docClient});
+ require('./config/router')(app,{session: session, AWS: AWS, passport: passport, docClient: docClient, sgKey: sgKey});
+ require('./config/user-management')(app,{session: session, AWS: AWS, passport: passport, docClient: docClient, sgKey: sgKey});
+ 
 // starting server
 var server = app.listen(5000, function () {
     console.log('Server is running on port 5000 !');

@@ -1,6 +1,5 @@
 module.exports = function(app,options){
-	var math = require('mathjs');
-
+	var math = require('mathjs');	
 	// declarations
 	var tables = {
 			company: "Hx.Company",
@@ -42,44 +41,7 @@ module.exports = function(app,options){
 	var dynamodb = new options.AWS.DynamoDB();
 	const path = require("path");
 	var simpleCallback;
-
-	// User Management Routes
-	app.get('/login', function (req, res) {
-		 res.render('pages' + path.sep + 'login');
-	});
-
-	app.post('/login',
-			  options.passport.authenticate('local'),
-			  function(req, res) {
-			    res.redirect('/');
-	});
-
-	app.get('/logout', function(req, res){
-		  req.logout();
-		  res.redirect('/login');
-	});
-
-	app.post('/register', function(req, res){
-		 var username = req.body.username;
-		 var password = req.body.password;
-		 var params = {
-				  TableName: tables.users,
-				  Item: {
-					  UserName: username,
-					  Password: password
-				  },
-				  ConditionExpression: "attribute_not_exists(UserName)"
-		  };
-		 options.docClient.put(params, function (err, data) {
-			    if (err) {
-			        console.error("Unable to insert user into the table. Error JSON:", JSON.stringify(err, null, 2));
-			    } else {
-			        console.log("Inserted User Successfully.");
-			    }
-			});
-		 res.redirect('/login');
-	});
-
+	
 	// Dashboard page routes
 	app.get('/', function (req, res) {
 		if(typeof req.session.passport == 'undefined'){
@@ -198,10 +160,6 @@ module.exports = function(app,options){
 							})(item);
 						}
 				}
-		//		for ()
-
-		//		options.docClient.query
-
 			}
 
 		});
