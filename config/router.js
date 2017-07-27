@@ -44,8 +44,9 @@ module.exports = function(app,options){
 	
 	// Dashboard page routes
 	app.get('/', function (req, res) {
+		req.session.attempts = 0;
 		if(typeof req.session.passport == 'undefined'){
-			res.redirect('/login');
+			return res.redirect('/login');
 		}
 		else{
 			getAssets(getCalculatedValues);
@@ -66,7 +67,7 @@ module.exports = function(app,options){
 							console.log(err);
 						}
 						else {
-							res.render('pages' + path.sep + 'index', {
+							return res.render('pages' + path.sep + 'index', {
 								assets: assets,
 								warnings: 0,
 								alerts: 0,

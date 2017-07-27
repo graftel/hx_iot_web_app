@@ -1,18 +1,57 @@
 module.exports = function(app, options) {
 
 	const path = require("path");
+	var request = require("request");
+
 	// User Management Routes
 	app.get('/login', function(req, res) {
-		res.render('pages' + path.sep + 'login');
+		var param = req.query;
+		var showCaptcha = false;
+		if(req.session.attempts >= 3)
+			showCaptcha = true;
+		return res.render('pages' + path.sep + 'login',{
+			showCaptcha : showCaptcha,
+			message: param.message
+		});
 	});
 
-	app.post('/login', options.passport.authenticate('local'), function(req,res) {
-		res.redirect('/');
-	});
+	app.post('/login', function(req, res, next) {
+		  options.passport.authenticate('local', function(err, user, info) {
+			  if(req.session.attempts >= 3 ){
+				  if(req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
+				    return res.redirect('/login?message=Captcha should be selected');
+				  }
+				  
+				  var secretKey = "6LdeZCoUAAAAAMf-0Z95nShHHAm0djcmefFvaRt7";
+				  var verificationUrl = "https://www.google.com/recaptcha/api/siteverify?secret=" + secretKey + "&response=" + req.body['g-recaptcha-response'] + "&remoteip=" + req.connection.remoteAddress;
+				  
+				  request(verificationUrl,function(error,response,body) { // reCaptcha verification
+					    body = JSON.parse(body);
+					    
+					    if (body.success !== undefined && !body.success) {
+					    	if(!req.session.attempts)
+					    		req.session.attempts = 0;
+					    	req.session.attempts += 1;
+					    	return res.redirect('/login?message=Invalid captcha');
+					    }
+				  });
+			  }
+		      if(!user) {
+					  if(!req.session.attempts)
+						  req.session.attempts = 0;
+				      req.session.attempts += 1;
+				      return res.redirect('/login?message='+info.message); 
+			  }
+			  req.logIn(user, function(err) {
+				  return res.redirect('/');
+			  });
+		  })(req, res, next);
+		});
 
 	app.get('/logout', function(req, res) {
-		req.logout();
-		res.redirect('/login');
+		req.logOut();
+		req.session.destroy();
+		return res.redirect('/login');
 	});
 
 	app.get('/forgotpassword', function(req, res) {

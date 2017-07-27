@@ -22,7 +22,7 @@ module.exports = function(passport, LocalStrategy, docClient) {
 					});
 				else
 					return done(null, false, {
-						message : 'Incorrect password.'
+						message : 'Incorrect username or password.'
 					});
 			}
 		});
