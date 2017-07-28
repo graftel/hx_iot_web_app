@@ -1,12 +1,12 @@
 module.exports = function(passport, LocalStrategy, docClient) {
-	
+	var base64 = require('base-64');
 	passport.use(new LocalStrategy(function(username, password, done) {
 		var params = {
 			TableName : "Hx.Users",
 			FilterExpression : "UserName = :un AND Password = :pw",
 			ExpressionAttributeValues : {
 				":un" : username,
-				":pw" : password
+				":pw" : base64.encode(password)
 			},
 			Select : "ALL_ATTRIBUTES"
 		};

@@ -2,7 +2,7 @@ module.exports = function(app, options) {
 
 	const path = require("path");
 	var request = require("request");
-
+	var base64 = require('base-64');
 	// User Management Routes
 	app.get('/login', function(req, res) {
 		var param = req.query;
@@ -165,7 +165,7 @@ module.exports = function(app, options) {
 			TableName : "Hx.Users",
 			Item : {
 				UserName : username,
-				Password : password
+				Password : base64.encode(password)
 			},
 			ConditionExpression : "attribute_not_exists(UserName)"
 		};
@@ -314,7 +314,7 @@ module.exports = function(app, options) {
 			},
 			UpdateExpression : "SET Password = :val",
 			ExpressionAttributeValues : {
-				":val" : password
+				":val" : base64.encode(password)
 			},
 			ReturnValues : "NONE"
 		};
