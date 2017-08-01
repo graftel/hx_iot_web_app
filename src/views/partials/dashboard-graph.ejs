@@ -1,0 +1,35 @@
+
+<h2 class="chart-heading">Heat Balance Error</h2>
+<div class="row" id="dashboard-line-chart-div"> </div>
+
+<style>
+.xaxis text, .yaxis text {
+	color: black;
+	font-size: 150%;
+}
+
+path.line {
+	width: 600px;
+	height: 351px;
+	overflow: hidden;
+}
+
+.sideLegend text {
+	font-weight: bold;
+	font-size: 15px;
+	cursor: pointer;
+}
+
+.disable {
+	pointer-events: none;
+	background-color: #e6e6e6;
+}
+</style>
+
+<script>
+	var data = <%- JSON.stringify(data) %>;
+	var assets = <%- JSON.stringify(assets) %>;
+	var domain = getDomainForDashboardGraph(data);
+	drawLineGraph(d3.select("#dashboard-line-chart-div"), data, assets, domain,
+			"Heat_Balance_Error(%)");
+</script>

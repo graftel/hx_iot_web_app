@@ -13,7 +13,11 @@
 			<div class="table-responsive tab-pane active" id="details">
 				<table class="table"></table>
 			</div>
-			<div id="plot" class="tab-pane"><%- include ../partials/assetPlot.ejs %></div>
+			<div id="plot" class="tab-pane">
+			<div width="700" height="800" id="assetPlotDiv">
+				<svg id="calculationsChart"></svg>
+			</div>
+			</div>
 		</div>
 	</div>
 	<div id="sensor-chart" class="col-md-4" style="padding-top: 3%;"></div>
