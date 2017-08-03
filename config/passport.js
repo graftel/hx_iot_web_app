@@ -1,11 +1,14 @@
 module.exports = function(passport, LocalStrategy, docClient) {
 	var base64 = require('base-64');
-	passport.use(new LocalStrategy(function(username, password, done) {
+	passport.use(new LocalStrategy({
+	    usernameField: 'email',
+	    passwordField: 'password'
+	  },function(email, password, done) {
 		var params = {
 			TableName : "Hx.Users",
-			FilterExpression : "UserName = :un AND Password = :pw",
+			FilterExpression : "EmailAddress = :em AND Password = :pw",
 			ExpressionAttributeValues : {
-				":un" : username,
+				":em" : email,
 				":pw" : base64.encode(password)
 			},
 			Select : "ALL_ATTRIBUTES"
@@ -17,12 +20,12 @@ module.exports = function(passport, LocalStrategy, docClient) {
 			} else {
 				if (data.Items.length > 0)
 					return done(null, {
-						user : username,
+						user : email,
 						userid: data.Items[0].UserID
 					});
 				else
 					return done(null, false, {
-						message : 'Incorrect username or password.'
+						message : 'Incorrect email or password.'
 					});
 			}
 		});
