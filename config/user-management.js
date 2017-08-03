@@ -1,8 +1,9 @@
 module.exports = function(app, options) {
-
+	require('log-timestamp');
 	const path = require("path");
 	var request = require("request");
 	var base64 = require('base-64');
+	
 	// User Management Routes
 	app.get('/login', function(req, res) {
 		var param = req.query;
@@ -19,7 +20,7 @@ module.exports = function(app, options) {
 		  options.passport.authenticate('local', function(err, user, info) {
 			  if(req.session.attempts >= 3 ){
 				  if(req.body['g-recaptcha-response'] === undefined || req.body['g-recaptcha-response'] === '' || req.body['g-recaptcha-response'] === null) {
-				    return res.redirect('/login?message=Captcha should be selected');
+				    return res.redirect('/login?message=Please select Capthca to confirm you are human.');
 				  }
 				  
 				  var secretKey = "6LdeZCoUAAAAAMf-0Z95nShHHAm0djcmefFvaRt7";
@@ -32,7 +33,7 @@ module.exports = function(app, options) {
 					    	if(!req.session.attempts)
 					    		req.session.attempts = 0;
 					    	req.session.attempts += 1;
-					    	return res.redirect('/login?message=Invalid captcha');
+					    	return res.redirect('/login?message=Selected Captcha is invalid. Please try again');
 					    }
 				  });
 			  }
@@ -65,13 +66,21 @@ module.exports = function(app, options) {
 	app.post('/forgotpassword',
 					function(req, res) {
 						var emailid = req.body.email;
-						sendForgotPasswordEmail(emailid);
-						res.render('pages' + path.sep + 'showMessage',
-										{
-											title: "Forgot Password",
-											message : "You shall receive an email to your registered email id soon. Click on the link provided in the email to reset your password. "
-													+ "Please note that password link expires in 24 hours."
-										});
+						if(emailid){
+							sendForgotPasswordEmail(emailid);
+							res.render('pages' + path.sep + 'showMessage',
+											{
+												title: "Forgot Password",
+												message : "You shall receive an email to your registered email id soon. Click on the link provided in the email to reset your password. "
+														+ "Please note that password link expires in 24 hours."
+											});
+						}else{
+							res.render('pages' + path.sep + 'showMessage',
+									{
+										title: "Forgot Password",
+										message : "User not found for given email id. Please try again to login."
+									});
+						}
 					});
 
 /*	app.post('/forgotusername',
@@ -113,7 +122,7 @@ module.exports = function(app, options) {
 									options.docClient.scan(params,
 													function(err, data) {
 														if (err) {
-															console.error("Unable to query from Confirmation code table. Error JSON:", JSON.stringify(err,null,2));
+															console.error("Unable to query Users table for user "+emailid+". (Route GET '/reset-password' ) Error JSON:", JSON.stringify(err,null,2));
 														} else {
 															if (data.Count < 1) {
 																res.render('pages'+ path.sep + 'showMessage',
@@ -140,6 +149,12 @@ module.exports = function(app, options) {
 															}
 														}
 													});
+							}else{
+								res.render('pages' + path.sep + 'showMessage',
+										{
+											title: "Forgot Password",
+											message : "User not found for given email id. Please try again to reset password."
+										});
 							}
 				});						
 						
@@ -158,6 +173,12 @@ module.exports = function(app, options) {
 																title: "Set New Password",
 																message : "Password update successful. Please login with new password to access your account."
 															});
+										}else{
+											res.render('pages' + path.sep + 'showMessage',
+													{
+														title: "Forgot Password",
+														message : "User not found for given email id. Please try again to reset password."
+													});
 										}
 					});
 	});
@@ -183,10 +204,9 @@ module.exports = function(app, options) {
 		};
 		options.docClient.put(params, function(err, data) {
 			if (err) {
-				console.error("Unable to insert user into the table. Error JSON:", JSON.stringify(err, null, 2));
+				console.error("Unable to insert user into Users table. (Route POST '/register' ) Error JSON:", JSON.stringify(err, null, 2));
 			} else {
 				completeRegistrationEmail(email);
-				console.log("Inserted User Successfully.");
 			}
 		});
 		res.render('pages' + path.sep + 'showMessage',
@@ -208,14 +228,14 @@ module.exports = function(app, options) {
 								email: user.EmailAddress,
 								code : user.VerificationCode
 							});
-				}else{
+				}else{ // code is wrong or expired
 					res.render('pages' + path.sep + 'showMessage',
 							{
 								title: "Registration",
 								message : "The given link is not valid or expired. Please contact our support team at http://www.graftel.com/contact/"
 							});
 				}
-			}else{
+			}else{ // user not found
 				res.render('pages' + path.sep + 'showMessage',
 						{
 							title: "Registration",
@@ -250,7 +270,7 @@ module.exports = function(app, options) {
 						options.docClient.update(params,
 								function(err, data) {
 							if (err) {
-								console.error("Unable to update registration details into the table. Error JSON:",
+								console.error("Unable to update registration details into the Users table for user "+ user.UserID + ". (Route POST '/registration2' ) Error JSON:",
 										JSON.stringify(err, null, 2));
 								res.render('pages' + path.sep + 'showMessage',
 										{
@@ -258,11 +278,10 @@ module.exports = function(app, options) {
 											message : "Registration failed. Please contact our support team at http://www.graftel.com/contact/"
 										});
 							} else {
-								console.log("Registration details updated Successfully.");
 								return res.redirect('/');
 							}
 						});
-					}else{
+					} else {
 						res.render('pages' + path.sep + 'showMessage',
 								{
 									title: "Login",
@@ -318,10 +337,8 @@ module.exports = function(app, options) {
 					body : mail.toJSON()
 				});
 				sg.API(request, function(error, response) {
-					if (response.statusCode == 202) {
-						console.log("Password reset mail sent.");
-					} else {
-						console.log("Error in sending email of password reset.");
+					if (!(response.statusCode == 202)) {
+						console.error("Error in sending email of password reset for "+emailid+". ", JSON.stringify(err, null, 2));
 					}
 				});
 			}
@@ -352,9 +369,7 @@ module.exports = function(app, options) {
 										});
 										sg.API(request, function(error, response) {
 											if (response.statusCode == 202) {
-												console.log("Registration mail sent.");
-											} else {
-												console.log("Error in sending email.");
+												console.error("Error in sending email of registration setup for "+emailid+". ", JSON.stringify(err, null, 2));
 											}
 										})
 									}
@@ -386,10 +401,8 @@ module.exports = function(app, options) {
 		options.docClient.update(params,
 						function(err, data) {
 							if (err) {
-								console.error("Unable to insert confirmation code into the table. Error JSON:",
+								console.error("Unable to insert confirmation code into the table. (saveConfirmationCode) Error JSON:",
 												JSON.stringify(err, null, 2));
-							} else {
-								console.log("Inserted Code Successfully.");
 							}
 						});
 	}
@@ -404,7 +417,7 @@ module.exports = function(app, options) {
 		};
 		options.docClient.scan(params, function(err, data) {
 			if (err) {
-				console.error("Unable to query from Users table. Error JSON:",
+				console.error("Unable to query from Users table for "+email+". (getUserByEmail) Error JSON:",
 						JSON.stringify(err, null, 2));
 			} else {
 				callback(data);
@@ -426,10 +439,7 @@ module.exports = function(app, options) {
 		};
 		options.docClient.update(params, function(err, data) {
 			if (err) {
-				console.error("Unable to update password. Error JSON:", JSON.stringify(err, null, 2));
-			} else {
-				console.error("Password updated");
-				return;
+				console.error("Unable to update password for "+userid+". (updatePassword) Error JSON:", JSON.stringify(err, null, 2));
 			}
 		});
 	}

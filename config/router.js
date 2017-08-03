@@ -1,5 +1,9 @@
 module.exports = function(app,options){
+	require('log-timestamp');
+	var dynamodb = new options.AWS.DynamoDB();
 	var math = require('mathjs');	
+	const path = require("path");
+
 	// declarations
 	var tables = {
 			company: "Hx.Company",
@@ -26,20 +30,11 @@ module.exports = function(app,options){
 	};
 	var HBEdetails = [], assets=[], assetIDs = [];
 	var today = new Date();
-	//today.setHours(0,0,0,0);
 	today = today.getTime()/1000;
-	var params = {
-			  TableName: tables.rawData,
-			  FilterExpression: "EpochTimeStamp >= :val",
-			  ExpressionAttributeValues: {":val" : today },
-			  Limit: 1
-	};
+
 	var startTime=0;
 	var currTime;
 	getStartTime();
-	var counter = 60*60;
-	var dynamodb = new options.AWS.DynamoDB();
-	const path = require("path");
 	var simpleCallback;
 	
 	// Dashboard page routes
@@ -52,19 +47,19 @@ module.exports = function(app,options){
 			getAssets(getCalculatedValues);
 			simpleCallback = function(){
 				if(HBEdetails.length == assetIDs.length){
-					var parameterlist = {"#HBP": "Heat_Balance_Error(%)",
-															 "#HBE": "Heat_Balance_Error(Btu/hr)",
-															 "#HMF":"HOT_Mass_Flow_(lbm/hr)",
-															 "#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
-															 "#HHL":"HOT_Heat_Loss_(Btu/hr)",
-															 "#CMF":"COLD_Mass_Flow(lbm/hr)",
-															 "#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
-															 "#CHG":"COLD_Heat_Gain(Btu/hr)"
-														 };
+					var parameterlist = {	"#HBP": "Heat_Balance_Error(%)",
+											"#HBE": "Heat_Balance_Error(Btu/hr)",
+											"#HMF":"HOT_Mass_Flow_(lbm/hr)",
+											"#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
+											"#HHL":"HOT_Heat_Loss_(Btu/hr)",
+											"#CMF":"COLD_Mass_Flow(lbm/hr)",
+											"#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
+											"#CHG":"COLD_Heat_Gain(Btu/hr)"
+										 };
 					getInstData(parameterlist,function(err, res_inst){
 						if (err)
 						{
-							console.log(err);
+							console.error("Unable to get Instant data for Dashboard .(Route: GET '/' ) ERROR JSON:", JSON.stringify(err, null, 2));
 						}
 						else {
 							return res.render('pages' + path.sep + 'index', {
@@ -72,7 +67,6 @@ module.exports = function(app,options){
 								warnings: 0,
 								alerts: 0,
 								predictions: 1,
-								counter: counter,
 								data: HBEdetails,
 								instData: res_inst
 							});
@@ -84,10 +78,7 @@ module.exports = function(app,options){
 		}
 	});
 
-	app.post('/live', function (req, res) {
-	//	if(currTime>=endTime){
-		//	res.status(404).send("Oh uh, something went wrong");
-	//	}
+	app.post('/getHBEdata', function (req, res) {
 		if(typeof req.session.passport == 'undefined'){
 			res.status(440).send("Session expired! Login again");
 		}
@@ -110,14 +101,14 @@ module.exports = function(app,options){
 		};// to do: bond to company
 		options.docClient.scan(inst_scan_params, function(err,data){
 			if (err) {
-				 console.error("unbable to scan the query . ERROR JSON:", JSON.stringify(err, null, 2));
+				 console.error("Unable to scan Instant data for Dashboard. (Route: POST /getHBEdata : var getInstData) ERROR JSON:", JSON.stringify(err, null, 2));
 				 res(err,null);
 			} else {
 
 				if (data.Count == 0)
 				{
-					console.error("no assets availble!");
-					res("no assets availble!",null);
+					console.error("No assets available! (Route: POST /getHBEdata : var getInstData)");
+					res("No assets availble!",null);
 				}
 				else {
 						for(var item in data.Items)
@@ -125,8 +116,6 @@ module.exports = function(app,options){
 							(function(item){
 								var inst_query_params = {
 									TableName : tables.calculatedData,
-//									ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#HBP": "Heat_Balance_Error(%)", "#HBE": "Heat_Balance_Error(Btu/hr)", "#DN": "DisplayName"},
-//									ProjectionExpression: "AssetID, EpochTimeStamp" + "," + req.toString(),
 									ExpressionAttributeNames: req,
 									ProjectionExpression: "AssetID, EpochTimeStamp" + " , " + Object.keys(req).toString(),
 									KeyConditionExpression: "AssetID = :v1 AND EpochTimeStamp = :v2",
@@ -134,12 +123,10 @@ module.exports = function(app,options){
 										 ":v1": data.Items[item].AssetID,
 										 ":v2":  data.Items[item].LastestTimeStamp
 								 }
-									//Select: "SPECIFIC_ATTRIBUTES"
 								};
-					//			console.log(inst_query_params);
 								options.docClient.query(inst_query_params, function (err, dataq) {
 										if (err) {
-												console.error("Unable to query the table. Error JSON:", JSON.stringify(err, null, 2));
+												console.error("Unable to query the table calculatedData for asset "+ data.Items[item].AssetID +". (Route: POST /getHBEdata : var getInstData) Error JSON:", JSON.stringify(err, null, 2));
 												res(err,null);
 										} else {
 												if (dataq.Count == 1) // verify there is actually data inside
@@ -148,7 +135,6 @@ module.exports = function(app,options){
 													instData[item] = dataq.Items[0];
 													if (datacount == data.Items.length - 1)
 													{
-														//res.end(JSON.stringify(instData));
 														output.Items = instData;
 														output.Parameters = req;
 														output.Count = data.Items.length;
@@ -170,19 +156,19 @@ module.exports = function(app,options){
 		if(typeof req.session.passport == 'undefined'){
 			return res.status(440).send("Session expired! Login again.");
 		}
-			var parameterlist = {"#HBP": "Heat_Balance_Error(%)",
-													 "#HBE": "Heat_Balance_Error(Btu/hr)",
-													 "#HMF":"HOT_Mass_Flow_(lbm/hr)",
-												 	 "#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
-												 	 "#HHL":"HOT_Heat_Loss_(Btu/hr)",
-												 	 "#CMF":"COLD_Mass_Flow(lbm/hr)",
-									 			 	 "#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
-													 "#CHG":"COLD_Heat_Gain(Btu/hr)"
-												 };
+			var parameterlist = {	"#HBP": "Heat_Balance_Error(%)",
+									"#HBE": "Heat_Balance_Error(Btu/hr)",
+									"#HMF":"HOT_Mass_Flow_(lbm/hr)",
+									"#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
+									"#HHL":"HOT_Heat_Loss_(Btu/hr)",
+									"#CMF":"COLD_Mass_Flow(lbm/hr)",
+									"#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
+									"#CHG":"COLD_Heat_Gain(Btu/hr)"
+								};
 			getInstData(parameterlist, function(err, res1) {
 				if (err)
 				{
-					console.error(err);
+					console.error("Unable to get Instant data for Dashboard: (Route: POST '/instData') ", JSON.stringify(err, null, 2));
 				}
 				else{
 				//	new EJS({url: 'comments.ejs'}).update('element_id', '/comments.json')
@@ -201,7 +187,7 @@ module.exports = function(app,options){
 				if(typeof assetid == 'undefined'){
 					return false;
 				}
-				var params = {
+				var calculatedDataParams = {
 						TableName : tables.calculatedData,
 						KeyConditionExpression: "AssetID = :v1",
 						ExpressionAttributeValues: {
@@ -210,9 +196,9 @@ module.exports = function(app,options){
 					    ScanIndexForward: false,
 					    Limit: 1
 				};
-				options.docClient.query(params, function (err, data) {
+				options.docClient.query(calculatedDataParams, function (err, data) {
 			 	    if (err) {
-				        console.error("Unable to query recent data. Error JSON:", JSON.stringify(err, null, 2));
+				        console.error("Unable to query calculatedData for AssetID:"+assetid+". (Route: GET '/asset') Error JSON:", JSON.stringify(err, null, 2));
 				    } else {
 				        if(data.Items.length == 1){
 							res.render('pages' + path.sep + 'asset',{
@@ -222,7 +208,7 @@ module.exports = function(app,options){
 								plateNames: plateNames
 							});
 				        }else{
-				        	console.log("Data pulled not correct");
+				        	console.error("Error with data of calculatedData for AssetID:"+assetid+" (Route: '/asset')");
 				        }
 			    }
 			});
@@ -240,7 +226,7 @@ module.exports = function(app,options){
 					var parameter = req.body.parameter;
 					var location = req.body.location;
 					if(typeof assetid == 'undefined' || typeof parameter == 'undefined'){
-						return false;
+						return res.status(404).send("Oh uh, something went wrong");
 					}
 					 rawValues = []; calculations = {}; latestRawValues = {};
 					// step 1 - get latest timestamp from assets table for given asset
@@ -269,21 +255,22 @@ module.exports = function(app,options){
 		 var params;
 		 HBEdetails=[];
 		 var curtime = new Date() / 1000;
-		 for(device of assetIDs)(function(device){
-			 var scan_params = {
+		 for(device of assetIDs)(
+			function(device){
+				var assetsParams = {
 				 	TableName: tables.assets,
 					FilterExpression: "AssetID = :v1",
 					ExpressionAttributeValues: {
 						":v1": device
-					}
-			 };
-			 options.docClient.scan(scan_params, function(err,data_assets){
+						}
+					};
+			 options.docClient.scan(assetsParams, function(err,data_assets){
 				 if (err) {
-						console.error("Unable to scan the query . ERROR JSON:", JSON.stringify(err, null, 2));
+						console.error("Unable to scan Assets table for AssetID:"+device+". ERROR JSON:", JSON.stringify(err, null, 2));
 						res(err,null);
 				 } else {
 					 					 var obj = new Object();
-										 params = {
+					 					 var calculatedDataParams = {
 												 	TableName : tables.calculatedData,
 												    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": "Heat_Balance_Error(%)"},
 												    ProjectionExpression: "AssetID, #T, #E",
@@ -295,12 +282,10 @@ module.exports = function(app,options){
 												    },
 												    Select: "SPECIFIC_ATTRIBUTES"
 										 };
-										 options.docClient.query(params, function (err, data) {
+										 options.docClient.query(calculatedDataParams, function (err, data) {
 										 	    if (err) {
-											        console.error("Unable to query the table. Error JSON:", JSON.stringify(err, null, 2));
+											        console.error("Unable to query calculatedData table for Asset "+device+". (getCalculatedValues) Error JSON:", JSON.stringify(err, null, 2));
 											    } else {
-											        //console.log("Device Details query successful");
-															//console.log(data);
 												        obj[device] = data.Items;
 												        HBEdetails.push(obj);
 											        callback();
@@ -313,16 +298,14 @@ module.exports = function(app,options){
 
 	 function getAssets(callback) {
 		 HBEdetails = [], assets = {}, assetIDs = []; // to empty any previous values stored
-		 var params = {
+		 var assetsParams = {
 				    TableName : tables.assets,
 				    ProjectionExpression: ["AssetID","DisplayName"]
 				};
-		 options.docClient.scan(params, function (err, data) {
+		 options.docClient.scan(assetsParams, function (err, data) {
 			    if (err) {
-			        console.error("Unable to scan the devices. Error JSON:", JSON.stringify(err, null, 2));
+			        console.error("Unable to scan the assets table.(getAssets) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
-			    	//console.log("Assets scan succesful.");
-			    	//assets = data.Items;
 			    	for(item in data.Items){
 			    		assets[data.Items[item].AssetID] = data.Items[item].DisplayName;
 			    		assetIDs.push(data.Items[item].AssetID);
@@ -345,10 +328,9 @@ module.exports = function(app,options){
 		 }
 		 options.docClient.query(params, function (err, data) {
 		 	    if (err) {
-			        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+			        console.error("Unable to query the assets table. (getLatestRecordedTimeStamp) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	   latestTimeStamp = data.Items[0].LastestTimeStamp;
-			    	   //console.log("got latest timestamp "+data.Items[0].LastestTimeStamp);
 			  		   callback(assetid,parameter,location,getRecentRawdata,sendData);
 			    }
 		 });

@@ -39,7 +39,7 @@
 	 function getLiveData(){
 		$.ajax({
 			type: 'POST',
-            url: '/live',
+            url: '/getHBEdata',
             success: function(data) {
                 var data = JSON.parse(data);
                 var domain = getDomainForDashboardGraph(data.data);
