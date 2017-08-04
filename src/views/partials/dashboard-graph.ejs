@@ -1,6 +1,8 @@
 
 <h2 class="chart-heading">Heat Balance Error</h2>
-<div class="row" id="dashboard-line-chart-div"> </div>
+<div style='position=relative'>
+<div class="row col-md-8" id="dashboard-line-chart-div"> </div>
+<button type="button" id="zoom-reset" class="btn btn-primary zoom-reset-dashboard">Reset</button></div>
 
 <style>
 .xaxis text, .yaxis text {
@@ -24,6 +26,8 @@ path.line {
 	pointer-events: none;
 	background-color: #e6e6e6;
 }
+
+
 </style>
 
 <script>

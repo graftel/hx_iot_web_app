@@ -505,3 +505,17 @@ h2.chart-heading{
 label{
 	padding-top: 5px;
 }
+
+#zoom-reset{
+	position: absolute;
+}
+
+.zoom-reset-dashboard{
+	top: 400px;
+	left: 1070px;
+}
+
+.zoom-reset-asset{
+	top: 100px;
+	left: 800px;
+}
