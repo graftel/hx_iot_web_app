@@ -1,5 +1,5 @@
 	
-	function drawLineGraph(graphDiv, data, assets, domain, YAxis) {
+	function drawLineGraph(graphDiv, data, assets, domain, YParam) {
 		graphDiv.select('svg').remove();
 		window.vis = graphDiv.append('svg').attr('width', 1000).attr('height', 500)
 				.attr('class', 'col col-md-10');
@@ -7,7 +7,7 @@
 			top : 20,
 			right : 20,
 			bottom : 20,
-			left : 50
+			left : 70
 		};
 	
 		var xScale = d3.scaleLinear().range(
@@ -29,7 +29,17 @@
 				"start");
 		var gY = vis.append("g").attr("class", "yaxis").attr("transform",
 				"translate(" + (MARGINS.left) + ",0)").call(yAxis);
-	
+		
+/*		vis.append("g") // display YAxis parameter name
+		.attr("class", "yaxis")
+		.append("text")
+		.attr("transform", "rotate(-90)")
+		.attr("y", 6)
+		.attr("dy", ".71em")
+		.style("text-anchor", "end")
+		.style("font-size", "10pt")
+		.text(YParam);*/
+
 		vis.append("defs").append("clipPath").attr("id", "clip").append("rect")
 				.attr("x", "50").attr("y", "-20").attr("width", WIDTH - 120).attr(
 						"height", HEIGHT);
@@ -46,7 +56,7 @@
 		var chartBody = vis.append("g").attr("clip-path", "url(#clip)");
 		var colors = assignColor(assets);
 		var sideLegend = vis.append('g').attr('class', 'sideLegend');
-		var dataGroup = reformatData(data, YAxis);
+		var dataGroup = reformatData(data, YParam);
 		var lineGen = d3.line().curve(d3.curveBasis).x(function(d) {
 			return xScale(d.xV);
 		}).y(function(d) {

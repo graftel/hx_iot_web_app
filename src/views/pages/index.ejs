@@ -41,9 +41,10 @@
 			type: 'POST',
             url: '/getHBEdata',
             success: function(data) {
+                var mainParameter = <%- JSON.stringify(mainParameter) %>;
                 var data = JSON.parse(data);
-                var domain = getDomainForDashboardGraph(data.data);
-                drawLineGraph(d3.select("#dashboard-line-chart-div"),data.data, data.assets,domain, "Heat_Balance_Error(%)");
+                var domain = getDomainForDashboardGraph(data.data,mainParameter);
+                drawLineGraph(d3.select("#dashboard-line-chart-div"),data.data, data.assets,domain, mainParameter);
             },
             error: function(err){
                 if(err.status == 440)

@@ -1,5 +1,5 @@
 
-<h2 class="chart-heading">Heat Balance Error</h2>
+<h2 class="chart-heading"><%= JSON.stringify(mainParameter).replace(/"/g, "") %></h2>
 <div style='position=relative'>
 <div class="row col-md-8" id="dashboard-line-chart-div"> </div>
 <button type="button" id="zoom-reset" class="btn btn-primary zoom-reset-dashboard">Reset</button></div>
@@ -33,7 +33,8 @@ path.line {
 <script>
 	var data = <%- JSON.stringify(data) %>;
 	var assets = <%- JSON.stringify(assets) %>;
-	var domain = getDomainForDashboardGraph(data);
+	var mainParameter = <%- JSON.stringify(mainParameter) %>;
+	var domain = getDomainForDashboardGraph(data,mainParameter);
 	drawLineGraph(d3.select("#dashboard-line-chart-div"), data, assets, domain,
-			"Heat_Balance_Error(%)");
+			mainParameter);
 </script>

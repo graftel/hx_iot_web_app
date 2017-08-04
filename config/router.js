@@ -12,7 +12,8 @@ module.exports = function(app,options){
 			deviceConfig: "Hx.DeviceConfiguration",
 			rawData: "Hx.RawData",
 			calculatedData: "Hx.CalculatedData",
-			alerts: "Hx.Alerts"
+			alerts: "Hx.Alerts",
+			settings: "Hx.Settings"
 	};
 	var plateNames = {
 			"GT_HX_170101" : {
@@ -28,7 +29,7 @@ module.exports = function(app,options){
 				"COLD_OUT": "01A006"
 			}
 	};
-	var HBEdetails = [], assets=[], assetIDs = [];
+	var HBEdetails = [], assets=[], assetIDs = [],mainParameter;
 	var today = new Date();
 	today = today.getTime()/1000;
 
@@ -44,6 +45,8 @@ module.exports = function(app,options){
 			return res.redirect('/login');
 		}
 		else{
+			var currentUserID = req.user.userid;
+			getMainParameter(currentUserID);
 			getAssets(getCalculatedValues);
 			simpleCallback = function(){
 				if(HBEdetails.length == assetIDs.length){
@@ -67,6 +70,7 @@ module.exports = function(app,options){
 								warnings: 0,
 								alerts: 0,
 								predictions: 1,
+								mainParameter: mainParameter,
 								data: HBEdetails,
 								instData: res_inst
 							});
@@ -272,7 +276,7 @@ module.exports = function(app,options){
 					 					 var obj = new Object();
 					 					 var calculatedDataParams = {
 												 	TableName : tables.calculatedData,
-												    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": "Heat_Balance_Error(%)"},
+												    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": mainParameter},
 												    ProjectionExpression: "AssetID, #T, #E",
 												    KeyConditionExpression: "AssetID = :v1 AND #T BETWEEN :v2a and :v2b",
 												    ExpressionAttributeValues: {
@@ -288,7 +292,7 @@ module.exports = function(app,options){
 											    } else {
 												        obj[device] = data.Items;
 												        HBEdetails.push(obj);
-											        callback();
+												        callback();
 											    }
 										 });
 					 }
@@ -429,4 +433,23 @@ module.exports = function(app,options){
 			startTime = today - (2*60);
 			currTime=startTime;
 	}
+	 
+	 function getMainParameter(userid){
+		 var settingsParams = {
+				 TableName : tables.settings,
+				 ProjectionExpression: "Dashboard",
+				 KeyConditionExpression: "UserId = :v1",
+				 ExpressionAttributeValues: {
+				        ":v1": userid
+				 },
+				 Select: "SPECIFIC_ATTRIBUTES"
+		 };
+		 options.docClient.query(settingsParams, function (err, data) {
+		 	    if (err) {
+			        console.error("Unable to query the settings table. (getMainParameter) Error JSON:", JSON.stringify(err, null, 2));
+			    } else {
+			    		mainParameter = data.Items[0].Dashboard;
+			    }
+		 });
+	 }
 }

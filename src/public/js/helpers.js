@@ -1,4 +1,4 @@
-	function getDomainForDashboardGraph(data) {
+	function getDomainForDashboardGraph(data, parameter) {
 		var domain = {
 			X : {
 				min : -1,
@@ -20,8 +20,8 @@
 		tempY = data.reduce(function(a, b) {
 			var vals = Object.values(b)[0];
 			var i = vals.map(function(x) {
-				if (x["Heat_Balance_Error(%)"] != 999)
-					return (x["Heat_Balance_Error(%)"]);
+				if (x[parameter] != 999)
+					return (x[parameter]);
 			});
 			return a.concat(i);
 		}, [])
