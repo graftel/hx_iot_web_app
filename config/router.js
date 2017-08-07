@@ -29,6 +29,28 @@ module.exports = function(app,options){
 				"COLD_OUT": "01A006"
 			}
 	};
+	
+	var settingOptions = [ "Ave_COLD_Inlet(F)",
+							"Ave_COLD_Outlet(F)",
+							"Ave_HOT_Inlet(F)",
+							"Ave_HOT_Outlet(F)",
+							"COLD_Avg_Temperature(F)",
+							"COLD_DT(F)",
+							"COLD_Density(lbm/ft3)",
+							"COLD_Flow(gpm)",
+							"COLD_Heat_Gain(Btu/hr)",
+							"COLD_Mass_Flow(lbm/hr)",
+							"COLD_Specific_Heat(Btu/lbm-F)",
+							"HOT_Avg_Temperature(F)",
+							"HOT_DT(F)",
+							"HOT_Density_(lbm/ft3)",
+							"HOT_Flow(gpm)",
+							"HOT_Heat_Loss_(Btu/hr)",
+							"HOT_Mass_Flow_(lbm/hr)",
+							"HOT_Specific_Heat(Btu/lbm-F)",
+							"Heat_Balance_Error(%)",
+							"Heat_Balance_Error(Btu/hr)"
+						 ];
 	var HBEdetails = [], assets=[], assetIDs = [],mainParameter;
 	var today = new Date();
 	today = today.getTime()/1000;
@@ -246,12 +268,56 @@ module.exports = function(app,options){
 
 	 // Settings route
 	 app.get('/settings', function(req,res){
-			if(typeof req.session.passport == 'undefined'){
+	    	if(typeof req.session.passport == 'undefined'){
 				res.status(440).send("Session expired! Login again.");
+			}else{
+		 var userid = req.user.userid;
+		 var params = {
+				 TableName : tables.settings,
+				 ProjectionExpression: ["Dashboard"],
+				 KeyConditionExpression: "UserId = :v1",
+				 ExpressionAttributeValues: {
+				        ":v1": userid
+				 },
+				 Select: "SPECIFIC_ATTRIBUTES"
+		 }
+		 options.docClient.query(params, function (err, data) {
+		 	    if (err) {
+			        console.error("Unable to query the assets table. (getLatestRecordedTimeStamp) Error JSON:", JSON.stringify(err, null, 2));
+			    } else {
+			    	var mainParam = data.Items[0].Dashboard;
+			    	res.render('pages' + path.sep + 'settings', {
+						assets: assets,
+						settingOptions: settingOptions,
+						mainParam: mainParam
+					});
+			    }
+		 });
+		}
+	 });
+	 
+	 app.post('/settings', function(req,res){
+			var mainParam = req.body["main-param"];
+			var userid = req.user.userid;
+			if(userid){
+				var settingsParams = {
+					    TableName : tables.settings,
+					    Key : {
+							UserId : userid
+						},
+						UpdateExpression : "SET Dashboard = :v",
+						ExpressionAttributeValues : {
+							":v" : mainParam
+						}
+					};
+			 options.docClient.update(settingsParams, function (err, data) {
+				    if (err) {
+				        console.error("Unable to scan the assets table.(getAssets) Error JSON:", JSON.stringify(err, null, 2));
+				    } else {
+				    	return res.redirect('/settings');
+				    }
+				});
 			}
-		 res.render('pages' + path.sep + 'settings', {
-				assets: assets
-			});
 	 });
 
 	// Helper Methods
