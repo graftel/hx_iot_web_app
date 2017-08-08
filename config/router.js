@@ -285,7 +285,10 @@ module.exports = function(app,options){
 		 	    if (err) {
 			        console.error("Unable to query the assets table. (getLatestRecordedTimeStamp) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
-			    	var mainParam = data.Items[0].Dashboard;
+			    	if(data.Count > 0)
+			    		var mainParam = data.Items[0].Dashboard ;
+			    	else
+			    		var mainParam = 'Heat_Balance_Error(%)';
 			    	res.render('pages' + path.sep + 'settings', {
 						assets: assets,
 						settingOptions: settingOptions,
@@ -514,7 +517,10 @@ module.exports = function(app,options){
 		 	    if (err) {
 			        console.error("Unable to query the settings table. (getMainParameter) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
+			    	if(data.Count > 0)
 			    		mainParameter = data.Items[0].Dashboard;
+			    	else
+			    		mainParameter = 'Heat_Balance_Error(%)'; 
 			    }
 		 });
 	 }
