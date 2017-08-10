@@ -188,32 +188,59 @@ module.exports = function(app, options) {
 		var expiry = new Date();
 		expiry.setDate(expiry.getDate() + 1);
 		var email = req.body.email;
-		var password = req.body.password;
+		var password = req.body.password;	
 		var params = {
-			TableName : "Hx.Users",
-			Item : {
-				UserID: 3,
-				EmailAddress : email,
-				Password : base64.encode(password),
-				Active: false,
-				VerificationCode: generateConfirmationCode(),
-				CreatedAt: now.toString(),
-				Expiry: expiry.toString()
-			},
-			ConditionExpression : "attribute_not_exists(EmailAddress)"
-		};
-		options.docClient.put(params, function(err, data) {
-			if (err) {
-				console.error("Unable to insert user into Users table. (Route POST '/register' ) Error JSON:", JSON.stringify(err, null, 2));
-			} else {
-				completeRegistrationEmail(email);
-			}
-		});
-		res.render('pages' + path.sep + 'showMessage',
-				{
-					title: "Registration",
-					message : "You shall receive an email to your registered email id along with verification code to complete your registration."
-				});
+				TableName : "Hx.Users",				
+				ProjectionExpression: "EmailAddress",	
+				Select:  "SPECIFIC_ATTRIBUTES"
+			};
+			options.docClient.scan(params, function(err, data) {
+				if (err) {
+					console.error("Unable to scan from Users table for "+email+". (getUserByEmail) Error JSON:",
+							JSON.stringify(err, null, 2));
+				} else {
+					var emailAddresses = data.Items.map(function(d){ return data.Items[0][Object.keys(d)[0]]; });
+					if(!emailAddresses.includes(email)){
+						var userid = data.Count+1;
+						var usersParams = {
+								TableName : "Hx.Users",
+								Item : {
+									UserID: userid,
+									EmailAddress : email,
+									Password : base64.encode(password),
+									Active: false,
+									VerificationCode: generateVerificationCode(),
+									CreatedAt: now.toString(),
+									Expiry: expiry.toString()
+								},
+								ConditionExpression : "attribute_not_exists(EmailAddress)"
+							};
+							options.docClient.put(usersParams, function(err, data) {
+								if (err) {
+									console.error("Unable to insert user into Users table. (Route POST '/register' ) Error JSON:", JSON.stringify(err, null, 2));
+									return res.render('pages' + path.sep + 'showMessage',
+											{
+												title: "Registration",
+												message : "Unable to register with given email id. Please contact our support team at http://www.graftel.com/contact"
+											});
+								} else {
+									completeRegistrationEmail(email);
+									return res.render('pages' + path.sep + 'showMessage',
+											{
+												title: "Registration",
+												message : "You shall receive an email to your registered email id along with verification code to complete your registration."
+											});
+								}
+							});						
+					}else{
+						return res.render('pages' + path.sep + 'showMessage',
+								{
+									title: "Registration",
+									message : "Unable to register with given email id. Please contact our support team at http://www.graftel.com/contact"
+								});
+					}
+				}
+			});	
 	});
 
 	app.get('/registration2', function(req, res) {
@@ -228,7 +255,7 @@ module.exports = function(app, options) {
 								email: user.EmailAddress,
 								code : user.VerificationCode
 							});
-				}else{ // code is wrong or expired
+				}else{ // Verification code is wrong or expired
 					res.render('pages' + path.sep + 'showMessage',
 							{
 								title: "Registration",
@@ -307,12 +334,12 @@ module.exports = function(app, options) {
 			var user = data.Items[0];
 			if(user){
 				var helper = require('sendgrid').mail;
-				var confirmationCode = generateConfirmationCode();
-				var link = "http://localhost:5000/reset-password?email=" + emailid + "&code=" + confirmationCode;
+				var VerificationCode = generateVerificationCode();
+				var link = "http://localhost:5000/reset-password?email=" + emailid + "&code=" + VerificationCode;
 				var now = new Date();
 				var expiry = new Date();
 				expiry.setDate(expiry.getDate() + 1);
-				saveConfirmationCode(user.UserID, emailid, confirmationCode, now, expiry);
+				saveVerificationCode(user.UserID, emailid, VerificationCode, now, expiry);
 				var fromEmail = new helper.Email('no-reply@graftel.com');
 				var toEmail = new helper.Email(emailid);
 				var subject = 'Reset password for Heat Exchange Monitering System';
@@ -338,7 +365,7 @@ module.exports = function(app, options) {
 				});
 				sg.API(request, function(error, response) {
 					if (!(response.statusCode == 202)) {
-						console.error("Error in sending email of password reset for "+emailid+". ", JSON.stringify(err, null, 2));
+						console.error("Error in sending email of password reset for "+emailid+". ", JSON.stringify(error, null, 2));
 					}
 				});
 			}
@@ -369,14 +396,14 @@ module.exports = function(app, options) {
 										});
 										sg.API(request, function(error, response) {
 											if (response.statusCode == 202) {
-												console.error("Error in sending email of registration setup for "+emailid+". ", JSON.stringify(err, null, 2));
+												console.error("Error in sending email of registration setup for "+emailid+". ", JSON.stringify(error, null, 2));
 											}
 										})
 									}
 						});
 	}
 
-	function generateConfirmationCode() {
+	function generateVerificationCode() {
 		var mask = '';
 		mask += 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 		var result = '';
@@ -385,7 +412,7 @@ module.exports = function(app, options) {
 		return result;
 	}
 
-	function saveConfirmationCode(userid, email, code, createdAt, expiry) {
+	function saveVerificationCode(userid, email, code, createdAt, expiry) {
 		var params = {
 			TableName : "Hx.Users",
 			Key : {
@@ -401,7 +428,7 @@ module.exports = function(app, options) {
 		options.docClient.update(params,
 						function(err, data) {
 							if (err) {
-								console.error("Unable to insert confirmation code into the table. (saveConfirmationCode) Error JSON:",
+								console.error("Unable to insert verification code into the table. (saveVerificationCode) Error JSON:",
 												JSON.stringify(err, null, 2));
 							}
 						});

@@ -322,6 +322,120 @@ module.exports = function(app,options){
 				});
 			}
 	 });
+	 
+	 app.get('/manageassets', function(req,res){
+	    if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Login again.");
+		}else{
+			var devicedetails={};
+			var renderPage = function(){
+				res.render('pages' + path.sep + 'manageAssets', {
+					assets: assets,
+					devicedetails: devicedetails
+				});
+			};
+			getAssets( function(){
+				for(let asset of assetIDs){
+					 var params = {
+							 TableName : tables.deviceConfig,
+							 ExpressionAttributeNames: { "#Ty": "Type", "#L": "Location", "#LD": "Location_Display", "#U": "Unit", "#O": "Orientation" },
+							 FilterExpression: "ASSETID = :v2",
+							 ProjectionExpression: ["DeviceID","#Ty","#L","#LD", "#U","#O"],
+							 ExpressionAttributeValues: {
+							        ":v2": asset
+							 },
+							 Select: "SPECIFIC_ATTRIBUTES"
+					 }
+					 options.docClient.scan(params, function (err, data) {
+					 	    if (err) {
+						        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+						    } else {
+						    	devicedetails[asset] = data.Items;
+						    	if(Object.keys(devicedetails).length == assetIDs.length){
+						    		renderPage();
+						    	}						    		
+						    }
+					 }); // end of scan function
+				} // end of for loop
+			}); // end of getAssets call
+			}
+	 });
+	 
+	 app.post('/asset/add', function(req,res){
+		 if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Action failed. Please login again and continue.");
+		}else{
+			var assetid = req.body["assetid"];
+			var displayName = req.body["display-name"];
+			var assetsParams = {
+					TableName : tables.assets,
+					Item : {
+						AssetID: assetid,
+						DisplayName: displayName,
+						AddTimeStamp: Math.floor((new Date).getTime()/1000)
+					},
+					ConditionExpression : "attribute_not_exists(AssetID)"
+				};
+				options.docClient.put(assetsParams, function(err, data) {
+					if (err) {
+						console.error("Unable to add new asset to Assets table. (Route POST '/asset/add' ) Error JSON:", JSON.stringify(err, null, 2));
+					}					
+					return res.redirect('/manageassets');
+				});
+		}
+	 });
+	 
+	 app.post('/asset/manage', function(req,res){
+		    if(typeof req.session.passport == 'undefined'){
+					res.status(440).send("Session expired! Login again.");
+			}else{
+				var inputs = req.body;
+				var assetid = inputs["assetid"];
+				var displayName = inputs["display-name"];
+				delete inputs["assetid"];
+				delete inputs["display-name"];
+				var values = {};
+				Object.keys(inputs).forEach(function(key){
+					var temp = key.split("-");
+					values[temp[0]] = values[temp[0]] || {};
+					values[temp[0]][temp[1]] = inputs[key];					
+				});
+				var deviceConfigParams = {  "RequestItems": { } };
+				deviceConfigParams["RequestItems"][tables.deviceConfig] = [];				
+				
+				Object.keys(values).forEach(function(deviceid){
+					var tempObj = {};
+					tempObj["PutRequest"] = { "Item": {} };
+					tempObj["PutRequest"]["Item"] = { 								
+													  DeviceID: deviceid,
+													  ASSETID: assetid,						
+													  Type: values[deviceid]["Type"],
+													  Location: values[deviceid]["Location"],
+													  Location_Display: values[deviceid]["Location_Display"],
+													  Unit: values[deviceid]["Unit"],
+													  Orientation: values[deviceid]["Orientation"]					
+													}
+					deviceConfigParams["RequestItems"][tables.deviceConfig].push(tempObj);
+				});
+				options.docClient.batchWrite(deviceConfigParams, function(err, data) {
+					if (err) {
+						console.error("Unable to update the Devices table. (Route POST '/asset/manage' ) Error JSON:", JSON.stringify(err, null, 2));
+					} else {
+						return res.redirect('/manageassets');
+					}
+				});
+				
+			}
+		 });
+	 
+	 app.get('/asset/delete', function(req,res){
+		    if(typeof req.session.passport == 'undefined'){
+					res.status(440).send("Session expired! Login again.");
+			}else{
+				console.log(req.query);
+				return res.redirect('/manageassets');
+			}
+		 });
 
 	// Helper Methods
 	var getCalculatedValues = function(callback) {

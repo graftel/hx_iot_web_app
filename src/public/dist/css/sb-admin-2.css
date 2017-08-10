@@ -519,3 +519,8 @@ label{
 	top: 100px;
 	left: 800px;
 }
+
+input[readonly]
+{
+    background-color: #f2f2f2;
+}
