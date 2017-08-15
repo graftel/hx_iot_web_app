@@ -511,13 +511,13 @@ label{
 }
 
 .zoom-reset-dashboard{
-	top: 700px;
-	left: 1070px;
+	top: 75%;
+	left: 55%;
 }
 
 .zoom-reset-asset{
 	top: 370px;
-	left: 800px;
+	left: 75%;
 }
 
 input[readonly]

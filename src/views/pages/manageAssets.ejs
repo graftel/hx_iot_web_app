@@ -88,7 +88,7 @@
 												<td>Location Display</td>
 												<td>Unit</td>
 												<td>Orientation</td>
-												<td>h</td>
+												<td> </td>
 											</thead>
 											<tbody></tbody>
 										</table>
@@ -146,31 +146,38 @@
 
 		$(".edit-asset").click(
 				function(c) {
-					$("form#assets-manage-form #devices").text("");
+					$("form#assets-manage-form #devices tbody").text("");
 					var key = c.target.getAttribute("data-key");
 					if (key) {
 						var val = $('td[data-key="' + key + '"]').attr("data-value");
-						var values = devices[key];
-						var html = '<table class="table table-striped table-hover">';
-						html += '<thead style="font-size:larger"> <td>  DeviceID </td> <td>  Type </td> <td>  Location </td> <td>  Location Display </td> ';
-						html += '<td>  Unit </td> <td>  Orientation </td></thead><tbody>';
-						for(i=0;i<values.length;i++){						
+						var values = devices[key];						
+						for(i=0;i<values.length;i++){			
+							var html = '';
 							html += '<tr><td><input type="text" size=6 value="'+ values[i].DeviceID +'" readonly></td>';
-							html += '<td><input type="text" size=12 name="'+values[i].DeviceID+'-Type" value="'+ values[i].Type +'"></td>';
-							html += '<td><input type="text" size=7 name="'+values[i].DeviceID+'-Location" value="'+ values[i].Location +'"></td>';
-							html += '<td><input type="text" size=10 name="'+values[i].DeviceID+'-Location_Display"  value="'+ values[i].Location_Display +'"></td>';
-							html += '<td><input type="text" size=3 name="'+values[i].DeviceID+'-Unit" value="'+ values[i].Unit +'"></td>';
-							html += '<td><input type="text" size=3 name="'+values[i].DeviceID+'-Orientation" value="'+ values[i].Orientation +'"></td>';						
+							html += '<td><select type="text" name="'+values[i].DeviceID+'-Type" onchange="populateOtherOptions(this)">';
+							if(values[i].Type == "Temperature")
+								html += '<option value="Temperature" selected>Temperature</option>';
+							else
+								html += '<option value="Temperature">Temperature</option>';	
+							if(values[i].Type == "FlowMeter")
+								html += '<option value="FlowMeter" selected>FlowMeter</option>';
+							else
+								html += '<option value="FlowMeter">FlowMeter</option>';	
+							'</select></td>';
+							html += '<td><select type="text" name="'+values[i].DeviceID+'-Location"></select></td>';
+							html += '<td><select type="text" name="'+values[i].DeviceID+'-Location_Display"></select></td>';
+							html += '<td><select type="text" name="'+values[i].DeviceID+'-Unit"></select></td>';
+							html += '<td><select type="text" name="'+values[i].DeviceID+'-Orientation"></select></td>';
 							html += '<td><a href="#" onclick="deleteRowFromDb(this);" name="'+values[i].DeviceID+'" data-type="'+values[i].Type+'"> <span class="glyphicon glyphicon-remove"></span></a></td></tr>';						
+							$("form#assets-manage-form #devices tbody").append(html);
+							populateOtherOptions(document.getElementsByName(values[i].DeviceID+"-Type")[0],values[i] );
 						}	
-						html += "</tbody></table>";
 						$("form#assets-manage-form #asset-form-heading").text("Edit Asset");
 						$("form#assets-manage-form #assetid").val(key);
 						$("form#assets-manage-form #assetid").prop("readonly", true);
-						$("form#assets-manage-form #display-name").val(val);
-						$("form#assets-manage-form #devices").append(html);
-						$('form#assets-manage-form').attr('action', '/asset/manage');
-						$("form#assets-manage-form").show();
+						$("form#assets-manage-form #display-name").val(val);		
+						$('form#assets-manage-form').attr('action', '/asset/manage');						
+						$("form#assets-manage-form").show();	
 					}
 				});
 
@@ -245,30 +252,37 @@
 	        });
 		}
 		
-		function populateOtherOptions(e){
-			var type = e.value;		
+		function populateOtherOptions(e, values = null){
+			
+			var type = e.value;
 			var row = e.name.split("-Type")[0];
 			var locationElement = $('select[name="'+row+'-Location"]');
 			var locationDisplayElement = $('select[name="'+row+'-Location_Display"]');
 			var unitElement = $('select[name="'+row+'-Unit"]');
-			var orientationElement = $('select[name="'+row+'-Orientation"]');
+			var orientationElement = $('select[name="'+row+'-Orientation"]');	
 			
 			locationElement.find('option').remove();
 			locationDisplayElement.find('option').remove();
 			unitElement.find('option').remove();
 			orientationElement.find('option').remove();
 		    for (var i = 0; i < OptionsList[type][0]["Location"].length; i++){
-		       locationElement.append("<option value='" + OptionsList[type][0]["Location"][i] + "'>" +  OptionsList[type][0]["Location"][i] + "</option>");
-			}
-		    for (var i = 0; i < OptionsList[type][1]["LocationDisplay"].length; i++){	
-		    	locationDisplayElement.append("<option value='" + OptionsList[type][1]["LocationDisplay"][i] + "'>" +  OptionsList[type][1]["LocationDisplay"][i] + "</option>");
-			}
+		    		locationElement.append("<option value='" + OptionsList[type][0]["Location"][i] + "'>" +  OptionsList[type][0]["Location"][i] + "</option>");
+			}		   
+		    for (var i = 0; i < OptionsList[type][1]["LocationDisplay"].length; i++){
+		    		locationDisplayElement.append("<option value='" + OptionsList[type][1]["LocationDisplay"][i] + "'>" +  OptionsList[type][1]["LocationDisplay"][i] + "</option>");
+			}		    
 		    for (var i = 0; i < OptionsList[type][2]["Unit"].length; i++){	
-		    	unitElement.append("<option value='" + OptionsList[type][2]["Unit"][i] + "'>" +  OptionsList[type][2]["Unit"][i] + "</option>");
-			}
+				unitElement.append("<option value='" + OptionsList[type][2]["Unit"][i] + "'>" +  OptionsList[type][2]["Unit"][i] + "</option>");
+			}		   
 		    for (var i = 0; i < OptionsList[type][3]["Orientation"].length; i++){	
-		    	orientationElement.append("<option value='" + OptionsList[type][3]["Orientation"][i] + "'>" +  OptionsList[type][3]["Orientation"][i] + "</option>");
+				orientationElement.append("<option value='" + OptionsList[type][3]["Orientation"][i] + "'>" +  OptionsList[type][3]["Orientation"][i] + "</option>");
 			}
+		    if(values){
+		    	 locationElement.val(values.Location);
+		    	 locationDisplayElement.val(values.Location_Display);
+		    	 unitElement.val(values.Unit);
+		    	 orientationElement.val(values.Orientation);
+		    }
 		}			
 		
 	</script>

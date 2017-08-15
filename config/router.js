@@ -386,11 +386,13 @@ module.exports = function(app,options){
 				options.docClient.put(assetsParams, function(err, data) {
 					if (err) {
 						console.error("Unable to add new asset to Assets table. (Route POST '/asset/add' ) Error JSON:", JSON.stringify(err, null, 2));
-						return res.redirect('/manageassets');
+						return res.redirect('/manageassets'); // TODO: redirect with message
 					}else{
-						var items = formatNewDevicesFormData(deviceData, assetid);
-						batchInsertNewDevices(items);
-					}	
+						if(Object.keys(deviceData).length > 0){
+							var items = formatNewDevicesFormData(deviceData, assetid);
+							batchInsertNewDevices(items);
+						}
+					}	return res.redirect('/manageassets');
 				});
 		}
 	 });
