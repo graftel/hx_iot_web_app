@@ -511,16 +511,22 @@ label{
 }
 
 .zoom-reset-dashboard{
-	top: 400px;
+	top: 700px;
 	left: 1070px;
 }
 
 .zoom-reset-asset{
-	top: 100px;
+	top: 370px;
 	left: 800px;
 }
 
 input[readonly]
 {
     background-color: #f2f2f2;
+}
+
+#devices table>tbody>tr>td, #devices table>tbody>tr>th, 
+#devices table>tfoot>tr>td, #devices table>tfoot>tr>th,
+#devices table>thead>tr>td, #devices table>thead>tr>th {
+	padding: 4px;
 }

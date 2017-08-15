@@ -25,12 +25,20 @@
 			});
 			return a.concat(i);
 		}, [])
-		if (tempX.length == 0 && tempY == 0)
-			return;
-		domain.X.min = Math.min.apply(Math, tempX);
-		domain.X.max = Math.max.apply(Math, tempX);
-		domain.Y.min = Math.min.apply(Math, tempY);
-		domain.Y.max = Math.max.apply(Math, tempY);
+		if(tempX.length == 0){
+			domain.X.min = new Date().getTime()/1000;
+			domain.X.max = (new Date().getTime()/1000) + (60*60);
+		}else{
+			domain.X.min = Math.min.apply(Math, tempX);
+			domain.X.max = Math.max.apply(Math, tempX);
+		}
+		if (tempY.length == 0){
+			domain.Y.min = 0;
+			domain.Y.max = 100;
+		}else{
+			domain.Y.min = Math.min.apply(Math, tempY);
+			domain.Y.max = Math.max.apply(Math, tempY);
+		}
 		return domain;
 	}
 	

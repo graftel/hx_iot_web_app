@@ -158,16 +158,18 @@ module.exports = function(app,options){
 												if (dataq.Count == 1) // verify there is actually data inside
 												{
 													dataq.Items[0].DisplayName = data.Items[item].DisplayName;
-													instData[item] = dataq.Items[0];
-													if (datacount == data.Items.length - 1)
-													{
-														output.Items = instData;
-														output.Parameters = req;
-														output.Count = data.Items.length;
-														res(null,output);
-													}
-													datacount++;
+													instData[item] = dataq.Items[0];													
+												}else{
+													instData[item] = { };													
 												}
+												if (datacount == data.Items.length - 1)
+												{
+													output.Items = instData;
+													output.Parameters = req;
+													output.Count = data.Items.length;
+													res(null,output);
+												}
+												datacount++;
 										}
 								});
 							})(item);
@@ -235,6 +237,7 @@ module.exports = function(app,options){
 							});
 				        }else{
 				        	console.error("Error with data of calculatedData for AssetID:"+assetid+" (Route: '/asset')");
+				        	return res.redirect("/"); // TO DO: add error message to Dashboard
 				        }
 			    }
 			});
@@ -367,20 +370,27 @@ module.exports = function(app,options){
 		}else{
 			var assetid = req.body["assetid"];
 			var displayName = req.body["display-name"];
+			var deviceData = req.body;
+			delete deviceData["assetid"];
+			delete deviceData["display-name"];
 			var assetsParams = {
 					TableName : tables.assets,
 					Item : {
 						AssetID: assetid,
 						DisplayName: displayName,
-						AddTimeStamp: Math.floor((new Date).getTime()/1000)
+						AddTimeStamp: Math.floor((new Date).getTime()/1000),
+						LastestTimeStamp: Math.floor((new Date).getTime()/1000)
 					},
 					ConditionExpression : "attribute_not_exists(AssetID)"
 				};
 				options.docClient.put(assetsParams, function(err, data) {
 					if (err) {
 						console.error("Unable to add new asset to Assets table. (Route POST '/asset/add' ) Error JSON:", JSON.stringify(err, null, 2));
-					}					
-					return res.redirect('/manageassets');
+						return res.redirect('/manageassets');
+					}else{
+						var items = formatNewDevicesFormData(deviceData, assetid);
+						batchInsertNewDevices(items);
+					}	
 				});
 		}
 	 });
@@ -402,32 +412,50 @@ module.exports = function(app,options){
 				});
 				var deviceConfigParams = {  "RequestItems": { } };
 				deviceConfigParams["RequestItems"][tables.deviceConfig] = [];				
-				
+				var items = [];
 				Object.keys(values).forEach(function(deviceid){
-					var tempObj = {};
-					tempObj["PutRequest"] = { "Item": {} };
-					tempObj["PutRequest"]["Item"] = { 								
-													  DeviceID: deviceid,
-													  ASSETID: assetid,						
-													  Type: values[deviceid]["Type"],
-													  Location: values[deviceid]["Location"],
-													  Location_Display: values[deviceid]["Location_Display"],
-													  Unit: values[deviceid]["Unit"],
-													  Orientation: values[deviceid]["Orientation"]					
-													}
-					deviceConfigParams["RequestItems"][tables.deviceConfig].push(tempObj);
+					var item = { 								
+									DeviceID: deviceid,
+									ASSETID: assetid,						
+									Type: values[deviceid]["Type"],
+									Location: values[deviceid]["Location"],
+									Location_Display: values[deviceid]["Location_Display"],
+									Unit: values[deviceid]["Unit"],
+									Orientation: values[deviceid]["Orientation"]					
+								};
+					items.push(item);					
 				});
-				options.docClient.batchWrite(deviceConfigParams, function(err, data) {
-					if (err) {
-						console.error("Unable to update the Devices table. (Route POST '/asset/manage' ) Error JSON:", JSON.stringify(err, null, 2));
-					} else {
-						return res.redirect('/manageassets');
-					}
-				});
-				
+				batchInsertNewDevices(items);
+				return res.redirect('/manageassets');
 			}
 		 });
 	 
+	 app.post('/device/delete', function(req,res){
+		    if(typeof req.session.passport == 'undefined'){
+					res.status(440).send("Session expired! Login again.");
+			}else{
+				var deviceid = req.body.deviceid;
+				var type = req.body.type;
+				if(deviceid){
+					var params = {
+						    TableName: tables.deviceConfig,
+						    Key:{
+						    	DeviceID: deviceid,
+						    	Type: type
+						    }						    
+						};
+						options.docClient.delete(params, function(err, data) {
+						    if (err) {
+						        console.error("Unable to delete item. (POST /device/delete) Error JSON:", JSON.stringify(err, null, 2));
+						        res.status(404).send("Delete failed");
+						    } else {
+						        res.end("success");
+						    }
+						});
+				}				
+			}
+		 });
+
 	 app.get('/asset/delete', function(req,res){
 		    if(typeof req.session.passport == 'undefined'){
 					res.status(440).send("Session expired! Login again.");
@@ -637,5 +665,41 @@ module.exports = function(app,options){
 			    		mainParameter = 'Heat_Balance_Error(%)'; 
 			    }
 		 });
+	 }
+	 
+	 function formatNewDevicesFormData(deviceData, assetid){
+		 var keys = Object.keys(deviceData);
+			var indexes = [];
+			keys.map(function(key){ var index = key.split("-")[0]; if(indexes.indexOf(index) === -1 )  indexes.push(index)});
+			var items = [];
+			indexes.forEach(function(index){
+				var item = {};
+				item["DeviceID"] = deviceData[index+"-DeviceID"];
+				item["Type"] = deviceData[index+"-Type"];
+				item["Location"] = deviceData[index+"-Location"];
+				item["Location_Display"] = deviceData[index+"-Location_Display"];
+				item["Unit"] = deviceData[index+"-Unit"];
+				item["Orientation"] = deviceData[index+"-Orientation"];
+				item["ASSETID"] = assetid;
+				items.push(item);
+			});
+			return items;
+	 }
+	 
+	 function batchInsertNewDevices(items){
+		 var deviceConfigParams = {  "RequestItems": { } };
+			deviceConfigParams["RequestItems"][tables.deviceConfig] = [];				
+			
+			items.forEach(function(item){
+				var tempObj = {};
+				tempObj["PutRequest"] = { "Item": {} };
+				tempObj["PutRequest"]["Item"] = item;
+				deviceConfigParams["RequestItems"][tables.deviceConfig].push(tempObj);
+			});
+			options.docClient.batchWrite(deviceConfigParams, function(err, data) {
+				if (err) {
+					console.error("Unable to insert into the Devices table. (Function batchInsertNewDevices ) Error JSON:", JSON.stringify(err, null, 2));
+				}
+			});
 	 }
 }

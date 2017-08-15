@@ -74,13 +74,28 @@
 										<input type="text" id="display-name" name="display-name">
 									</div>
 								</div>
+								<div class="row text-center">
+									<button type="button" class="btn btn-success"
+										onclick="addRow()">Add Probe</button>
+								</div>
 								<div class="form-group row">
 									<div class="col-md-12" id="devices">
-										
+										<table class="table table-striped table-hover">
+											<thead>
+												<td>DeviceID</td>
+												<td>Type</td>
+												<td>Location</td>
+												<td>Location Display</td>
+												<td>Unit</td>
+												<td>Orientation</td>
+												<td>h</td>
+											</thead>
+											<tbody></tbody>
+										</table>
 									</div>
 								</div>
 								<div class="form-group">
-									<div class="col-sm-3 col-sm-offset-3">
+									<div class="col-sm-3 col-md-offset-5">
 										<input type="submit" tabindex="4" id="submit"
 											class="form-control btn btn-primary" value="Submit">
 									</div>
@@ -119,11 +134,12 @@
 	var devices = <%-  JSON.stringify(devicedetails) %>;
 
 		$("#add-asset").click(function() {
-			$("form#assets-manage-form #devices").text("");
+		//	$("form#assets-manage-form #devices").text("");
 			$("form#assets-manage-form #asset-form-heading").text("Add Asset");
 			$("form#assets-manage-form #assetid").val("");
 			$("form#assets-manage-form #assetid").prop("readonly", false);
 			$("form#assets-manage-form #display-name").val("");
+			$("form#assets-manage-form #devices tbody").text("");
 			$('form#assets-manage-form').attr('action', '/asset/add');
 			$("form#assets-manage-form").show();
 		});
@@ -144,7 +160,8 @@
 							html += '<td><input type="text" size=7 name="'+values[i].DeviceID+'-Location" value="'+ values[i].Location +'"></td>';
 							html += '<td><input type="text" size=10 name="'+values[i].DeviceID+'-Location_Display"  value="'+ values[i].Location_Display +'"></td>';
 							html += '<td><input type="text" size=3 name="'+values[i].DeviceID+'-Unit" value="'+ values[i].Unit +'"></td>';
-							html += '<td><input type="text" size=3 name="'+values[i].DeviceID+'-Orientation" value="'+ values[i].Orientation +'"></td></tr>';						
+							html += '<td><input type="text" size=3 name="'+values[i].DeviceID+'-Orientation" value="'+ values[i].Orientation +'"></td>';						
+							html += '<td><a href="#" onclick="deleteRowFromDb(this);" name="'+values[i].DeviceID+'" data-type="'+values[i].Type+'"> <span class="glyphicon glyphicon-remove"></span></a></td></tr>';						
 						}	
 						html += "</tbody></table>";
 						$("form#assets-manage-form #asset-form-heading").text("Edit Asset");
@@ -177,4 +194,81 @@
 					$("#myModal h4.modal-title").text(key+": Devices Details");
 					$("#myModal div.modal-body").html(html);					
 				});
+		var OptionsList = {
+				"Temperature" : 
+		    				[{ "Location" : ["COLD_IN" ,"HOT_IN","COLD_OUT","HOT_OUT","AMBIENT"]  },
+							{ "LocationDisplay" : ["SW Inlet" ,"RHR Inlet","SW Outlet","RHR Outlet","Ambient"] },
+							{ "Unit" : ["F" ,"C"] },
+							{ "Orientation" : ["","0" ,"90","180","270"] }],
+	    		"FlowMeter" : 
+		    				[{ "Location" : ["HOT_FLOW_IN","COLD_FLOW_IN"]  },
+							{ "LocationDisplay" : ["RHR Flow","SW Flow"]  },
+							{ "Unit" : ["GPM"]  },
+							{ "Orientation" : ["0" ,"90","180","270"] }]
+			};
+
+		var index = 1;
+		function addRow(){
+			var html = "";
+			html += '<tr><td><input type="text" name="'+index+'-DeviceID" size=6></td>';
+			html += '<td><select name="'+index+'-Type" class="type" onchange="populateOtherOptions(this)"><option value="">--select--</option>'+
+					'<option value="Temperature">Temperature</option>'+
+					'<option value="FlowMeter">FlowMeter</option>'+
+					'</select></td>';
+			html += '<td><select name="'+index+'-Location" class="location"></select></td>';
+			html += '<td><select name="'+index+'-Location_Display" class="locationDisplay"></select></td>';
+			html += '<td><select name="'+index+'-Unit" class="unit"></select></td>';
+			html += '<td><select name="'+index+'-Orientation" class="orientation"></select></td>';						
+			html += '<td><a href="#" onclick="deleteRow(this);"> <span class="glyphicon glyphicon-remove"></span></a></td></tr>';		
+			index++;
+			$("#devices tbody").append(html);
+		}
+		
+		function deleteRow(e){
+			var row = e.parentElement.parentElement;
+			row.parentNode.removeChild(row);
+		}
+		
+		function deleteRowFromDb(e){
+			var device = e.name;
+			var type = e.dataset.type;
+			$.ajax({
+				type: 'POST',
+	            url: '/device/delete',
+	            data: {'deviceid': device, "type": type},
+	            success: function(data) {
+	            	location.reload();
+	            },
+	            error: function(err){
+	                alert("Delete Item failed");
+	            }
+	        });
+		}
+		
+		function populateOtherOptions(e){
+			var type = e.value;		
+			var row = e.name.split("-Type")[0];
+			var locationElement = $('select[name="'+row+'-Location"]');
+			var locationDisplayElement = $('select[name="'+row+'-Location_Display"]');
+			var unitElement = $('select[name="'+row+'-Unit"]');
+			var orientationElement = $('select[name="'+row+'-Orientation"]');
+			
+			locationElement.find('option').remove();
+			locationDisplayElement.find('option').remove();
+			unitElement.find('option').remove();
+			orientationElement.find('option').remove();
+		    for (var i = 0; i < OptionsList[type][0]["Location"].length; i++){
+		       locationElement.append("<option value='" + OptionsList[type][0]["Location"][i] + "'>" +  OptionsList[type][0]["Location"][i] + "</option>");
+			}
+		    for (var i = 0; i < OptionsList[type][1]["LocationDisplay"].length; i++){	
+		    	locationDisplayElement.append("<option value='" + OptionsList[type][1]["LocationDisplay"][i] + "'>" +  OptionsList[type][1]["LocationDisplay"][i] + "</option>");
+			}
+		    for (var i = 0; i < OptionsList[type][2]["Unit"].length; i++){	
+		    	unitElement.append("<option value='" + OptionsList[type][2]["Unit"][i] + "'>" +  OptionsList[type][2]["Unit"][i] + "</option>");
+			}
+		    for (var i = 0; i < OptionsList[type][3]["Orientation"].length; i++){	
+		    	orientationElement.append("<option value='" + OptionsList[type][3]["Orientation"][i] + "'>" +  OptionsList[type][3]["Orientation"][i] + "</option>");
+			}
+		}			
+		
 	</script>
