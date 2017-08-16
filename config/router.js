@@ -409,8 +409,16 @@ module.exports = function(app,options){
 				var values = {};
 				Object.keys(inputs).forEach(function(key){
 					var temp = key.split("-");
-					values[temp[0]] = values[temp[0]] || {};
-					values[temp[0]][temp[1]] = inputs[key];					
+					var deviceId;
+					if(key.includes("new-")){
+						deviceId = inputs["new-"+temp[1]+"-DeviceID"];
+					}else{
+						deviceId = temp[0];
+					}
+					var param = temp.pop();
+					values[deviceId] = values[deviceId] || {};
+					if(param != "DeviceID")
+						values[deviceId][param] = inputs[key];					
 				});
 				var deviceConfigParams = {  "RequestItems": { } };
 				deviceConfigParams["RequestItems"][tables.deviceConfig] = [];				

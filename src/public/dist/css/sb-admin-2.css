@@ -530,3 +530,7 @@ input[readonly]
 #devices table>thead>tr>td, #devices table>thead>tr>th {
 	padding: 4px;
 }
+
+.manage-asset-dialog{
+	width: 750px;
+}
