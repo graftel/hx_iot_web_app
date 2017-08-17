@@ -444,7 +444,9 @@ module.exports = function(app,options){
 		    if(typeof req.session.passport == 'undefined'){
 					res.status(440).send("Session expired! Login again.");
 			}else{
-				var deviceid = req.body.deviceid;
+				// TO DO : Unlink device
+				// NOT deleting device for now
+				/*var deviceid = req.body.deviceid;
 				var type = req.body.type;
 				if(deviceid){
 					var params = {
@@ -462,7 +464,8 @@ module.exports = function(app,options){
 						        res.end("success");
 						    }
 						});
-				}				
+				}				*/
+				res.end("success");
 			}
 		 });
 
@@ -487,9 +490,10 @@ module.exports = function(app,options){
 					 	    if (err) {
 						        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
 						    } else {
-						    	if(data.Count > 0)
-						    		batchDeleteDevices(data.Items);
-						    	deleteAsset(assetId);
+						    	//if(data.Count > 0)
+						    	//	batchDeleteDevices(data.Items);
+						    	//deleteAsset(assetId);
+						    	// TO DO: Unlink asset from company ID
 						    	return res.redirect('/manageassets');
 						    }
 					 });
@@ -735,7 +739,7 @@ module.exports = function(app,options){
 			});
 	 }
 	 
-	 function batchDeleteDevices(items){
+	 /*function batchDeleteDevices(items){
 		 var deviceConfigParams = {  "RequestItems": { } };
 			deviceConfigParams["RequestItems"][tables.deviceConfig] = [];							
 			items.forEach(function(item){
@@ -765,5 +769,5 @@ module.exports = function(app,options){
 				    	console.log("success");
 				    }
 				});
-	 }
+	 }*/
 }
