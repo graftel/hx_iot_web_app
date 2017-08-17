@@ -1,5 +1,8 @@
 module.exports = function(app,options){
-	var math = require('mathjs');
+	require('log-timestamp');
+	var dynamodb = new options.AWS.DynamoDB();
+	var math = require('mathjs');	
+	const path = require("path");
 
 	// declarations
 	var tables = {
@@ -9,7 +12,8 @@ module.exports = function(app,options){
 			deviceConfig: "Hx.DeviceConfiguration",
 			rawData: "Hx.RawData",
 			calculatedData: "Hx.CalculatedData",
-			alerts: "Hx.Alerts"
+			alerts: "Hx.Alerts",
+			settings: "Hx.Settings"
 	};
 	var plateNames = {
 			"GT_HX_170101" : {
@@ -25,91 +29,70 @@ module.exports = function(app,options){
 				"COLD_OUT": "01A006"
 			}
 	};
-	var HBEdetails = [], assets=[], assetIDs = [];
+	
+	var settingOptions = [ "Ave_COLD_Inlet(F)",
+							"Ave_COLD_Outlet(F)",
+							"Ave_HOT_Inlet(F)",
+							"Ave_HOT_Outlet(F)",
+							"COLD_Avg_Temperature(F)",
+							"COLD_DT(F)",
+							"COLD_Density(lbm/ft3)",
+							"COLD_Flow(gpm)",
+							"COLD_Heat_Gain(Btu/hr)",
+							"COLD_Mass_Flow(lbm/hr)",
+							"COLD_Specific_Heat(Btu/lbm-F)",
+							"HOT_Avg_Temperature(F)",
+							"HOT_DT(F)",
+							"HOT_Density_(lbm/ft3)",
+							"HOT_Flow(gpm)",
+							"HOT_Heat_Loss_(Btu/hr)",
+							"HOT_Mass_Flow_(lbm/hr)",
+							"HOT_Specific_Heat(Btu/lbm-F)",
+							"Heat_Balance_Error(%)",
+							"Heat_Balance_Error(Btu/hr)"
+						 ];
+	var HBEdetails = [], assets=[], assetIDs = [],mainParameter;
 	var today = new Date();
-	//today.setHours(0,0,0,0);
 	today = today.getTime()/1000;
-	var params = {
-			  TableName: tables.rawData,
-			  FilterExpression: "EpochTimeStamp >= :val",
-			  ExpressionAttributeValues: {":val" : today },
-			  Limit: 1
-	};
+
 	var startTime=0;
 	var currTime;
 	getStartTime();
-	var counter = 60*60;
-	var dynamodb = new options.AWS.DynamoDB();
-	const path = require("path");
 	var simpleCallback;
-
-	// User Management Routes
-	app.get('/login', function (req, res) {
-		 res.render('pages' + path.sep + 'login');
-	});
-
-	app.post('/login',
-			  options.passport.authenticate('local'),
-			  function(req, res) {
-			    res.redirect('/');
-	});
-
-	app.get('/logout', function(req, res){
-		  req.logout();
-		  res.redirect('/login');
-	});
-
-	app.post('/register', function(req, res){
-		 var username = req.body.username;
-		 var password = req.body.password;
-		 var params = {
-				  TableName: tables.users,
-				  Item: {
-					  UserName: username,
-					  Password: password
-				  },
-				  ConditionExpression: "attribute_not_exists(UserName)"
-		  };
-		 options.docClient.put(params, function (err, data) {
-			    if (err) {
-			        console.error("Unable to insert user into the table. Error JSON:", JSON.stringify(err, null, 2));
-			    } else {
-			        console.log("Inserted User Successfully.");
-			    }
-			});
-		 res.redirect('/login');
-	});
-
+	
 	// Dashboard page routes
 	app.get('/', function (req, res) {
+		req.session.attempts = 0;
 		if(typeof req.session.passport == 'undefined'){
-			res.redirect('/login');
+			return res.redirect('/login');
 		}
 		else{
+			var currentUserID = req.user.userid;
+			getMainParameter(currentUserID);
 			getAssets(getCalculatedValues);
 			simpleCallback = function(){
 				if(HBEdetails.length == assetIDs.length){
-					var parameterlist = {"#HBP": "Heat_Balance_Error(%)",
-															 "#HBE": "Heat_Balance_Error(Btu/hr)",
-															 "#HMF":"HOT_Mass_Flow_(lbm/hr)",
-															 "#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
-															 "#HHL":"HOT_Heat_Loss_(Btu/hr)",
-															 "#CMF":"COLD_Mass_Flow(lbm/hr)",
-															 "#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
-															 "#CHG":"COLD_Heat_Gain(Btu/hr)"
-														 };
+					var parameterlist = {	"#HBP": "Heat_Balance_Error(%)",
+											"#HBE": "Heat_Balance_Error(Btu/hr)",
+											"#HMF":"HOT_Mass_Flow_(lbm/hr)",
+											"#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
+											"#HHL":"HOT_Heat_Loss_(Btu/hr)",
+											"#CMF":"COLD_Mass_Flow(lbm/hr)",
+											"#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
+											"#CHG":"COLD_Heat_Gain(Btu/hr)"
+										 };
 					getInstData(parameterlist,function(err, res_inst){
 						if (err)
 						{
-							console.log(err);
+							console.error("Unable to get Instant data for Dashboard .(Route: GET '/' ) ERROR JSON:", JSON.stringify(err, null, 2));
 						}
 						else {
-							res.render('pages' + path.sep + 'index', {
+							return res.render('pages' + path.sep + 'index', {
 								assets: assets,
 								warnings: 0,
 								alerts: 0,
 								predictions: 1,
-								counter: counter,
+								mainParameter: mainParameter,
 								data: HBEdetails,
 								instData: res_inst
 							});
@@ -121,10 +104,7 @@ module.exports = function(app,options){
 		}
 	});
 
-	app.post('/live', function (req, res) {
-	//	if(currTime>=endTime){
-		//	res.status(404).send("Oh uh, something went wrong");
-	//	}
+	app.post('/getHBEdata', function (req, res) {
 		if(typeof req.session.passport == 'undefined'){
 			res.status(440).send("Session expired! Login again");
 		}
@@ -147,14 +127,14 @@ module.exports = function(app,options){
 		};// to do: bond to company
 		options.docClient.scan(inst_scan_params, function(err,data){
 			if (err) {
-				 console.error("unbable to scan the query . ERROR JSON:", JSON.stringify(err, null, 2));
+				 console.error("Unable to scan Instant data for Dashboard. (Route: POST /getHBEdata : var getInstData) ERROR JSON:", JSON.stringify(err, null, 2));
 				 res(err,null);
 			} else {
 
 				if (data.Count == 0)
 				{
-					console.error("no assets availble!");
-					res("no assets availble!",null);
+					console.error("No assets available! (Route: POST /getHBEdata : var getInstData)");
+					res("No assets availble!",null);
 				}
 				else {
 						for(var item in data.Items)
@@ -162,8 +142,6 @@ module.exports = function(app,options){
 							(function(item){
 								var inst_query_params = {
 									TableName : tables.calculatedData,
-//									ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#HBP": "Heat_Balance_Error(%)", "#HBE": "Heat_Balance_Error(Btu/hr)", "#DN": "DisplayName"},
-//									ProjectionExpression: "AssetID, EpochTimeStamp" + "," + req.toString(),
 									ExpressionAttributeNames: req,
 									ProjectionExpression: "AssetID, EpochTimeStamp" + " , " + Object.keys(req).toString(),
 									KeyConditionExpression: "AssetID = :v1 AND EpochTimeStamp = :v2",
@@ -171,37 +149,32 @@ module.exports = function(app,options){
 										 ":v1": data.Items[item].AssetID,
 										 ":v2":  data.Items[item].LastestTimeStamp
 								 }
-									//Select: "SPECIFIC_ATTRIBUTES"
 								};
-					//			console.log(inst_query_params);
 								options.docClient.query(inst_query_params, function (err, dataq) {
 										if (err) {
-												console.error("Unable to query the table. Error JSON:", JSON.stringify(err, null, 2));
+												console.error("Unable to query the table calculatedData for asset "+ data.Items[item].AssetID +". (Route: POST /getHBEdata : var getInstData) Error JSON:", JSON.stringify(err, null, 2));
 												res(err,null);
 										} else {
 												if (dataq.Count == 1) // verify there is actually data inside
 												{
 													dataq.Items[0].DisplayName = data.Items[item].DisplayName;
-													instData[item] = dataq.Items[0];
-													if (datacount == data.Items.length - 1)
-													{
-														//res.end(JSON.stringify(instData));
-														output.Items = instData;
-														output.Parameters = req;
-														output.Count = data.Items.length;
-														res(null,output);
-													}
-													datacount++;
+													instData[item] = dataq.Items[0];													
+												}else{
+													instData[item] = { };													
 												}
+												if (datacount == data.Items.length - 1)
+												{
+													output.Items = instData;
+													output.Parameters = req;
+													output.Count = data.Items.length;
+													res(null,output);
+												}
+												datacount++;
 										}
 								});
 							})(item);
 						}
 				}
-		//		for ()
-
-		//		options.docClient.query
-
 			}
 
 		});
@@ -211,19 +184,19 @@ module.exports = function(app,options){
 		if(typeof req.session.passport == 'undefined'){
 			return res.status(440).send("Session expired! Login again.");
 		}
-			var parameterlist = {"#HBP": "Heat_Balance_Error(%)",
-													 "#HBE": "Heat_Balance_Error(Btu/hr)",
-													 "#HMF":"HOT_Mass_Flow_(lbm/hr)",
-												 	 "#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
-												 	 "#HHL":"HOT_Heat_Loss_(Btu/hr)",
-												 	 "#CMF":"COLD_Mass_Flow(lbm/hr)",
-									 			 	 "#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
-													 "#CHG":"COLD_Heat_Gain(Btu/hr)"
-												 };
+			var parameterlist = {	"#HBP": "Heat_Balance_Error(%)",
+									"#HBE": "Heat_Balance_Error(Btu/hr)",
+									"#HMF":"HOT_Mass_Flow_(lbm/hr)",
+									"#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
+									"#HHL":"HOT_Heat_Loss_(Btu/hr)",
+									"#CMF":"COLD_Mass_Flow(lbm/hr)",
+									"#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
+									"#CHG":"COLD_Heat_Gain(Btu/hr)"
+								};
 			getInstData(parameterlist, function(err, res1) {
 				if (err)
 				{
-					console.error(err);
+					console.error("Unable to get Instant data for Dashboard: (Route: POST '/instData') ", JSON.stringify(err, null, 2));
 				}
 				else{
 				//	new EJS({url: 'comments.ejs'}).update('element_id', '/comments.json')
@@ -242,7 +215,7 @@ module.exports = function(app,options){
 				if(typeof assetid == 'undefined'){
 					return false;
 				}
-				var params = {
+				var calculatedDataParams = {
 						TableName : tables.calculatedData,
 						KeyConditionExpression: "AssetID = :v1",
 						ExpressionAttributeValues: {
@@ -251,9 +224,9 @@ module.exports = function(app,options){
 					    ScanIndexForward: false,
 					    Limit: 1
 				};
-				options.docClient.query(params, function (err, data) {
+				options.docClient.query(calculatedDataParams, function (err, data) {
 			 	    if (err) {
-				        console.error("Unable to query recent data. Error JSON:", JSON.stringify(err, null, 2));
+				        console.error("Unable to query calculatedData for AssetID:"+assetid+". (Route: GET '/asset') Error JSON:", JSON.stringify(err, null, 2));
 				    } else {
 				        if(data.Items.length == 1){
 							res.render('pages' + path.sep + 'asset',{
@@ -263,7 +236,8 @@ module.exports = function(app,options){
 								plateNames: plateNames
 							});
 				        }else{
-				        	console.log("Data pulled not correct");
+				        	console.error("Error with data of calculatedData for AssetID:"+assetid+" (Route: '/asset')");
+				        	return res.redirect("/"); // TO DO: add error message to Dashboard
 				        }
 			    }
 			});
@@ -281,7 +255,7 @@ module.exports = function(app,options){
 					var parameter = req.body.parameter;
 					var location = req.body.location;
 					if(typeof assetid == 'undefined' || typeof parameter == 'undefined'){
-						return false;
+						return res.status(404).send("Oh uh, something went wrong");
 					}
 					 rawValues = []; calculations = {}; latestRawValues = {};
 					// step 1 - get latest timestamp from assets table for given asset
@@ -297,36 +271,255 @@ module.exports = function(app,options){
 
 	 // Settings route
 	 app.get('/settings', function(req,res){
-			if(typeof req.session.passport == 'undefined'){
+	    	if(typeof req.session.passport == 'undefined'){
 				res.status(440).send("Session expired! Login again.");
-			}
-		 res.render('pages' + path.sep + 'settings', {
-				assets: assets
-			});
+			}else{
+		 var userid = req.user.userid;
+		 var params = {
+				 TableName : tables.settings,
+				 ProjectionExpression: ["Dashboard"],
+				 KeyConditionExpression: "UserId = :v1",
+				 ExpressionAttributeValues: {
+				        ":v1": userid
+				 },
+				 Select: "SPECIFIC_ATTRIBUTES"
+		 }
+		 options.docClient.query(params, function (err, data) {
+		 	    if (err) {
+			        console.error("Unable to query the assets table. (getLatestRecordedTimeStamp) Error JSON:", JSON.stringify(err, null, 2));
+			    } else {
+			    	if(data.Count > 0)
+			    		var mainParam = data.Items[0].Dashboard ;
+			    	else
+			    		var mainParam = 'Heat_Balance_Error(%)';
+			    	res.render('pages' + path.sep + 'settings', {
+						assets: assets,
+						settingOptions: settingOptions,
+						mainParam: mainParam
+					});
+			    }
+		 });
+		}
 	 });
+	 
+	 app.post('/settings', function(req,res){
+			var mainParam = req.body["main-param"];
+			var userid = req.user.userid;
+			if(userid){
+				var settingsParams = {
+					    TableName : tables.settings,
+					    Key : {
+							UserId : userid
+						},
+						UpdateExpression : "SET Dashboard = :v",
+						ExpressionAttributeValues : {
+							":v" : mainParam
+						}
+					};
+			 options.docClient.update(settingsParams, function (err, data) {
+				    if (err) {
+				        console.error("Unable to scan the assets table.(getAssets) Error JSON:", JSON.stringify(err, null, 2));
+				    } else {
+				    	return res.redirect('/settings');
+				    }
+				});
+			}
+	 });
+	 
+	 app.get('/manageassets', function(req,res){
+	    if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Login again.");
+		}else{
+			var devicedetails={};
+			var renderPage = function(){
+				res.render('pages' + path.sep + 'manageAssets', {
+					assets: assets,
+					devicedetails: devicedetails
+				});
+			};
+			getAssets( function(){
+				for(let asset of assetIDs){
+					 var params = {
+							 TableName : tables.deviceConfig,
+							 ExpressionAttributeNames: { "#Ty": "Type", "#L": "Location", "#LD": "Location_Display", "#U": "Unit", "#O": "Orientation" },
+							 FilterExpression: "ASSETID = :v2",
+							 ProjectionExpression: ["DeviceID","#Ty","#L","#LD", "#U","#O"],
+							 ExpressionAttributeValues: {
+							        ":v2": asset
+							 },
+							 Select: "SPECIFIC_ATTRIBUTES"
+					 }
+					 options.docClient.scan(params, function (err, data) {
+					 	    if (err) {
+						        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+						    } else {
+						    	devicedetails[asset] = data.Items;
+						    	if(Object.keys(devicedetails).length == assetIDs.length){
+						    		renderPage();
+						    	}						    		
+						    }
+					 }); // end of scan function
+				} // end of for loop
+			}); // end of getAssets call
+			}
+	 });
+	 
+	 app.post('/asset/add', function(req,res){
+		 if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Action failed. Please login again and continue.");
+		}else{
+			var assetid = req.body["assetid"];
+			var displayName = req.body["display-name"];
+			var deviceData = req.body;
+			delete deviceData["assetid"];
+			delete deviceData["display-name"];
+			var assetsParams = {
+					TableName : tables.assets,
+					Item : {
+						AssetID: assetid,
+						DisplayName: displayName,
+						AddTimeStamp: Math.floor((new Date).getTime()/1000),
+						LastestTimeStamp: Math.floor((new Date).getTime()/1000)
+					},
+					ConditionExpression : "attribute_not_exists(AssetID)"
+				};
+				options.docClient.put(assetsParams, function(err, data) {
+					if (err) {
+						console.error("Unable to add new asset to Assets table. (Route POST '/asset/add' ) Error JSON:", JSON.stringify(err, null, 2));
+						return res.redirect('/manageassets'); // TODO: redirect with message
+					}else{
+						if(Object.keys(deviceData).length > 0){
+							var items = formatNewDevicesFormData(deviceData, assetid);
+							batchInsertNewDevices(items);
+						}
+					}	return res.redirect('/manageassets');
+				});
+		}
+	 });
+	 
+	 app.post('/asset/manage', function(req,res){
+		    if(typeof req.session.passport == 'undefined'){
+					res.status(440).send("Session expired! Login again.");
+			}else{
+				var inputs = req.body;
+				var assetid = inputs["assetid"];
+				var displayName = inputs["display-name"];
+				delete inputs["assetid"];
+				delete inputs["display-name"];
+				var values = {};
+				Object.keys(inputs).forEach(function(key){
+					var temp = key.split("-");
+					var deviceId;
+					if(key.includes("new-")){
+						deviceId = inputs["new-"+temp[1]+"-DeviceID"];
+					}else{
+						deviceId = temp[0];
+					}
+					var param = temp.pop();
+					values[deviceId] = values[deviceId] || {};
+					if(param != "DeviceID")
+						values[deviceId][param] = inputs[key];					
+				});
+				var deviceConfigParams = {  "RequestItems": { } };
+				deviceConfigParams["RequestItems"][tables.deviceConfig] = [];				
+				var items = [];
+				Object.keys(values).forEach(function(deviceid){
+					var item = { 								
+									DeviceID: deviceid,
+									ASSETID: assetid,						
+									Type: values[deviceid]["Type"],
+									Location: values[deviceid]["Location"],
+									Location_Display: values[deviceid]["Location_Display"],
+									Unit: values[deviceid]["Unit"],
+									Orientation: values[deviceid]["Orientation"]					
+								};
+					items.push(item);					
+				});
+				batchInsertNewDevices(items);
+				return res.redirect('/manageassets');
+			}
+		 });
+	 
+	 app.post('/device/delete', function(req,res){
+		    if(typeof req.session.passport == 'undefined'){
+					res.status(440).send("Session expired! Login again.");
+			}else{
+				var deviceid = req.body.deviceid;
+				var type = req.body.type;
+				if(deviceid){
+					var params = {
+						    TableName: tables.deviceConfig,
+						    Key:{
+						    	DeviceID: deviceid,
+						    	Type: type
+						    }						    
+						};
+						options.docClient.delete(params, function(err, data) {
+						    if (err) {
+						        console.error("Unable to delete item. (POST /device/delete) Error JSON:", JSON.stringify(err, null, 2));
+						        res.status(404).send("Delete failed");
+						    } else {
+						        res.end("success");
+						    }
+						});
+				}				
+			}
+		 });
+
+	 app.get('/asset/delete', function(req,res){
+		    if(typeof req.session.passport == 'undefined'){
+					res.status(440).send("Session expired! Login again.");
+			}else{
+				var assetId = req.query.key;
+				var devices;
+				if(assetId){
+					var deviceConfigParams = {
+							 TableName : tables.deviceConfig,
+							 FilterExpression: "ASSETID = :v",
+							 ExpressionAttributeNames: {"#T":"Type"},
+							 ProjectionExpression: "DeviceID, #T",
+							 ExpressionAttributeValues: {
+							        ":v": assetId
+							 },
+							 Select: "SPECIFIC_ATTRIBUTES"
+					 }
+					 options.docClient.scan(deviceConfigParams, function (err, data) {
+					 	    if (err) {
+						        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+						    } else {
+						    	if(data.Count > 0)
+						    		batchDeleteDevices(data.Items);
+						    	deleteAsset(assetId);
+						    	return res.redirect('/manageassets');
+						    }
+					 });
+				}				
+			}
+		 });
 
 	// Helper Methods
 	var getCalculatedValues = function(callback) {
 		 var params;
 		 HBEdetails=[];
 		 var curtime = new Date() / 1000;
-		 for(device of assetIDs)(function(device){
-			 var scan_params = {
+		 for(device of assetIDs)(
+			function(device){
+				var assetsParams = {
 				 	TableName: tables.assets,
 					FilterExpression: "AssetID = :v1",
 					ExpressionAttributeValues: {
 						":v1": device
-					}
-			 };
-			 options.docClient.scan(scan_params, function(err,data_assets){
+						}
+					};
+			 options.docClient.scan(assetsParams, function(err,data_assets){
 				 if (err) {
-						console.error("Unable to scan the query . ERROR JSON:", JSON.stringify(err, null, 2));
+						console.error("Unable to scan Assets table for AssetID:"+device+". ERROR JSON:", JSON.stringify(err, null, 2));
 						res(err,null);
 				 } else {
 					 					 var obj = new Object();
-										 params = {
+					 					 var calculatedDataParams = {
 												 	TableName : tables.calculatedData,
-												    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": "Heat_Balance_Error(%)"},
+												    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": mainParameter},
 												    ProjectionExpression: "AssetID, #T, #E",
 												    KeyConditionExpression: "AssetID = :v1 AND #T BETWEEN :v2a and :v2b",
 												    ExpressionAttributeValues: {
@@ -336,15 +529,13 @@ module.exports = function(app,options){
 												    },
 												    Select: "SPECIFIC_ATTRIBUTES"
 										 };
-										 options.docClient.query(params, function (err, data) {
+										 options.docClient.query(calculatedDataParams, function (err, data) {
 										 	    if (err) {
-											        console.error("Unable to query the table. Error JSON:", JSON.stringify(err, null, 2));
+											        console.error("Unable to query calculatedData table for Asset "+device+". (getCalculatedValues) Error JSON:", JSON.stringify(err, null, 2));
 											    } else {
-											        //console.log("Device Details query successful");
-															//console.log(data);
 												        obj[device] = data.Items;
 												        HBEdetails.push(obj);
-											        callback();
+												        callback();
 											    }
 										 });
 					 }
@@ -354,16 +545,14 @@ module.exports = function(app,options){
 
 	 function getAssets(callback) {
 		 HBEdetails = [], assets = {}, assetIDs = []; // to empty any previous values stored
-		 var params = {
+		 var assetsParams = {
 				    TableName : tables.assets,
 				    ProjectionExpression: ["AssetID","DisplayName"]
 				};
-		 options.docClient.scan(params, function (err, data) {
+		 options.docClient.scan(assetsParams, function (err, data) {
 			    if (err) {
-			        console.error("Unable to scan the devices. Error JSON:", JSON.stringify(err, null, 2));
+			        console.error("Unable to scan the assets table.(getAssets) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
-			    	//console.log("Assets scan succesful.");
-			    	//assets = data.Items;
 			    	for(item in data.Items){
 			    		assets[data.Items[item].AssetID] = data.Items[item].DisplayName;
 			    		assetIDs.push(data.Items[item].AssetID);
@@ -386,10 +575,9 @@ module.exports = function(app,options){
 		 }
 		 options.docClient.query(params, function (err, data) {
 		 	    if (err) {
-			        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+			        console.error("Unable to query the assets table. (getLatestRecordedTimeStamp) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	   latestTimeStamp = data.Items[0].LastestTimeStamp;
-			    	   //console.log("got latest timestamp "+data.Items[0].LastestTimeStamp);
 			  		   callback(assetid,parameter,location,getRecentRawdata,sendData);
 			    }
 		 });
@@ -488,4 +676,94 @@ module.exports = function(app,options){
 			startTime = today - (2*60);
 			currTime=startTime;
 	}
+	 
+	 function getMainParameter(userid){
+		 var settingsParams = {
+				 TableName : tables.settings,
+				 ProjectionExpression: "Dashboard",
+				 KeyConditionExpression: "UserId = :v1",
+				 ExpressionAttributeValues: {
+				        ":v1": userid
+				 },
+				 Select: "SPECIFIC_ATTRIBUTES"
+		 };
+		 options.docClient.query(settingsParams, function (err, data) {
+		 	    if (err) {
+			        console.error("Unable to query the settings table. (getMainParameter) Error JSON:", JSON.stringify(err, null, 2));
+			    } else {
+			    	if(data.Count > 0)
+			    		mainParameter = data.Items[0].Dashboard;
+			    	else
+			    		mainParameter = 'Heat_Balance_Error(%)'; 
+			    }
+		 });
+	 }
+	 
+	 function formatNewDevicesFormData(deviceData, assetid){
+		 var keys = Object.keys(deviceData);
+			var indexes = [];
+			keys.map(function(key){ var index = key.split("-")[0]; if(indexes.indexOf(index) === -1 )  indexes.push(index)});
+			var items = [];
+			indexes.forEach(function(index){
+				var item = {};
+				item["DeviceID"] = deviceData[index+"-DeviceID"];
+				item["Type"] = deviceData[index+"-Type"];
+				item["Location"] = deviceData[index+"-Location"];
+				item["Location_Display"] = deviceData[index+"-Location_Display"];
+				item["Unit"] = deviceData[index+"-Unit"];
+				item["Orientation"] = deviceData[index+"-Orientation"];
+				item["ASSETID"] = assetid;
+				items.push(item);
+			});
+			return items;
+	 }
+	 
+	 function batchInsertNewDevices(items){
+		 var deviceConfigParams = {  "RequestItems": { } };
+			deviceConfigParams["RequestItems"][tables.deviceConfig] = [];				
+			
+			items.forEach(function(item){
+				var tempObj = {};
+				tempObj["PutRequest"] = { "Item": {} };
+				tempObj["PutRequest"]["Item"] = item;
+				deviceConfigParams["RequestItems"][tables.deviceConfig].push(tempObj);
+			});
+			options.docClient.batchWrite(deviceConfigParams, function(err, data) {
+				if (err) {
+					console.error("Unable to insert into the Devices table. (Function batchInsertNewDevices ) Error JSON:", JSON.stringify(err, null, 2));
+				}
+			});
+	 }
+	 
+	 function batchDeleteDevices(items){
+		 var deviceConfigParams = {  "RequestItems": { } };
+			deviceConfigParams["RequestItems"][tables.deviceConfig] = [];							
+			items.forEach(function(item){
+				var tempObj = {};
+				tempObj["DeleteRequest"] = { "Key": item };
+				deviceConfigParams["RequestItems"][tables.deviceConfig].push(tempObj);
+			});
+			options.docClient.batchWrite(deviceConfigParams, function(err, data) {
+				if (err) {
+					console.error("Unable to delete devices from Devices table. (Function batchDeleteDevices ) Error JSON:", JSON.stringify(err, null, 2));
+				}
+			});
+	 }
+	 
+	 function deleteAsset(assetId){
+		 var assetsParams = {
+				    TableName: tables.assets,
+				    Key:{
+				    	AssetID: assetId
+				    }						    
+				};
+				options.docClient.delete(assetsParams, function(err, data) {
+				    if (err) {
+				        console.error("Unable to delete asset. deleteAsset Error JSON:", JSON.stringify(err, null, 2));
+				        
+				    } else {
+				    	console.log("success");
+				    }
+				});
+	 }
 }

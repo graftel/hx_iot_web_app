@@ -1,28 +1,31 @@
 module.exports = function(passport, LocalStrategy, docClient) {
-	
-	passport.use(new LocalStrategy(function(username, password, done) {
+	var base64 = require('base-64');
+	passport.use(new LocalStrategy({
+	    usernameField: 'email',
+	    passwordField: 'password'
+	  },function(email, password, done) {
 		var params = {
-			TableName : "Users",
-			KeyConditionExpression : "UserName = :un",
-			FilterExpression : "Password = :pw",
+			TableName : "Hx.Users",
+			FilterExpression : "EmailAddress = :em AND Password = :pw",
 			ExpressionAttributeValues : {
-				":un" : username,
-				":pw" : password
+				":em" : email,
+				":pw" : base64.encode(password)
 			},
 			Select : "ALL_ATTRIBUTES"
 		};
-		docClient.query(params, function(err, data) {
+		docClient.scan(params, function(err, data) {
 			if (err) {
 				console.error("Unable to query the Users table. Error JSON:", JSON
 						.stringify(err, null, 2));
 			} else {
 				if (data.Items.length > 0)
 					return done(null, {
-						user : username
+						user : email,
+						userid: data.Items[0].UserID
 					});
 				else
 					return done(null, false, {
-						message : 'Incorrect password.'
+						message : 'Incorrect email or password.'
 					});
 			}
 		});

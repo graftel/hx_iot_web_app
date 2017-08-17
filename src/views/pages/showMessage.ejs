@@ -1,0 +1,30 @@
+<%- include ../partials/header.ejs %>
+<link href="dist/css/login.css" rel="stylesheet">
+
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="panel panel-login">
+					<div class="panel-title">
+						<p class="panel-title-p">
+							 Graftel Heat Exchange System Demo
+						</p>
+					</div>
+					<div class="panel-heading">
+							<h4 class="col-xs-12"><%= title %></h4>
+						<hr>
+					</div>
+					<div class="panel-body">
+							<div class="col-lg-12">
+								<%= message %>
+							<div class="col-md-12 col-md-offset-4" ><a href="/login">Login / Register</a></div>
+							</div>
+						</div>
+					</div>
+			</div>
+		</div>
+	</div>
+	<div class="container" id="alert"></div>
+	<%- include ../partials/scripts.ejs %>
+</body>

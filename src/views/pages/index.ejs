@@ -19,7 +19,7 @@
 			<div class="row"><%- include ../partials/dashboard-panels.ejs %></div>
 			<div class="row">
 				<hr>
-				<div><%- include ../partials/chart.ejs %></div>
+				<div><%- include ../partials/dashboard-graph.ejs %></div>
 			</div>
 			<div class="row" >
 				<div id="dashboard-instant-data-div"><%- include ../partials/dashboard-instant-data.ejs %></div>
@@ -33,26 +33,24 @@
 	$( document ).ready(function() {
 		var refreshIntervalId =	setInterval(function(){
 		getLiveData();
-    getInstData();
+    	getInstData();
 	},1 * 60 * 1000);  // refresh every 1 minute
 
 	 function getLiveData(){
 		$.ajax({
 			type: 'POST',
-            url: '/live',
+            url: '/getHBEdata',
             success: function(data) {
+                var mainParameter = <%- JSON.stringify(mainParameter) %>;
                 var data = JSON.parse(data);
-                drawLineChart(data.data, data.assets);
-
-                //drawDashBoardGraph(data);
-                //updateGraph(data);
+                var domain = getDomainForDashboardGraph(data.data,mainParameter);
+                drawLineGraph(d3.select("#dashboard-line-chart-div"),data.data, data.assets,domain, mainParameter);
             },
             error: function(err){
                 if(err.status == 440)
               	  document.location.reload(true);
             	clearInterval(refreshIntervalId);
-            	console.log("Error in ajax");
-				//alert("Live streaming stopped");
+            	console.log("Error in ajax"); // "Live streaming stopped
             }
 
         });
@@ -78,8 +76,6 @@ function getInstData(){
         }
   })
 }
-
-
-	</script>
+</script>
 
 </html>

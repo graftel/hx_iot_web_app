@@ -10,6 +10,7 @@
 %>
 <hr />
 <% for(var i = 0; i < instData.Count; i++) { %>
+	<% if( Object.keys(instData.Items[i]).length > 0){  %>
 	<h2 class="chart-heading"> Instant Data For <%= instData.Items[i].DisplayName %></h2>
   <p id="instData-Last-Update-Time">Last Updated: <%=ToLocalDate(instData.Items[i].EpochTimeStamp) %> </p>
 	<table class="table table-striped">
@@ -36,4 +37,5 @@
 			<% }); %>
 		</tbody>
 	</table>
+<% } %>
 <% } %>

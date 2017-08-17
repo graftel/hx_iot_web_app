@@ -1,0 +1,40 @@
+
+<h2 class="chart-heading"><%= JSON.stringify(mainParameter).replace(/"/g, "") %></h2>
+<div style='position=relative'>
+<div class="row col-md-8" id="dashboard-line-chart-div"> </div>
+<button type="button" id="zoom-reset" class="btn btn-primary zoom-reset-dashboard">Reset</button></div>
+
+<style>
+.xaxis text, .yaxis text {
+	color: black;
+	font-size: 150%;
+}
+
+path.line {
+	width: 600px;
+	height: 351px;
+	overflow: hidden;
+}
+
+.sideLegend text {
+	font-weight: bold;
+	font-size: 15px;
+	cursor: pointer;
+}
+
+.disable {
+	pointer-events: none;
+	background-color: #e6e6e6;
+}
+
+
+</style>
+
+<script>
+	var data = <%- JSON.stringify(data) %>;
+	var assets = <%- JSON.stringify(assets) %>;
+	var mainParameter = <%- JSON.stringify(mainParameter) %>;
+	var domain = getDomainForDashboardGraph(data,mainParameter);
+	drawLineGraph(d3.select("#dashboard-line-chart-div"), data, assets, domain,
+			mainParameter);
+</script>

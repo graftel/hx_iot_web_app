@@ -359,35 +359,36 @@
 								inkscape:connector-curvature="0" sodipodi:nodetypes="cc" />
 							<text xml:space="preserve"
 								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
-								x="345.03348" y="53.226425" 
-								data-type="Temperature" data-location="COLD_IN" onclick="getData(this)" class="clickable" 
-								id="text4537">
+								x="345.03348" y="53.226425" data-type="Temperature"
+								data-location="COLD_IN" onclick="getData(this)"
+								class="clickable" id="text4537">
 							<tspan sodipodi:role="line" id="tspan4535" x="345.03348"
 								y="53.226425" style="stroke-width:0.93750846"><%= values["Ave_COLD_Inlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
 								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
-								x="25.1499186" y="277.56779" 
-								data-type="Temperature"	data-location="HOT_OUT" onclick="getData(this)" class="clickable"
-								id="text4541">
+								x="25.1499186" y="277.56779" data-type="Temperature"
+								data-location="HOT_OUT" onclick="getData(this)"
+								class="clickable" id="text4541">
 							<tspan sodipodi:role="line" id="tspan4539" x="25.1499186"
 								y="277.56779" style="stroke-width:0.93750846"><%= values["Ave_HOT_Outlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
 								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
-								x="636.37885" y="446.53967" 
-								data-type="Temperature"	data-location="COLD_OUT" onclick="getData(this)" class="clickable" id="text4545">
+								x="636.37885" y="446.53967" data-type="Temperature"
+								data-location="COLD_OUT" onclick="getData(this)"
+								class="clickable" id="text4545">
 							<tspan sodipodi:role="line" id="tspan4543" x="654.37885"
 								y="516.53967" style="stroke-width:0.93750846"><%= values["Ave_COLD_Outlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
 								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
-								x="966.68805" y="277.56779" 
-								data-type="Temperature" data-location="HOT_IN" onclick="getData(this)"
-								class="clickable" id="text4549">
+								x="966.68805" y="277.56779" data-type="Temperature"
+								data-location="HOT_IN" onclick="getData(this)" class="clickable"
+								id="text4549">
 							<tspan sodipodi:role="line" id="tspan4547" x="966.68805"
 								y="277.56779" style="stroke-width:0.93750846"><%= values["Ave_HOT_Inlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
 								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
-								x="171.68002" y="249.51559" 
-								data-type="FlowMeter" data-location="HOT_FLOW_IN" onclick="getData(this)"
+								x="171.68002" y="249.51559" data-type="FlowMeter"
+								data-location="HOT_FLOW_IN" onclick="getData(this)"
 								class="clickable" id="text4553">
 							<tspan sodipodi:role="line" id="tspan4551" x="198.68002"
 								y="277.51559"
@@ -402,9 +403,9 @@
 								style="font-size:17.00027084px;stroke-width:0.93750846"><%=values["COLD_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
  						 	<text xml:space="preserve"
 								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
-								x="595.16998" y="332.21436" 
-								data-type="FlowMeter" data-location="COLD_FLOW_IN" onclick="getData(this)" class="clickable" 
-								id="text4561">
+								x="595.16998" y="332.21436" data-type="FlowMeter"
+								data-location="COLD_FLOW_IN" onclick="getData(this)"
+								class="clickable" id="text4561">
 							<tspan sodipodi:role="line" id="tspan4559" x="645.16998"
 								y="357.21436"
 								style="font-size:17.00027084px;stroke-width:0.93750846"><%=values["COLD_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
@@ -416,10 +417,7 @@
 							<tspan sodipodi:role="line" id="tspan4563" x="775.49536"
 								y="274.75253"
 								style="font-size:16.00027084px;stroke-width:0.93750846"><%=values["HOT_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
-
 </svg>
-
-
 					</div>
 				</div>
 			</div>
@@ -429,99 +427,118 @@
 		</div>
 	</div>
 </body>
-<%- include ../partials/scripts.ejs %>
-<script src="js/d3.min.js"></script>
+
 <head>
-<script type="text/javascript">
-	function getData(element) {
-		var parameter = element.getAttribute("data-type");
-		var location = element.getAttribute("data-location");
-		 $.ajax({
-			type : 'POST',
-			url : '/asset/detail',
-			data : {
-				asset : "<%- asset %>",
-				parameter : parameter,
-				location : location
-			},
-			success : function(data) {
-				$("#machine-image").hide();
-				$("#showDetails").show();
-				$("#locationHeading").text(setHeading(location));
-				$("#showDetails").append(populateTable(JSON.parse(data), element, parameter));
-				buildPlot(data);
-			},
-			error : function(err) {
-		          if(err.status == 440)
-		        	  document.location.reload(true);
-		          console.log(err);
+	<%- include ../partials/scripts.ejs %>
+	<script src="js/sensor-map.js" type="text/javascript"></script>
+	
+	<script type="text/javascript">
+		function getData(element) {
+			var parameter = element.getAttribute("data-type");
+			var location = element.getAttribute("data-location");
+			 $.ajax({
+				type : 'POST',
+				url : '/asset/detail',
+				data : {
+					asset : "<%- asset %>",
+					parameter : parameter,
+					location : location
+				},
+				success : function(data) {
+					$("#machine-image").hide();
+					$("#showDetails").show();
+					$("#locationHeading").text(setHeading(location));
+					$("#showDetails").append(populateTable(JSON.parse(data), element, parameter));
+					buildPlot(data);
+				},
+				error : function(err) {
+			          if(err.status == 440)
+			        	  document.location.reload(true);
+			          console.log(err);
+				}
+			});
+		}
+	
+		function populateTable(data,element,parameter){
+			var latestValues = data[0];
+			var calculatedValues = data[1];
+			$(".nav.nav-pills li a").removeClass("active");
+			var keys = Object.keys(calculatedValues);
+			var table = $("#details table");
+			table.data("showing",element.id);
+			table.text("");
+			var unit = (parameter == "Temperature") ? "F" : "GPM";
+			var tableStructure = "";
+			tableStructure = tableStructure + "<thead><tr> <th> Sensor ID </th>";
+			keys.map(function(key){ tableStructure = tableStructure+"<th>"+key+"</th>"; });
+			tableStructure = tableStructure + "</tr></thead>";
+			tableStructure = tableStructure + '<tbody><tr  id="LatestValue"> <td> Latest Value ('+unit+') </td></tr>'
+											+ '<tr id="Max"> <td> Maximum ('+unit+')</tr>'
+											+ '<tr id="Min"> <td> Minimum ('+unit+') </td> </tr>'
+											+ '<tr id="Mean"> <td> Mean ('+unit+') </td></tr>'
+										//	+ '<tr id="Uncertainity"> <td> Measurement Uncertainity(GPM) </td></tr>'
+											+ '<tr id="Std"> <td> Standard Deviation ('+unit+') </td></tr>'
+											//+ '<tr id="Stability"> <td> Stability(GPM/min) </td></tr></tbody>';
+			table.append(tableStructure);
+			for(key of keys){
+				var values = calculatedValues[key];
+				table.find("tr#LatestValue td").last().after("<td>" + latestValues[key].toFixed(3) + "</td>");
+				table.find("tr#Max td").last().after("<td>" + values["Max"].toFixed(3) + "</td>");
+				table.find("tr#Min td").last().after("<td>" + values["Min"].toFixed(3) + "</td>");
+				table.find("tr#Mean td").last().after("<td>" + values["Mean"].toFixed(3) + "</td>");
+				//table.find("tr#Uncertainity td").last().after("<td>" + values["Uncertainity"].toFixed(3) + "</td>");
+				table.find("tr#Std td").last().after("<td>" + values["Std"].toFixed(3) + "</td>");
+				//table.find("tr#Stability td").last().after("<td>" + values["Stability"].toFixed(3) + "</td>");
 			}
-		});
-	}
-
-
-	function populateTable(data,element,parameter){
-		var latestValues = data[0];
-		var calculatedValues = data[1];
-		$(".nav.nav-pills li a").removeClass("active");
-		var keys = Object.keys(calculatedValues);
-		var table = $("#details table");
-		table.data("showing",element.id);
-		table.text("");
-		var unit = (parameter == "Temperature") ? "F" : "GPM";
-		console.log(unit);
-		var tableStructure = "";
-		tableStructure = tableStructure + "<thead><tr> <th> Sensor ID </th>";
-		keys.map(function(key){ tableStructure = tableStructure+"<th>"+key+"</th>"; });
-		tableStructure = tableStructure + "</tr></thead>";
-		tableStructure = tableStructure + '<tbody><tr  id="LatestValue"> <td> Latest Value ('+unit+') </td></tr>'
-										+ '<tr id="Max"> <td> Maximum ('+unit+')</tr>'
-										+ '<tr id="Min"> <td> Minimum ('+unit+') </td> </tr>'
-										+ '<tr id="Mean"> <td> Mean ('+unit+') </td></tr>'
-									//	+ '<tr id="Uncertainity"> <td> Measurement Uncertainity(GPM) </td></tr>'
-										+ '<tr id="Std"> <td> Standard Deviation ('+unit+') </td></tr>'
-										//+ '<tr id="Stability"> <td> Stability(GPM/min) </td></tr></tbody>';
-		table.append(tableStructure);
-		for(key of keys){
-			var values = calculatedValues[key];
-			table.find("tr#LatestValue td").last().after("<td>" + latestValues[key].toFixed(3) + "</td>");
-			table.find("tr#Max td").last().after("<td>" + values["Max"].toFixed(3) + "</td>");
-			table.find("tr#Min td").last().after("<td>" + values["Min"].toFixed(3) + "</td>");
-			table.find("tr#Mean td").last().after("<td>" + values["Mean"].toFixed(3) + "</td>");
-			//table.find("tr#Uncertainity td").last().after("<td>" + values["Uncertainity"].toFixed(3) + "</td>");
-			table.find("tr#Std td").last().after("<td>" + values["Std"].toFixed(3) + "</td>");
-			//table.find("tr#Stability td").last().after("<td>" + values["Stability"].toFixed(3) + "</td>");
 		}
-	}
-
-	function setHeading(text){
-		var str = "  > ";
-		if(text.includes("HOT"))
-			str = str + "HOT SIDE ";
-		else
-			str = str + "COLD SIDE ";
-		
-		if(!text.includes("FLOW")){
-			if(text.includes("IN"))
-				str = str + "IN ";
+	
+		function setHeading(text){
+			var str = "  > ";
+			if(text.includes("HOT"))
+				str = str + "HOT SIDE ";
 			else
-				str = str + "OUT ";
+				str = str + "COLD SIDE ";
+			
+			if(!text.includes("FLOW")){
+				if(text.includes("IN"))
+					str = str + "IN ";
+				else
+					str = str + "OUT ";
+			}
+			
+			if(text.includes("FLOW"))
+				str = str + ": FLOW";
+			else
+				str = str + ": TEMPERATURE";
+			return str;
 		}
-		
-		if(text.includes("FLOW"))
-			str = str + ": FLOW";
-		else
-			str = str + ": TEMPERATURE";
-		return str;
-	}
-
-	setInterval(function(){
-		   console.log("refreshing");
-		   var table = $("#details table");
-		   var element = document.getElementById(table.data("showing"));
-		   if(element == null)
-			   return document.location.reload(true);
-		   getData(element);
-		}, 1 * 60 * 1000);
-</script>
+	
+		function buildPlot(data) {
+			data = JSON.parse(data);
+			var latestVals = data[0];
+			var calculatedVals = data[1];
+			var rawValues = data[2];
+			var latestTimeStamp = data[3];
+	
+			var devices = Object.keys(latestVals);		
+			var assets = {};
+			for (i in devices) {
+				assets[devices[i]] = devices[i];
+			}		
+			var domain = setMinMaxforAssetGraph(calculatedVals, latestTimeStamp);
+	
+			drawLineGraph(d3.select("#assetPlotDiv"), rawValues, assets, domain, "Value");
+			drawSensorMap(latestVals);
+	
+		}
+	
+		setInterval(function(){
+			   console.log("refreshing");
+			   var table = $("#details table");
+			   var element = document.getElementById(table.data("showing"));
+			   if(element == null)
+				   return document.location.reload(true);
+			   getData(element);
+			}, 1 * 60 * 1000);
+	</script>
 </head>

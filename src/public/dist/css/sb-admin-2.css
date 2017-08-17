@@ -501,3 +501,36 @@ h2.chart-heading{
 .shadow{
 	text-shadow: 1px 1px 10px #000, 1px 1px 10px #000;
 }
+
+label{
+	padding-top: 5px;
+}
+
+#zoom-reset{
+	position: absolute;
+}
+
+.zoom-reset-dashboard{
+	top: 75%;
+	left: 55%;
+}
+
+.zoom-reset-asset{
+	top: 370px;
+	left: 75%;
+}
+
+input[readonly]
+{
+    background-color: #f2f2f2;
+}
+
+#devices table>tbody>tr>td, #devices table>tbody>tr>th, 
+#devices table>tfoot>tr>td, #devices table>tfoot>tr>th,
+#devices table>thead>tr>td, #devices table>thead>tr>th {
+	padding: 4px;
+}
+
+.manage-asset-dialog{
+	width: 750px;
+}
