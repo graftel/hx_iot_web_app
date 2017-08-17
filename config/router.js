@@ -470,8 +470,30 @@ module.exports = function(app,options){
 		    if(typeof req.session.passport == 'undefined'){
 					res.status(440).send("Session expired! Login again.");
 			}else{
-				console.log(req.query);
-				return res.redirect('/manageassets');
+				var assetId = req.query.key;
+				var devices;
+				if(assetId){
+					var deviceConfigParams = {
+							 TableName : tables.deviceConfig,
+							 FilterExpression: "ASSETID = :v",
+							 ExpressionAttributeNames: {"#T":"Type"},
+							 ProjectionExpression: "DeviceID, #T",
+							 ExpressionAttributeValues: {
+							        ":v": assetId
+							 },
+							 Select: "SPECIFIC_ATTRIBUTES"
+					 }
+					 options.docClient.scan(deviceConfigParams, function (err, data) {
+					 	    if (err) {
+						        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+						    } else {
+						    	if(data.Count > 0)
+						    		batchDeleteDevices(data.Items);
+						    	deleteAsset(assetId);
+						    	return res.redirect('/manageassets');
+						    }
+					 });
+				}				
 			}
 		 });
 
@@ -711,5 +733,37 @@ module.exports = function(app,options){
 					console.error("Unable to insert into the Devices table. (Function batchInsertNewDevices ) Error JSON:", JSON.stringify(err, null, 2));
 				}
 			});
+	 }
+	 
+	 function batchDeleteDevices(items){
+		 var deviceConfigParams = {  "RequestItems": { } };
+			deviceConfigParams["RequestItems"][tables.deviceConfig] = [];							
+			items.forEach(function(item){
+				var tempObj = {};
+				tempObj["DeleteRequest"] = { "Key": item };
+				deviceConfigParams["RequestItems"][tables.deviceConfig].push(tempObj);
+			});
+			options.docClient.batchWrite(deviceConfigParams, function(err, data) {
+				if (err) {
+					console.error("Unable to delete devices from Devices table. (Function batchDeleteDevices ) Error JSON:", JSON.stringify(err, null, 2));
+				}
+			});
+	 }
+	 
+	 function deleteAsset(assetId){
+		 var assetsParams = {
+				    TableName: tables.assets,
+				    Key:{
+				    	AssetID: assetId
+				    }						    
+				};
+				options.docClient.delete(assetsParams, function(err, data) {
+				    if (err) {
+				        console.error("Unable to delete asset. deleteAsset Error JSON:", JSON.stringify(err, null, 2));
+				        
+				    } else {
+				    	console.log("success");
+				    }
+				});
 	 }
 }
