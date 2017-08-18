@@ -14,6 +14,9 @@
 				</div>
 				<!-- /.col-lg-12 -->
 			</div>
+			<div class="row">
+				<div class="alert alert-info" role="alert"><%- messages() %></div>
+			</div>
 			<div class="row col-md-offset-6">
 				<a href='#' id="add-asset" class="btn btn-success" data-toggle="modal" data-target="#editAsset"
 					style="margin: 10px;">Add Asset</a>
@@ -352,6 +355,15 @@
 		    	 unitElement.val(values.Unit);
 		    	 orientationElement.val(values.Orientation);
 		    }
-		}			
+		}
+		
+		function toggleAlert(){
+		    var text = $("#messages").text();
+		    if(text.length <= 0)
+		    	$('div[role="alert"]').hide();
+		    else
+		    	$('div[role="alert"]').show();
+		}
+		toggleAlert();
 		
 	</script>

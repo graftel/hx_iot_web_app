@@ -30,6 +30,11 @@ app.use(express.static('src/public'));
 app.use(express.static('src/views/partials'));
 app.use(session({ secret: 'anything', cookie: { maxAge: 86400000 },resave: true, // 1 day session, TODO: add option- rolling: true
     saveUninitialized: true }));
+app.use(require('connect-flash')());
+app.use(function (req, res, next) {
+	res.locals.messages = require('express-messages')(req, res);
+	next();
+});
 app.use(cookieParser());
 app.use(passport.initialize());
 app.use(passport.session());

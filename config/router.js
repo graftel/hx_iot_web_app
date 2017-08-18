@@ -237,7 +237,8 @@ module.exports = function(app,options){
 							});
 				        }else{
 				        	console.error("Error with data of calculatedData for AssetID:"+assetid+" (Route: '/asset')");
-				        	return res.redirect("/"); // TO DO: add error message to Dashboard
+				        	req.flash("error", "Error in receiving data. Please try again later");
+				        	return res.redirect("/");
 				        }
 			    }
 			});
@@ -319,9 +320,11 @@ module.exports = function(app,options){
 			 options.docClient.update(settingsParams, function (err, data) {
 				    if (err) {
 				        console.error("Unable to scan the assets table.(getAssets) Error JSON:", JSON.stringify(err, null, 2));
+				        req.flash("error", "Error in updating settings. Please try again later");
 				    } else {
-				    	return res.redirect('/settings');
+				    	req.flash("info", "Settings update successful.");
 				    }
+			    	return res.redirect('/settings');
 				});
 			}
 	 });
@@ -386,12 +389,14 @@ module.exports = function(app,options){
 				options.docClient.put(assetsParams, function(err, data) {
 					if (err) {
 						console.error("Unable to add new asset to Assets table. (Route POST '/asset/add' ) Error JSON:", JSON.stringify(err, null, 2));
-						return res.redirect('/manageassets'); // TODO: redirect with message
+						req.flash("error", "Error in adding new asset. Please try again later or contact Graftel Support team.");
+						return res.redirect('/manageassets');
 					}else{
 						if(Object.keys(deviceData).length > 0){
 							var items = formatNewDevicesFormData(deviceData, assetid);
 							batchInsertNewDevices(items);
 						}
+						req.flash("info", "Adding new asset successful.");
 					}	return res.redirect('/manageassets');
 				});
 		}
@@ -436,6 +441,7 @@ module.exports = function(app,options){
 					items.push(item);					
 				});
 				batchInsertNewDevices(items);
+				req.flash("info", "Asset updates successful.");
 				return res.redirect('/manageassets');
 			}
 		 });
