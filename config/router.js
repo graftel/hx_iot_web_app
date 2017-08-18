@@ -354,7 +354,7 @@ module.exports = function(app,options){
 					 }
 					 options.docClient.scan(params, function (err, data) {
 					 	    if (err) {
-						        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+						        console.error("Unable to scan the devices table. (GET /manageassets) Error JSON:", JSON.stringify(err, null, 2));
 						    } else {
 						    	devicedetails[asset] = data.Items;
 						    	if(Object.keys(devicedetails).length == assetIDs.length){
@@ -494,7 +494,7 @@ module.exports = function(app,options){
 					 }
 					 options.docClient.scan(deviceConfigParams, function (err, data) {
 					 	    if (err) {
-						        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+						        console.error("Unable to scan the deviceConfig table. (GET /asset/delete) Error JSON:", JSON.stringify(err, null, 2));
 						    } else {
 						    	//if(data.Count > 0)
 						    	//	batchDeleteDevices(data.Items);
@@ -608,7 +608,7 @@ module.exports = function(app,options){
 		 }
 		 options.docClient.scan(params, function (err, data) {
 		 	    if (err) {
-			        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+			        console.error("Unable to scan the devices table. (Function getDevicesForAsset) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	deviceids = data.Items.map(function(d){ return d.DeviceID });
 					callback(calculateDeviceValues,sendData);
@@ -638,7 +638,7 @@ module.exports = function(app,options){
 			 }
 			 options.docClient.query(params, function (err, data) {
 			 	    if (err) {
-				        console.error("Unable to query the assets table. Error JSON:", JSON.stringify(err, null, 2));
+				        console.error("Unable to query the raw data table. (Function getRecentRawdata) Error JSON:", JSON.stringify(err, null, 2));
 				    } else {
 				    		var tempObj = {};
 				    		tempObj[deviceid] = data.Items;
