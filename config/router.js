@@ -319,7 +319,7 @@ module.exports = function(app,options){
 					};
 			 options.docClient.update(settingsParams, function (err, data) {
 				    if (err) {
-				        console.error("Unable to scan the assets table.(getAssets) Error JSON:", JSON.stringify(err, null, 2));
+				        console.error("Unable to update the settings table.( POST /settings) Error JSON:", JSON.stringify(err, null, 2));
 				        req.flash("error", "Error in updating settings. Please try again later");
 				    } else {
 				    	req.flash("info", "Settings update successful.");
@@ -506,6 +506,36 @@ module.exports = function(app,options){
 				}				
 			}
 		 });
+
+	 app.get('/alerts', function(req,res){
+	    	if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Login again.");
+			}else{		 
+			    	res.render('pages' + path.sep + 'alerts',{
+			    		assets: assets
+			    	});			  
+		}
+	 });
+	 
+	 app.get('/warnings', function(req,res){
+	    	if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Login again.");
+			}else{		 
+			    	res.render('pages' + path.sep + 'warnings',{
+			    		assets: assets
+			    	});			  
+		}
+	 });
+	 
+	 app.get('/predictions', function(req,res){
+	    	if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Login again.");
+			}else{		 
+			    	res.render('pages' + path.sep + 'predictions',{
+			    		assets: assets
+			    	});			  
+		}
+	 });
 
 	// Helper Methods
 	var getCalculatedValues = function(callback) {
