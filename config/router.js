@@ -67,9 +67,10 @@ module.exports = function(app,options){
 			return res.redirect('/login');
 		}
 		else{
+			var timer = req.query.timer || 1;
 			var currentUserID = req.user.userid;
 			getMainParameter(currentUserID);
-			getAssets(getCalculatedValues);
+			getAssets(timer, getCalculatedValues);
 			simpleCallback = function(){
 				if(HBEdetails.length == assetIDs.length){
 					var parameterlist = {	"#HBP": "Heat_Balance_Error(%)",
@@ -108,7 +109,7 @@ module.exports = function(app,options){
 		if(typeof req.session.passport == 'undefined'){
 			res.status(440).send("Session expired! Login again");
 		}
-		getCalculatedValues(simpleCallback = function(){
+		getCalculatedValues(1, simpleCallback = function(){
 			if(HBEdetails.length == 0 ){
 				res.status(404).send("Oh uh, something went wrong");
 			}
@@ -538,7 +539,7 @@ module.exports = function(app,options){
 	 });
 
 	// Helper Methods
-	var getCalculatedValues = function(callback) {
+	var getCalculatedValues = function(timer=1, callback) {
 		 var params;
 		 HBEdetails=[];
 		 var curtime = new Date() / 1000;
@@ -564,7 +565,7 @@ module.exports = function(app,options){
 												    KeyConditionExpression: "AssetID = :v1 AND #T BETWEEN :v2a and :v2b",
 												    ExpressionAttributeValues: {
 												        ":v1": device,
-												        ":v2a": curtime - 3600,
+												        ":v2a": curtime - (timer * 60 * 60),
 												        ":v2b": curtime
 												    },
 												    Select: "SPECIFIC_ATTRIBUTES"
@@ -583,7 +584,7 @@ module.exports = function(app,options){
 		 })(device)
 	 }
 
-	 function getAssets(callback) {
+	 function getAssets(timer=1, callback) {
 		 HBEdetails = [], assets = {}, assetIDs = []; // to empty any previous values stored
 		 var assetsParams = {
 				    TableName : tables.assets,
@@ -597,7 +598,7 @@ module.exports = function(app,options){
 			    		assets[data.Items[item].AssetID] = data.Items[item].DisplayName;
 			    		assetIDs.push(data.Items[item].AssetID);
 			    	}
-				    callback(simpleCallback);
+				    callback(timer, simpleCallback);
 			    }
 			});
 		}

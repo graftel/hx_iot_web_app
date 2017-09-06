@@ -119,17 +119,15 @@
 										}
 					  });
 		vis.call(zoom);
-		
 
-		
 		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
 				.attr("class", "row border-0")
 				.html('<img src="images/zoom.png" alt="zoom" width="25" height="25" id="zoom" class="span3 controls" title="Enable/Disable Zoom"/>'
 								+ '<img src="images/full-screen.png" alt="full" width="25" height="25" id="full-screen" class="span3 controls" style="margin: 0 5px 0 5px;" title="Full Screen" />'
 								+ '<img src="images/timer.png" alt="timer" width="25" height="25" id="timer" class="span3 controls" title="Time Period" data-toggle="dropdown"/>'
 								+ '<img src="images/lock.png" alt="lock" width="25" height="25" id="lock" class="span3 controls" title="Lock this control bar" />'
-								+ '<div class="timer-dropdown"><div><a href="#">1-hour data</a></div><div><a href="#">2-hours data</a></div>'
-								+ '<div><a href="#">3-hours data</a></div><div><a href="#">5-hours data</a></div><div><a href="#">24-hours data</a></div></div>');
+								+ '<div class="timer-dropdown"><div><a  id="timer-1" href="#">1-hour data</a></div><div><a id="timer-2" href="#">2-hours data</a></div>'
+								+ '<div><a id="timer-3" href="#">3-hours data</a></div><div><a  id="timer-5" href="#">5-hours data</a></div><div><a  id="timer-24" href="#">24-hours data</a></div></div>');
 			
 		var lines = document.getElementsByClassName('line');
 
@@ -142,7 +140,6 @@
 				.attr('fill', 'none')
 				.attr('pointer-events', 'all')
 				.on('mouseout', function() { 
-					// and text
 					d3.select(".mouse-line").style("opacity", "0");
 					d3.selectAll(".mouse-per-line rect").style("opacity", "0");
 					d3.selectAll(".mouse-per-line text").style("opacity", "0");
@@ -156,7 +153,7 @@
 					xlabelBox.style("opacity", "0.6");
 					xlabelText.style("opacity", "1");
 				})
-				.on('mousemove', function() { // mouse moving over canvas
+				.on('mousemove', function() {
 							var mouse = d3.mouse(this);
 							d3.select(".mouse-line").attr("d", function() {
 								var d = "M" + mouse[0] + "," + (HEIGHT - 20);
@@ -255,7 +252,8 @@
 		});
 		
 		toolMenu.selectAll("div.timer-dropdown a").on('click',function(){
-			console.log(this);
+			var timeInHours = this.id.split("timer-")[1];
+			window.location.href = "/?timer="+timeInHours;
 		});
 		
 	}
