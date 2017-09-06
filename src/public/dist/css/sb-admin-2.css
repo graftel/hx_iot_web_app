@@ -534,3 +534,18 @@ input[readonly]
 .manage-asset-dialog{
 	width: 750px;
 }
+
+img.controls{
+	padding: 2px;
+	box-sizing: border-box;
+}
+
+img.controls:hover{
+	cursor:pointer;
+	border: 2px solid grey;
+}
+
+.timer-dropdown li,.timer-dropdown li a{
+	padding: 0;
+	margin: 0;
+}
