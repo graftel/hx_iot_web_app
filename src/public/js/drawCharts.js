@@ -49,7 +49,7 @@
 		var mousePerLine = mouseG.selectAll('.mouse-per-line').data(data).enter()   // tooltip group
 				.append("g").attr("class", "mouse-per-line");
 	
-		mousePerLine.append("rect").style("fill", "none").attr("width", 50).attr(
+		mousePerLine.append("rect").style("fill", "red").attr("width", 50).attr(
 				"height", 30).style("opacity", "0");
 	
 		mousePerLine.append("text").attr("transform", "translate(12,20)").style(
@@ -165,8 +165,7 @@
 									.attr("transform",
 											function(d, i) {
 													var key = Object.keys(d)[0];
-													var rectColor = d3
-															.select("#" + key).attr(
+													var rectColor = $("#" + key).attr(
 																	"stroke");
 													if (!($(".sideLegend text[data-id*='"
 															+ key + "']")
@@ -215,6 +214,11 @@
 													return "translate(" + mouse[0] + "," + pos.y + ")";
 											});
 						});
+		if(window.location.pathname == "/asset"){
+			zoomEnabled = true;
+			toolMenu.attr("display", "none");
+		}
+		
 		if (!lock)
 			toolMenu.attr("display", "none");
 		
@@ -227,6 +231,10 @@
 		});
 		
 		vis.on("mouseover", function() {
+			if(window.location.pathname == "/asset"){
+				toolMenu.attr("display", "none");
+				return;
+			}
 			toolMenu.attr("display", "block");
 		}).on("mouseout", function() {
 			if (!lock)
@@ -235,7 +243,7 @@
 		
 		toolMenu.on("mouseover", function(d) {
 			var circleUnderMouse = this;
-			d3.selectAll("svg g").transition().style('opacity', function() {
+			graphDiv.selectAll("svg g").transition().style('opacity', function() {
 				var opacityDegree = 0.4;
 				d3.select("#zoom-reset").style('opacity', opacityDegree);
 				return (this === circleUnderMouse) ? 1.0 : opacityDegree;
@@ -253,7 +261,7 @@
 		
 		toolMenu.selectAll("div.timer-dropdown a").on('click',function(){
 			var timeInHours = this.id.split("timer-")[1];
-			window.location.href = "/?timer="+timeInHours;
+			getLiveData(timeInHours);			
 		});
 		
 	}

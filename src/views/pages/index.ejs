@@ -38,10 +38,11 @@
     	getInstData();
 	},1 * 60 * 1000);  // refresh every 1 minute
 
-	 function getLiveData(){
+	  window.getLiveData = function(timer=1){
 		$.ajax({
 			type: 'POST',
             url: '/getHBEdata',
+            data: {timer: timer},
             success: function(data) {
                 var mainParameter = <%- JSON.stringify(mainParameter) %>;
                 var data = JSON.parse(data);

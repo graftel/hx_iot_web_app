@@ -433,7 +433,7 @@
 	<script src="js/sensor-map.js" type="text/javascript"></script>
 	
 	<script type="text/javascript">
-		function getData(element) {
+		 window.getData = function(element, timer) {
 			var parameter = element.getAttribute("data-type");
 			var location = element.getAttribute("data-location");
 			 $.ajax({
@@ -442,7 +442,8 @@
 				data : {
 					asset : "<%- asset %>",
 					parameter : parameter,
-					location : location
+					location : location,
+					timer: timer
 				},
 				success : function(data) {
 					$("#machine-image").hide();
@@ -538,7 +539,7 @@
 			   var element = document.getElementById(table.data("showing"));
 			   if(element == null)
 				   return document.location.reload(true);
-			   getData(element);
+			   getData(element, 0.25);
 			}, 1 * 60 * 1000);
 	</script>
 </head>

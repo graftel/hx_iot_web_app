@@ -67,10 +67,9 @@ module.exports = function(app,options){
 			return res.redirect('/login');
 		}
 		else{
-			var timer = req.query.timer || 1;
 			var currentUserID = req.user.userid;
 			getMainParameter(currentUserID);
-			getAssets(timer, getCalculatedValues);
+			getAssets(getCalculatedValues);
 			simpleCallback = function(){
 				if(HBEdetails.length == assetIDs.length){
 					var parameterlist = {	"#HBP": "Heat_Balance_Error(%)",
@@ -109,7 +108,8 @@ module.exports = function(app,options){
 		if(typeof req.session.passport == 'undefined'){
 			res.status(440).send("Session expired! Login again");
 		}
-		getCalculatedValues(1, simpleCallback = function(){
+		var timer = req.body.timer || 1;
+		getCalculatedValues(timer, simpleCallback = function(){
 			if(HBEdetails.length == 0 ){
 				res.status(404).send("Oh uh, something went wrong");
 			}
@@ -256,6 +256,7 @@ module.exports = function(app,options){
 				 	var assetid = req.body.asset;
 					var parameter = req.body.parameter;
 					var location = req.body.location;
+					var timer = req.body.timer;
 					if(typeof assetid == 'undefined' || typeof parameter == 'undefined'){
 						return res.status(404).send("Oh uh, something went wrong");
 					}
@@ -265,7 +266,7 @@ module.exports = function(app,options){
 					// step 3 - get last one hour raw data from given timestamp
 					// step 4 - calculate values
 
-					getLatestRecordedTimeStamp(assetid,parameter,location,getDevicesForAsset,sendData=function(){
+					getLatestRecordedTimeStamp(assetid,parameter,location,timer,getDevicesForAsset,sendData=function(){
 						res.end(JSON.stringify([latestRawValues,calculations,rawValues,latestTimeStamp]));
 					});
 				}
@@ -584,7 +585,7 @@ module.exports = function(app,options){
 		 })(device)
 	 }
 
-	 function getAssets(timer=1, callback) {
+	 function getAssets(callback) {
 		 HBEdetails = [], assets = {}, assetIDs = []; // to empty any previous values stored
 		 var assetsParams = {
 				    TableName : tables.assets,
@@ -598,12 +599,12 @@ module.exports = function(app,options){
 			    		assets[data.Items[item].AssetID] = data.Items[item].DisplayName;
 			    		assetIDs.push(data.Items[item].AssetID);
 			    	}
-				    callback(timer, simpleCallback);
+				    callback(1, simpleCallback);
 			    }
 			});
 		}
 
-	 function getLatestRecordedTimeStamp(assetid,parameter,location,callback,sendData){
+	 function getLatestRecordedTimeStamp(assetid,parameter,location,timer,callback,sendData){
 		 var params = {
 				 TableName : tables.assets,
 				 ExpressionAttributeNames: {"#T":"LastestTimeStamp"},
@@ -619,12 +620,12 @@ module.exports = function(app,options){
 			        console.error("Unable to query the assets table. (getLatestRecordedTimeStamp) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	   latestTimeStamp = data.Items[0].LastestTimeStamp;
-			  		   callback(assetid,parameter,location,getRecentRawdata,sendData);
+			  		   callback(assetid,parameter,location,timer,getRecentRawdata,sendData);
 			    }
 		 });
 	 }
 
-	 function getDevicesForAsset(assetid,parameter,location,callback,sendData){
+	 function getDevicesForAsset(assetid,parameter,location,timer,callback,sendData){
 		 var params = {
 				 TableName : tables.deviceConfig,
 				 ExpressionAttributeNames: { "#Ty": "Type", "#L": "Location" },
@@ -642,12 +643,12 @@ module.exports = function(app,options){
 			        console.error("Unable to scan the devices table. (Function getDevicesForAsset) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	deviceids = data.Items.map(function(d){ return d.DeviceID });
-					callback(calculateDeviceValues,sendData);
+					callback(timer,calculateDeviceValues,sendData);
 			    }
 		 });
 	 }
 
-	 function getRecentRawdata(callback,sendData){
+	 function getRecentRawdata(timer=0.25,callback,sendData){
 		 rawValues = [];
 		 var counter = 0;
 		 if(deviceids.length == 0){
@@ -662,7 +663,7 @@ module.exports = function(app,options){
 					 ProjectionExpression: "EpochTimeStamp, #V",
 					 ExpressionAttributeValues: {
 					        ":v1": deviceid,
-					        ":v2": latestTimeStamp - (15*60),
+					        ":v2": latestTimeStamp - (timer * 60 * 60),
 					        ":v3": latestTimeStamp
 					 },
 					 Select: "SPECIFIC_ATTRIBUTES"

@@ -124,9 +124,9 @@
 	
 	function setStrokeVisibility(key) {
 		if ($(".sideLegend text[data-id*='" + key + "']").hasClass("showLine"))
-			d3.selectAll("#" + key).style("opacity", 1);
+			$("#" + key).attr("opacity", 1);
 		else
-			d3.selectAll("#" + key).style("opacity", 0);
+			$("#" + key).attr("opacity", 0);
 	}
 	
 	function setLegendEnability(key, itemsLength) {
