@@ -545,7 +545,22 @@ img.controls:hover{
 	border: 2px solid grey;
 }
 
-.timer-dropdown li,.timer-dropdown li a{
-	padding: 0;
-	margin: 0;
+.timer-dropdown{
+	margin-left: 25px;
+	background-color: #f2f2f2;
+	display: none;
+}
+
+.timer-dropdown a{
+	text-decoration: none;
+	border: 1px;
+	color: black;
+	padding-left: 5px;	
+}
+
+.timer-dropdown div{
+	width: 100%;
+}
+.timer-dropdown div:hover{
+	background-color: #cdcdcd;
 }
