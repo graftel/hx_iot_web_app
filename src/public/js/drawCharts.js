@@ -28,7 +28,13 @@
 			return timestampToTime(d);
 		});
 		window.yAxis = d3.axisLeft(yScale);
-	
+		var reset = vis.append("g").attr("transform", "translate(100,100)").attr("id","zoom-reset").style("cursor","pointer");
+		reset.append("rect") // reset button
+			.attr('x', WIDTH - 140).attr('y', HEIGHT - 150).attr('width', 70)
+			.attr('height', 35).attr("rx",6).style('fill', "#7d7e82").style("stroke","black").style("stroke-width","3px");
+		
+		reset.append("text").text("Reset").style("fill","white").attr('x', WIDTH - 125).attr('y', HEIGHT - 130).attr('width', 70)
+		.attr('height', 35);
 		var gX = vis.append("g").attr("class", "xaxis").attr("transform",
 				"translate(0," + (HEIGHT - MARGINS.bottom) + ")");
 		gX.call(xAxis).selectAll("text").attr("y", 0).attr("x", 9).attr("dy",
@@ -248,7 +254,6 @@
 			var circleUnderMouse = this;
 			graphDiv.selectAll("svg g").transition().style('opacity', function() {
 				var opacityDegree = 0.4;
-				d3.select("#zoom-reset").style('opacity', opacityDegree);
 				return (this === circleUnderMouse) ? 1.0 : opacityDegree;
 			});
 		}).on("mouseout", function(d) {
@@ -266,7 +271,9 @@
 			var timeInHours = this.id.split("timer-")[1];
 			getLiveData(timeInHours);			
 		});
-		
+		vis.select("#zoom-reset").on("click",function(event) {
+			vis.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+		});
 	}
 	
 	function drawSensorMap(latestValues) {

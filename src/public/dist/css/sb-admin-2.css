@@ -546,9 +546,10 @@ img.controls:hover{
 }
 
 .timer-dropdown{
-	margin-left: 25px;
+	margin-left: 15px;
 	background-color: #f2f2f2;
 	display: none;
+	width: 90px;
 }
 
 .timer-dropdown a{
@@ -565,12 +566,18 @@ img.controls:hover{
 	background-color: #cdcdcd;
 }
 
+#dashboard-instant-data-div{
+	margin-left: 15px;
+}
+
 .svg-container {
     display: inline-block;
     position: relative;
-    padding-bottom: 30%; /* aspect ratio */
+    padding-bottom: 0; /* aspect ratio */
     vertical-align: top;
-    overflow: unset;
+    overflow: hidden;
+    width: 100%;
+    height: 550px;
 }
 .svg-content {
     display: inline-block;
@@ -578,10 +585,4 @@ img.controls:hover{
     top: 10px;
     left: 2%;
     overflow: overlay !important;
-}
-
-@media only screen and (max-height: 600px) {
-   .svg-container {
-    	padding-bottom: 60%; /* aspect ratio */
-	}
 }
