@@ -564,3 +564,24 @@ img.controls:hover{
 .timer-dropdown div:hover{
 	background-color: #cdcdcd;
 }
+
+.svg-container {
+    display: inline-block;
+    position: relative;
+    padding-bottom: 30%; /* aspect ratio */
+    vertical-align: top;
+    overflow: unset;
+}
+.svg-content {
+    display: inline-block;
+    position: absolute;
+    top: 10px;
+    left: 2%;
+    overflow: overlay !important;
+}
+
+@media only screen and (max-height: 600px) {
+   .svg-container {
+    	padding-bottom: 60%; /* aspect ratio */
+	}
+}

@@ -3,8 +3,11 @@
 	function drawLineGraph(graphDiv, data, assets, domain, YParam) {
 		
 		graphDiv.select('svg').remove(); // empty svg on every load
-		window.vis = graphDiv.append('svg').attr('width', 1000).attr('height', 500)
-				.attr('class', 'col col-md-10');
+		window.vis = graphDiv.append('svg')
+					.attr("preserveAspectRatio", "xMinYMin meet")
+					.attr("viewBox", "0 0 800 500")
+					.attr('width', 800).attr('height', 500)
+					.attr('class', 'svg-content col col-md-10');
 		var WIDTH = 800, HEIGHT = 400, MARGINS = {
 			top : 20,
 			right : 20,
@@ -49,7 +52,7 @@
 		var mousePerLine = mouseG.selectAll('.mouse-per-line').data(data).enter()   // tooltip group
 				.append("g").attr("class", "mouse-per-line");
 	
-		mousePerLine.append("rect").style("fill", "red").attr("width", 50).attr(
+		mousePerLine.append("rect").style("fill", "none").attr("width", 50).attr(
 				"height", 30).style("opacity", "0");
 	
 		mousePerLine.append("text").attr("transform", "translate(12,20)").style(
