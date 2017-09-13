@@ -203,13 +203,14 @@
 											});
 						});
 		
-		// ******** Options Tool Menu **********
+		// ******** Tool Menu Options **********
 		var toolMenu = vis.append('g').attr('class', 'toolMenu'); // Tool menu group
 		toolMenu.append('rect').attr('x', 740).attr('y', 2).attr('width', 120)  // tool menu background
 		.attr('height', 25).style('fill', "#f2f2f2");
 	
 		var foreignObj = toolMenu.append("foreignObject").attr("class", "container").attr(
 			'x', 745).attr('y', 2).attr('width', 80).attr('height', 25);  // options under tool menu
+		
 		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
 		.attr("class", "row border-0")
 		.html('<img src="images/zoom_drag.png" alt="zoom" width="25" height="25" id="zoom" class="span3 controls" title="Selectable Zoom / Zoom InOut"/>'
@@ -218,22 +219,20 @@
 						+ '<img src="images/lock.png" alt="lock" width="25" height="25" id="lock" class="span3 controls" title="Lock this control bar" />'
 						+ '<div class="timer-dropdown"><div><a id="timer-1hr" href="#">1-hour data</a></div><div><a id="timer-2hr" href="#">2-hours data</a></div>'
 						+ '<div><a id="timer-3hr" href="#">3-hours data</a></div><div><a id="timer-5hr" href="#">5-hours data</a></div><div><a id="timer-24hr" href="#">24-hours data</a></div></div>');
-
-		setZoomImage();
 		
 		if(window.location.pathname == "/asset"){
 			zoomEnabled = true;
 			toolMenu.attr("display", "none");
 		}
 		
-		if (!lock)
+		if (!lock) // lock button - initial setup
 			toolMenu.attr("display", "none");
 		
-		$("img#lock").click(function(event) {
+		$("img#lock").click(function(event) { // lock button - click event
 			lock = !lock;
 		});
 	
-		vis.on("mouseover", function() {
+		vis.on("mouseover", function() { // tool menu - display events
 			if(window.location.pathname == "/asset"){
 				toolMenu.attr("display", "none");
 				return;
@@ -254,17 +253,18 @@
 			d3.selectAll("svg g").transition().style('opacity', 1);
 		});
 	
-		toolMenu.selectAll("img#timer, div.timer-dropdown").on("mouseover", function() {
+		toolMenu.selectAll("img#timer, div.timer-dropdown").on("mouseover", function() { // timer button - display events
 			toolMenu.select("div.timer-dropdown").style("display", "block");
 		}).on("mouseout", function() {
 			toolMenu.select("div.timer-dropdown").style("display", "none");
 		});
 		
-		toolMenu.selectAll("div.timer-dropdown a").on('click',function(){
+		toolMenu.selectAll("div.timer-dropdown a").on('click',function(){ // timer button - click events
 			var timeInHours = this.id.replace(/^\D+|\D+$/g, "");
 			getLiveData(timeInHours);			
 		});
-		vis.select("#reset").on("click",function() {
+		
+		vis.select("#reset").on("click",function() { // RESET button
 			drawLineGraph(graphDiv, data, assets, domain, YParam);
 		});
 		
@@ -336,15 +336,15 @@
 		  });
 		vis.on("click", clearMask);
 		
-		$("img#zoom").click(function(event) {
-			zoomEnabled = !zoomEnabled;
-			setZoomImage();
+		var setZoom = function(){
 			if(zoomEnabled){ // zoom enabled
+				$("img#zoom").attr("src", "images/zoom_in_out.png");
 				if(dragBehavior) // disable drag behavior
 					vis.call(dragBehavior).on(".drag",null);
 				vis.call(zoom);
 			}			
 			else{ 
+				$("img#zoom").attr("src", "images/zoom_drag.png");
 				if(zoom)
 					vis.call(zoom) // zoom disable
 				    .on("wheel.zoom", null)
@@ -354,19 +354,18 @@
 				    .on("touchend.zoom", null);					
 				vis.call(dragBehavior); // enable drag
 			}
+		};
+		
+		setZoom(); // for initial setup when graph loads
+		$("img#zoom").click(function(event) {
+			zoomEnabled = !zoomEnabled;
+			setZoom();
 		});
 	}
 	
 	function clearMask(){
 		d3.selectAll(".maskDef").remove();
 		d3.selectAll(".maskRect").remove();
-	}
-	
-	function setZoomImage(){
-		if(zoomEnabled)
-			$("img#zoom").attr("src", "images/zoom_in_out.png");
-		else
-			$("img#zoom").attr("src", "images/zoom_drag.png");
 	}
 	
 	function drawSensorMap(latestValues) {
