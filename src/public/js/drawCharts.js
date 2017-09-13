@@ -1,5 +1,8 @@
+	
 	var zoomEnabled = false;
 	var lock = false;
+	var selectionDrag;
+
 	function drawLineGraph(graphDiv, data, assets, domain, YParam) {
 		
 		graphDiv.select('svg').remove(); // empty svg on every load
@@ -17,6 +20,8 @@
 		vis.append("rect").attr("x", 0).attr("y", 0).attr("height", HEIGHT + 50)
 				.attr("width", WIDTH + 60).style("stroke", "grey").style("fill",
 						"none").style("stroke-width", 1);   // svg border line
+		
+		// ***** X-axis, Y-axis ******
 		var xScale = d3.scaleLinear().range(
 				[ MARGINS.left, WIDTH - MARGINS.right - 50 ]).domain(
 				[ domain.X.min, domain.X.max ]);
@@ -28,13 +33,7 @@
 			return timestampToTime(d);
 		});
 		window.yAxis = d3.axisLeft(yScale);
-		var reset = vis.append("g").attr("transform", "translate(100,100)").attr("id","zoom-reset").style("cursor","pointer");
-		reset.append("rect") // reset button
-			.attr('x', WIDTH - 140).attr('y', HEIGHT - 150).attr('width', 70)
-			.attr('height', 35).attr("rx",6).style('fill', "#7d7e82").style("stroke","black").style("stroke-width","3px");
-		
-		reset.append("text").text("Reset").style("fill","white").attr('x', WIDTH - 125).attr('y', HEIGHT - 130).attr('width', 70)
-		.attr('height', 35);
+
 		var gX = vis.append("g").attr("class", "xaxis").attr("transform",
 				"translate(0," + (HEIGHT - MARGINS.bottom) + ")");
 		gX.call(xAxis).selectAll("text").attr("y", 0).attr("x", 9).attr("dy",
@@ -42,51 +41,46 @@
 				"start");
 		var gY = vis.append("g").attr("class", "yaxis").attr("transform",
 				"translate(" + (MARGINS.left) + ",0)").call(yAxis);
-		var chartBody = vis.append("g").attr("clip-path", "url(#clip)");
-		var colors = assignColor(assets);
-		var sideLegend = vis.append('g').attr('class', 'sideLegend'); // legend group
-		var toolMenu = vis.append('g').attr('class', 'toolMenu'); // Tool menu group
-			toolMenu.append('rect').attr('x', 740).attr('y', 2).attr('width', 120)  // tool menu background
-			.attr('height', 25).style('fill', "#f2f2f2");
-		
-		var foreignObj = toolMenu.append("foreignObject").attr("class", "container").attr(
-				'x', 745).attr('y', 2).attr('width', 80).attr('height', 25);  // options under tool menu
-		
-		var mouseG = vis.append("g").attr("class", "mouse-over-effects");  // tooltip canvas group
-		
-	
-		var mousePerLine = mouseG.selectAll('.mouse-per-line').data(data).enter()   // tooltip group
-				.append("g").attr("class", "mouse-per-line");
-	
-		mousePerLine.append("rect").style("fill", "none").attr("width", 50).attr(
-				"height", 30).style("opacity", "0");
-	
-		mousePerLine.append("text").attr("transform", "translate(12,20)").style(
-				"fill", "white");
 		
 		var xlabelBox = d3.select(".xaxis").append("rect").attr("transform",
-				"translate(12,20)").style("fill", "#337ab7").attr("width", 50)
-				.attr("height", 30).style("opacity", "0");
-		var xlabelText = d3.select(".xaxis").append("text").attr("transform",
-				"translate(12,20)").style("fill", "white").style("opacity", "0");
+		"translate(12,20)").style("fill", "#7d7e82").attr("width", 50)
+		.attr("height", 30).style("opacity", "0");
 		
-		/*
-		 * vis.append("g") // display YAxis parameter name .attr("class", "yaxis")
-		 * .append("text") .attr("transform", "rotate(-90)") .attr("y", 6)
-		 * .attr("dy", ".71em") .style("text-anchor", "end") .style("font-size",
-		 * "10pt") .text(YParam);
-		 */
-
+		var xlabelText = d3.select(".xaxis").append("text").attr("transform",
+		"translate(12,20)").style("fill", "white").style("opacity", "0");
+		
+		var startingDate = new Date(domain.X.min * 1000),
+			endingDate = new Date(domain.X.max * 1000);
+		if(startingDate.getDate() != endingDate.getDate()){
+			vis.append("g")  // x axis label ending date
+			.append("text").attr("x", 750).attr("y", 430).attr("dy",".71em")
+			.style("text-anchor", "end").style("font-size", "10pt")
+			.text((endingDate.getMonth()+1) + "/" + endingDate.getDate() + "/" + endingDate.getFullYear());
+		}
+		vis.append("g")  // x axis label starting date
+			.append("text").attr("x", 120).attr("y", 430).attr("dy",".71em")
+			.style("text-anchor", "end").style("font-size", "10pt")
+			.text((startingDate.getMonth()+1) + "/" + startingDate.getDate() + "/" + startingDate.getFullYear());
+		vis.append("g")  // y axis label
+			.append("text").attr("transform", "rotate(-90)").attr("x", -20).attr("y", 20).attr("dy",".71em")
+			.style("text-anchor", "end").style("font-size", "10pt")
+			.text(YParam);
+		
+		// ****** Path and side legend ********
+		var chartBody = vis.append("g").attr("clip-path", "url(#clip)").attr("id","chartBody");
+		var colors = assignColor(assets);
+		
 		var dataGroup = reformatData(data, YParam);
 		var lineGen = d3.line().curve(d3.curveBasis).x(function(d) {
 			return xScale(d.xV);
 		}).y(function(d) {
 			return yScale(d.yV);
 		});
-	
-		// draw graph lines and add legend
-		dataGroup.forEach(function(d, i) {
-			// adding legend start
+		
+		var sideLegend = vis.append('g').attr('class', 'sideLegend'); // legend group
+		
+		dataGroup.forEach(function(d, i) { // draw graph lines and add legend
+			
 			sideLegend.append('rect').attr('x', WIDTH - 20).attr('y', function() {
 				return (i * 20) + 50;
 			}).attr('width', 10).attr('height', 10).style('fill', function() {
@@ -103,7 +97,6 @@
 				setStrokeVisibility(device);
 			});
 			setLegendEnability(d.key, d.values.length);
-			// adding legend end
 			
 			chartBody.append('path').attr('d', lineGen(d.values)).attr('stroke',  // generate path lines
 					colors[d.key]).attr('stroke-width', 2).attr('class', 'line')
@@ -111,41 +104,27 @@
 		});
 		
 		vis.append("defs").append("clipPath").attr("id", "clip").append("rect")
-		.attr("x", "50").attr("y", "-20").attr("width", WIDTH - 120).attr("height", HEIGHT);
+		.attr("x", "70").attr("y", "0").attr("width", WIDTH - 140).attr("height", HEIGHT - 20);		
 		
-		window.zoom = d3.zoom().scaleExtent([ 0.5, 2 ])  // svg zoom properties
-					  .on("zoom", function() {
-										if (zoomEnabled) {
-											var new_xScale = d3.event.transform.rescaleX(xScale);
-											var new_yScale = d3.event.transform.rescaleY(yScale);
-											gX.call(xAxis.scale(new_xScale)).selectAll("text").attr(
-													"x", 9).attr("y", 0).attr("dy", ".35em").attr(
-													"transform", "rotate(90)").style("text-anchor",
-													"start");
-											gY.call(yAxis.scale(new_yScale));
-											vis.selectAll('.line')
-													.attr("transform", d3.event.transform);
-										}
-					  });
-		vis.call(zoom);
-
-		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
-				.attr("class", "row border-0")
-				.html('<img src="images/zoom.png" alt="zoom" width="25" height="25" id="zoom" class="span3 controls" title="Enable/Disable Zoom"/>'
-								+ '<img src="images/full-screen.png" alt="full" width="25" height="25" id="full-screen" class="span3 controls" style="margin: 0 5px 0 5px;" title="Full Screen" />'
-								+ '<img src="images/timer.png" alt="timer" width="25" height="25" id="timer" class="span3 controls" title="Time Period" data-toggle="dropdown"/>'
-								+ '<img src="images/lock.png" alt="lock" width="25" height="25" id="lock" class="span3 controls" title="Lock this control bar" />'
-								+ '<div class="timer-dropdown"><div><a  id="timer-1" href="#">1-hour data</a></div><div><a id="timer-2" href="#">2-hours data</a></div>'
-								+ '<div><a id="timer-3" href="#">3-hours data</a></div><div><a  id="timer-5" href="#">5-hours data</a></div><div><a  id="timer-24" href="#">24-hours data</a></div></div>');
-			
+		// ****** Tool tip **********
 		var lines = document.getElementsByClassName('line');
-
-		// all mouse events - start
+		var mouseG = vis.append("g").attr("class", "mouse-over-effects");  // tooltip canvas group
+		
+		
+		var mousePerLine = mouseG.selectAll('.mouse-per-line').data(data).enter()   // tooltip group
+				.append("g").attr("class", "mouse-per-line");
+	
+		mousePerLine.append("rect").style("fill", "none").attr("width", 50).attr(
+				"height", 30).style("opacity", "0");
+	
+		mousePerLine.append("text").attr("transform", "translate(12,20)").style(
+				"fill", "white");
+		
 		mouseG.append('svg:rect')
-				.attr("x", "50")
-				.attr("y", "30")
-				.attr('width', WIDTH - 120)
-				.attr('height', HEIGHT - 50)
+				.attr("x", "70")
+				.attr("y", "20")
+				.attr('width', WIDTH - 140)
+				.attr('height', HEIGHT - 40)
 				.attr('fill', 'none')
 				.attr('pointer-events', 'all')
 				.on('mouseout', function() { 
@@ -214,7 +193,7 @@
 															"transform",
 															"translate(" + mouse[0]
 																	+ ",20)").style(
-															"opacity", "0.6");
+															"opacity", "1");
 													xlabelText.text(timestampToTime(xScale.invert(mouse[0])))
 															   .attr("transform", "translate("+ (mouse[0] + 22) + ",40)")
 															   .style("opacity", "1");
@@ -223,6 +202,25 @@
 													return "translate(" + mouse[0] + "," + pos.y + ")";
 											});
 						});
+		
+		// ******** Options Tool Menu **********
+		var toolMenu = vis.append('g').attr('class', 'toolMenu'); // Tool menu group
+		toolMenu.append('rect').attr('x', 740).attr('y', 2).attr('width', 120)  // tool menu background
+		.attr('height', 25).style('fill', "#f2f2f2");
+	
+		var foreignObj = toolMenu.append("foreignObject").attr("class", "container").attr(
+			'x', 745).attr('y', 2).attr('width', 80).attr('height', 25);  // options under tool menu
+		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
+		.attr("class", "row border-0")
+		.html('<img src="images/zoom_drag.png" alt="zoom" width="25" height="25" id="zoom" class="span3 controls" title="Selectable Zoom / Zoom InOut"/>'
+						+ '<img src="images/reset.png" alt="full" width="25" height="25" id="reset" class="span3 controls" style="margin: 0 5px 0 5px;" title="Reset" />'
+						+ '<img src="images/timer.png" alt="timer" width="25" height="25" id="timer" class="span3 controls" title="Time Period" data-toggle="dropdown"/>'
+						+ '<img src="images/lock.png" alt="lock" width="25" height="25" id="lock" class="span3 controls" title="Lock this control bar" />'
+						+ '<div class="timer-dropdown"><div><a id="timer-1hr" href="#">1-hour data</a></div><div><a id="timer-2hr" href="#">2-hours data</a></div>'
+						+ '<div><a id="timer-3hr" href="#">3-hours data</a></div><div><a id="timer-5hr" href="#">5-hours data</a></div><div><a id="timer-24hr" href="#">24-hours data</a></div></div>');
+
+		setZoomImage();
+		
 		if(window.location.pathname == "/asset"){
 			zoomEnabled = true;
 			toolMenu.attr("display", "none");
@@ -234,11 +232,7 @@
 		$("img#lock").click(function(event) {
 			lock = !lock;
 		});
-		
-		$("img#zoom").click(function(event) {
-			zoomEnabled = !zoomEnabled;
-		});
-		
+	
 		vis.on("mouseover", function() {
 			if(window.location.pathname == "/asset"){
 				toolMenu.attr("display", "none");
@@ -257,7 +251,6 @@
 				return (this === circleUnderMouse) ? 1.0 : opacityDegree;
 			});
 		}).on("mouseout", function(d) {
-			d3.select("#zoom-reset").style('opacity', 1);
 			d3.selectAll("svg g").transition().style('opacity', 1);
 		});
 	
@@ -268,12 +261,112 @@
 		});
 		
 		toolMenu.selectAll("div.timer-dropdown a").on('click',function(){
-			var timeInHours = this.id.split("timer-")[1];
+			var timeInHours = this.id.replace(/^\D+|\D+$/g, "");
 			getLiveData(timeInHours);			
 		});
-		vis.select("#zoom-reset").on("click",function(event) {
-			vis.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+		vis.select("#reset").on("click",function() {
+			drawLineGraph(graphDiv, data, assets, domain, YParam);
 		});
+		
+		
+		// ****** Zoom and Drag ********
+		window.zoom = d3.zoom().scaleExtent([ 0.5, 2 ])  // svg zoom properties
+		  .on("zoom", function() {
+							if (zoomEnabled) {
+								var new_xScale = d3.event.transform.rescaleX(xScale);
+								var new_yScale = d3.event.transform.rescaleY(yScale);
+								gX.call(xAxis.scale(new_xScale)).selectAll("text").attr(
+										"x", 9).attr("y", 0).attr("dy", ".35em").attr(
+										"transform", "rotate(90)").style("text-anchor",
+										"start");
+								gY.call(yAxis.scale(new_yScale));
+								vis.selectAll('.line')
+										.attr("transform", d3.event.transform);
+							}
+		  });
+		//vis.call(zoom);
+		
+		var mask, startarea, endarea;
+		var dragBehavior = d3.drag()
+		  .on("start",function() {
+				startarea = d3.event;
+				clearMask();
+				mask = vis.append("defs").attr("class", "maskDef").append(
+						"mask").attr("id", "myMask").style("stroke","green").style("stroke-width","3px");
+
+				mask.append("rect").attr("x", 0).attr("y", 0).attr("width",
+						 WIDTH - 70).attr("height", HEIGHT - 20).style("fill", "white")
+						.style("opacity", 0.5);
+		  })
+		  .on("drag", function() {
+			  	d3.selectAll(".maskRect").remove(); // remove mask layer
+			  	endarea = d3.event;
+				var sv = vis.append("g").attr("class", "maskRect").attr(
+						"transform", "translate(0,0)");
+				mask.append("rect").attr("x", startarea.x).attr("y",
+						startarea.y).attr("width", (endarea.x - startarea.x))
+						.attr("height", (endarea.y - startarea.y));
+
+				var rr = sv.append("rect").attr("x", 70).attr("y", 0).attr(
+						"width", WIDTH - 130).attr("height", HEIGHT - 20).attr(
+						"mask", "url(#myMask)").style("fill", "grey");
+		  })
+		  .on("end", function(d) {
+				endarea = d3.event;
+				clearMask();
+				var dx = endarea.x - startarea.x,
+			      	dy = endarea.y - startarea.y,
+			      	x = (startarea.x + endarea.x) / 2,
+			      	y = (startarea.y + endarea.y) / 2;
+				if(dx == 0 && dy == 0){
+					vis.transition().call(zoom.transform, d3.zoomIdentity);
+					return;
+				}				
+				var scale = .9 / Math.max(dx / WIDTH, dy / HEIGHT),
+					translate = [(WIDTH / 2) - (scale * x), (HEIGHT / 2) - (scale * y)];
+				var transform = d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale);
+				var new_xScale = transform.rescaleX(xScale);
+				var new_yScale = transform.rescaleY(yScale);			
+				gX.call(xAxis.scale(new_xScale)).selectAll("text").attr(
+						"x", 9).attr("y", 0).attr("dy", ".35em").attr(
+						"transform", "rotate(90)").style("text-anchor",
+						"start");
+				gY.call(yAxis.scale(new_yScale));
+				vis.selectAll('.line').attr("transform",transform);
+		  });
+		vis.on("click", clearMask);
+		
+		$("img#zoom").click(function(event) {
+			zoomEnabled = !zoomEnabled;
+			setZoomImage();
+			if(zoomEnabled){ // zoom enabled
+				if(dragBehavior) // disable drag behavior
+					vis.call(dragBehavior).on(".drag",null);
+				vis.call(zoom);
+			}			
+			else{ 
+				if(zoom)
+					vis.call(zoom) // zoom disable
+				    .on("wheel.zoom", null)
+				    .on("mousedown.zoom", null)
+				    .on("touchstart.zoom", null)
+				    .on("touchmove.zoom", null)
+				    .on("touchend.zoom", null);					
+				vis.call(dragBehavior); // enable drag
+			}
+		});
+	}
+	
+	function clearMask(){
+		d3.selectAll(".maskDef").remove();
+		d3.selectAll(".maskRect").remove();
+	}
+	
+	function setZoomImage(){
+		if(zoomEnabled)
+			$("img#zoom").attr("src", "images/zoom_in_out.png");
+		else
+			$("img#zoom").attr("src", "images/zoom_drag.png");
 	}
 	
 	function drawSensorMap(latestValues) {
@@ -303,7 +396,5 @@
 	}
 	
 	$(document).ready(function() {
-		$("#zoom-reset").click(function(event) {
-			vis.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
-		});
+		
 	});
