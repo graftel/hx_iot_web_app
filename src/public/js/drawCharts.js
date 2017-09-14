@@ -28,7 +28,7 @@
 		var yScale = d3.scaleLinear().range(
 				[ HEIGHT - MARGINS.top, MARGINS.bottom ]).domain(
 				[ domain.Y.min, domain.Y.max ]);
-	
+		var new_xScale, new_yScale;
 		var xAxis = d3.axisBottom(xScale).ticks(10).tickFormat(function(d) {
 			return timestampToTime(d);
 		});
@@ -108,16 +108,16 @@
 		
 		// ****** Tool tip **********
 		var lines = document.getElementsByClassName('line');
-		var mouseG = vis.append("g").attr("class", "mouse-over-effects");  // tooltip canvas group
+		var mouseG = chartBody.append("g").attr("class", "mouse-over-effects");  // tooltip canvas group
 		
 		
 		var mousePerLine = mouseG.selectAll('.mouse-per-line').data(data).enter()   // tooltip group
 				.append("g").attr("class", "mouse-per-line");
 	
 		mousePerLine.append("rect").style("fill", "none").attr("width", 50).attr(
-				"height", 30).style("opacity", "0");
+				"height", 30).attr("class","holder").style("opacity", "0");
 	
-		mousePerLine.append("text").attr("transform", "translate(12,20)").style(
+		mousePerLine.append("text").attr("transform", "translate(12,20)").attr("class","holder").style(
 				"fill", "white");
 		
 		mouseG.append('svg:rect')
@@ -194,11 +194,17 @@
 															"translate(" + mouse[0]
 																	+ ",20)").style(
 															"opacity", "1");
+													
+													var offset = lines[i].getAttribute("transform") == null ? 22 : 0;
+													var yValue = yScale.invert(pos.y);
+													
 													xlabelText.text(timestampToTime(xScale.invert(mouse[0])))
-															   .attr("transform", "translate("+ (mouse[0] + 22) + ",40)")
+															   .attr("transform", "translate("+ (mouse[0] + offset ) + ",40)")
 															   .style("opacity", "1");
-		
-													d3.select(this).select('text').text(yScale.invert(pos.y).toFixed(2));
+													if(new_yScale && (yValue < new_yScale.domain()[0] || yValue > new_yScale.domain()[1])){
+														return "translate(-10,-10)";
+													}
+													d3.select(this).select('text').text(yValue.toFixed(2));
 													return "translate(" + mouse[0] + "," + pos.y + ")";
 											});
 						});
@@ -273,8 +279,8 @@
 		window.zoom = d3.zoom().scaleExtent([ 0.5, 2 ])  // svg zoom properties
 		  .on("zoom", function() {
 							if (zoomEnabled) {
-								var new_xScale = d3.event.transform.rescaleX(xScale);
-								var new_yScale = d3.event.transform.rescaleY(yScale);
+								new_xScale = d3.event.transform.rescaleX(xScale);
+								new_yScale = d3.event.transform.rescaleY(yScale);
 								gX.call(xAxis.scale(new_xScale)).selectAll("text").attr(
 										"x", 9).attr("y", 0).attr("dy", ".35em").attr(
 										"transform", "rotate(90)").style("text-anchor",
@@ -282,6 +288,8 @@
 								gY.call(yAxis.scale(new_yScale));
 								vis.selectAll('.line')
 										.attr("transform", d3.event.transform);
+								vis.selectAll('.mouse-over-effects *:not(.holder)')
+								.attr("transform",d3.event.transform);
 							}
 		  });
 		//vis.call(zoom);
@@ -325,14 +333,15 @@
 				var scale = .9 / Math.max(dx / WIDTH, dy / HEIGHT),
 					translate = [(WIDTH / 2) - (scale * x), (HEIGHT / 2) - (scale * y)];
 				var transform = d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale);
-				var new_xScale = transform.rescaleX(xScale);
-				var new_yScale = transform.rescaleY(yScale);			
+				new_xScale = transform.rescaleX(xScale);
+				new_yScale = transform.rescaleY(yScale);			
 				gX.call(xAxis.scale(new_xScale)).selectAll("text").attr(
 						"x", 9).attr("y", 0).attr("dy", ".35em").attr(
 						"transform", "rotate(90)").style("text-anchor",
 						"start");
 				gY.call(yAxis.scale(new_yScale));
 				vis.selectAll('.line').attr("transform",transform);
+				vis.selectAll('.mouse-over-effects *:not(.holder)').attr("transform","translate("+translate[0]+","+translate[1]+")scale("+scale+")");
 		  });
 		vis.on("click", clearMask);
 		
@@ -393,7 +402,3 @@
 		}
 		RadarChart.draw("#sensor-chart", [ data ], config);
 	}
-	
-	$(document).ready(function() {
-		
-	});
