@@ -11,19 +11,20 @@
 					.attr("viewBox", "0 0 800 500")
 					.attr('width', 800).attr('height', 500)
 					.attr('class', 'svg-content col col-md-10');
+		var padding = 10;
 		var WIDTH = 800, HEIGHT = 400, MARGINS = {
 			top : 20,
 			right : 20,
 			bottom : 20,
 			left : 70
 		};
-		vis.append("rect").attr("x", 0).attr("y", 0).attr("height", HEIGHT + 50)
-				.attr("width", WIDTH + 60).style("stroke", "grey").style("fill",
+		vis.append("rect").attr("x", 0).attr("y", 0).attr("height", HEIGHT + MARGINS.top + MARGINS.bottom + padding)
+				.attr("width", WIDTH + MARGINS.left - padding).style("stroke", "grey").style("fill",
 						"none").style("stroke-width", 1);   // svg border line
 		
 		// ***** X-axis, Y-axis ******
 		var xScale = d3.scaleLinear().range(
-				[ MARGINS.left, WIDTH - MARGINS.right - 50 ]).domain(
+				[ MARGINS.left, WIDTH - MARGINS.right ]).domain(
 				[ domain.X.min, domain.X.max ]);
 		var yScale = d3.scaleLinear().range(
 				[ HEIGHT - MARGINS.top, MARGINS.bottom ]).domain(
@@ -36,7 +37,8 @@
 
 		var gX = vis.append("g").attr("class", "xaxis").attr("transform",
 				"translate(0," + (HEIGHT - MARGINS.bottom) + ")");
-		gX.call(xAxis).selectAll("text").attr("y", 0).attr("x", 9).attr("dy",
+		
+		gX.call(xAxis).selectAll("text").attr("y", 0).attr("x", padding).attr("dy",
 				".35em").attr("transform", "rotate(90)").style("text-anchor",
 				"start");
 		var gY = vis.append("g").attr("class", "yaxis").attr("transform",
@@ -50,19 +52,19 @@
 		"translate(12,20)").style("fill", "white").style("opacity", "0");
 		
 		var startingDate = new Date(domain.X.min * 1000),
-			endingDate = new Date(domain.X.max * 1000);
+			endingDate = new Date(domain.X.max * 1000);		
 		if(startingDate.getDate() != endingDate.getDate()){
 			vis.append("g")  // x axis label ending date
-			.append("text").attr("x", 750).attr("y", 430).attr("dy",".71em")
+			.append("text").attr("x", WIDTH - MARGINS.right).attr("y", HEIGHT + MARGINS.bottom + padding).attr("dy",".71em")
 			.style("text-anchor", "end").style("font-size", "10pt")
 			.text((endingDate.getMonth()+1) + "/" + endingDate.getDate() + "/" + endingDate.getFullYear());
 		}
 		vis.append("g")  // x axis label starting date
-			.append("text").attr("x", 120).attr("y", 430).attr("dy",".71em")
+			.append("text").attr("x", MARGINS.left + padding).attr("y", HEIGHT + MARGINS.bottom + padding).attr("dy",".71em")
 			.style("text-anchor", "end").style("font-size", "10pt")
 			.text((startingDate.getMonth()+1) + "/" + startingDate.getDate() + "/" + startingDate.getFullYear());
 		vis.append("g")  // y axis label
-			.append("text").attr("transform", "rotate(-90)").attr("x", -20).attr("y", 10).attr("dy",".71em")
+			.append("text").attr("transform", "rotate(-90)").attr("x", -MARGINS.top).attr("y", MARGINS.top-padding).attr("dy",".71em")
 			.style("text-anchor", "end").style("font-size", "10pt")
 			.text(YParam);
 		
@@ -81,13 +83,13 @@
 		
 		dataGroup.forEach(function(d, i) { // draw graph lines and add legend
 			
-			sideLegend.append('rect').attr('x', WIDTH - 20).attr('y', function() {
+			sideLegend.append('rect').attr('x', WIDTH - MARGINS.right - padding).attr('y', function() {
 				return (i * 20) + 50;
 			}).attr('width', 10).attr('height', 10).style('fill', function() {
 				return colors[d.key];
 			});
 	
-			sideLegend.append('text').attr('x', WIDTH - 8).attr('y', function() {
+			sideLegend.append('text').attr('x', WIDTH - padding).attr('y', function() {
 				return (i * 20) + 60;
 			}).attr("class", "showLine").attr("data-id", d.key).text(function() {
 				return assets[d.key];
@@ -104,7 +106,7 @@
 		});
 		
 		vis.append("defs").append("clipPath").attr("id", "clip").append("rect")
-		.attr("x", "70").attr("y", "0").attr("width", WIDTH - 140).attr("height", HEIGHT - 20);		
+		.attr("x", MARGINS.left).attr("y", 0).attr("width", WIDTH - (2*MARGINS.left)).attr("height", HEIGHT - MARGINS.top);		
 		
 		// ****** Tool tip **********
 		var lines = document.getElementsByClassName('line');
@@ -137,10 +139,10 @@
 		};
 		
 		mouseG.append('svg:rect')
-				.attr("x", "70")
-				.attr("y", "20")
-				.attr('width', WIDTH - 140)
-				.attr('height', HEIGHT - 40)
+				.attr("x", MARGINS.left)
+				.attr("y", MARGINS.top)
+				.attr('width', WIDTH - 2*MARGINS.left)
+				.attr('height', HEIGHT - 2*MARGINS.top)
 				.attr('fill', 'none')
 				.attr('pointer-events', 'all')
 				.on('mouseout', function() { 
@@ -223,11 +225,11 @@
 		
 		// ******** Tool Menu Options **********
 		var toolMenu = vis.append('g').attr('class', 'toolMenu'); // Tool menu group
-		toolMenu.append('rect').attr('x', 740).attr('y', 2).attr('width', 120)  // tool menu background
+		toolMenu.append('rect').attr('x', WIDTH - MARGINS.left + padding).attr('y', 2).attr('width', 120)  // tool menu background
 		.attr('height', 25).style('fill', "#f2f2f2");
 	
 		var foreignObj = toolMenu.append("foreignObject").attr("class", "container").attr(
-			'x', 745).attr('y', 2).attr('width', 80).attr('height', 25);  // options under tool menu
+			'x', WIDTH - MARGINS.left + padding).attr('y', 2).attr('width', 80).attr('height', 25);  // options under tool menu
 		
 		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
 		.attr("class", "row border-0")
@@ -300,7 +302,7 @@
 								new_xScale = d3.event.transform.rescaleX(xScale);
 								new_yScale = d3.event.transform.rescaleY(yScale);
 								gX.call(xAxis.scale(new_xScale)).selectAll("text").attr(
-										"x", 9).attr("y", 0).attr("dy", ".35em").attr(
+										"x", padding).attr("y", 0).attr("dy", ".35em").attr(
 										"transform", "rotate(90)").style("text-anchor",
 										"start");
 								gY.call(yAxis.scale(new_yScale));
@@ -320,7 +322,7 @@
 						"mask").attr("id", "myMask").style("stroke","green").style("stroke-width","3px");
 
 				mask.append("rect").attr("x", 0).attr("y", 0).attr("width",
-						 WIDTH - 70).attr("height", HEIGHT - 20).style("fill", "white")
+						 WIDTH - MARGINS.left).attr("height", HEIGHT - MARGINS.top).style("fill", "white")
 						.style("opacity", 0.5);
 		  })
 		  .on("drag", function() {
@@ -336,8 +338,8 @@
 						startarea.y).attr("width", (endarea.x - startarea.x))
 						.attr("height", (endarea.y - startarea.y));
 
-				var rr = sv.append("rect").attr("x", 70).attr("y", 0).attr(
-						"width", WIDTH - 130).attr("height", HEIGHT - 20).attr(
+				var rr = sv.append("rect").attr("x", MARGINS.left).attr("y", 0).attr(
+						"width", WIDTH - 2*MARGINS.left).attr("height", HEIGHT - MARGINS.top).attr(
 						"mask", "url(#myMask)").style("fill", "grey");
 		  })
 		  .on("end", function(d) {
@@ -357,7 +359,7 @@
 				new_xScale = transform.rescaleX(xScale);
 				new_yScale = transform.rescaleY(yScale);			
 				gX.call(xAxis.scale(new_xScale)).selectAll("text").attr(
-						"x", 9).attr("y", 0).attr("dy", ".35em").attr(
+						"x", padding).attr("y", 0).attr("dy", ".35em").attr(
 						"transform", "rotate(90)").style("text-anchor",
 						"start");
 				gY.call(yAxis.scale(new_yScale));
