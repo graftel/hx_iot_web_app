@@ -234,7 +234,7 @@
 		.html('<img src="images/zoom_drag.png" alt="zoom" width="25" height="25" id="zoom" class="span3 controls" title="Selectable Zoom / Zoom InOut"/>'
 						+ '<img src="images/reset.png" alt="full" width="25" height="25" id="reset" class="span3 controls" style="margin: 0 5px 0 5px;" title="Reset" />'
 						+ '<img src="images/timer.png" alt="timer" width="25" height="25" id="timer" class="span3 controls" title="Time Period" data-toggle="dropdown"/>'
-						+ '<img src="images/lock.png" alt="lock" width="25" height="25" id="lock" class="span3 controls" title="Lock this control bar" />'
+						+ '<img src="images/unlock.png" alt="lock" width="25" height="25" id="lock" class="span3 controls" title="Lock this control bar" />'
 						+ '<div class="timer-dropdown"><div><a id="timer-1hr" href="#">1-hour data</a></div><div><a id="timer-2hr" href="#">2-hours data</a></div>'
 						+ '<div><a id="timer-3hr" href="#">3-hours data</a></div><div><a id="timer-5hr" href="#">5-hours data</a></div><div><a id="timer-24hr" href="#">24-hours data</a></div></div>');
 		
@@ -248,6 +248,12 @@
 		
 		$("img#lock").click(function(event) { // lock button - click event
 			lock = !lock;
+			if(lock){
+				$("img#lock").attr("src", "images/lock.png");
+			}
+			else{
+				$("img#lock").attr("src", "images/unlock.png");
+			}
 		});
 	
 		vis.on("mouseover", function() { // tool menu - display events
@@ -322,6 +328,10 @@
 			  	endarea = d3.event;
 				var sv = vis.append("g").attr("class", "maskRect").attr(
 						"transform", "translate(0,0)");
+				var dx = endarea.x - startarea.x,
+		      		dy = endarea.y - startarea.y;
+				if(dx < 0 || dy < 0)
+					return false;
 				mask.append("rect").attr("x", startarea.x).attr("y",
 						startarea.y).attr("width", (endarea.x - startarea.x))
 						.attr("height", (endarea.y - startarea.y));
@@ -360,7 +370,7 @@
 			if(zoomEnabled){ // zoom enabled
 				$("img#zoom").attr("src", "images/zoom_in_out.png");
 				if(dragBehavior) // disable drag behavior
-					vis.call(dragBehavior).on(".drag",null);
+					chartBody.call(dragBehavior).on(".drag",null);
 				vis.call(zoom);
 			}			
 			else{ 
@@ -372,7 +382,7 @@
 				    .on("touchstart.zoom", null)
 				    .on("touchmove.zoom", null)
 				    .on("touchend.zoom", null);					
-				vis.call(dragBehavior); // enable drag
+				chartBody.call(dragBehavior); // enable drag
 			}
 		};
 		
