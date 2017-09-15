@@ -62,7 +62,7 @@
 			.style("text-anchor", "end").style("font-size", "10pt")
 			.text((startingDate.getMonth()+1) + "/" + startingDate.getDate() + "/" + startingDate.getFullYear());
 		vis.append("g")  // y axis label
-			.append("text").attr("transform", "rotate(-90)").attr("x", -20).attr("y", 20).attr("dy",".71em")
+			.append("text").attr("transform", "rotate(-90)").attr("x", -20).attr("y", 10).attr("dy",".71em")
 			.style("text-anchor", "end").style("font-size", "10pt")
 			.text(YParam);
 		
