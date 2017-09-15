@@ -120,6 +120,22 @@
 		mousePerLine.append("text").attr("transform", "translate(12,20)").attr("class","holder").style(
 				"fill", "white");
 		
+		var showTooltip = function(){
+			d3.select(".mouse-line").style("opacity", "1");
+			d3.selectAll(".mouse-per-line rect").style("opacity", "0.6");
+			d3.selectAll(".mouse-per-line text").style("opacity", "1");
+			xlabelBox.style("opacity", "0.6");
+			xlabelText.style("opacity", "1");
+		};
+		
+		var hideTooltip = function(){
+			d3.select(".mouse-line").style("opacity", "0");
+			d3.selectAll(".mouse-per-line rect").style("opacity", "0");
+			d3.selectAll(".mouse-per-line text").style("opacity", "0");
+			xlabelBox.style("opacity", "0");
+			xlabelText.style("opacity", "0");
+		};
+		
 		mouseG.append('svg:rect')
 				.attr("x", "70")
 				.attr("y", "20")
@@ -128,18 +144,10 @@
 				.attr('fill', 'none')
 				.attr('pointer-events', 'all')
 				.on('mouseout', function() { 
-					d3.select(".mouse-line").style("opacity", "0");
-					d3.selectAll(".mouse-per-line rect").style("opacity", "0");
-					d3.selectAll(".mouse-per-line text").style("opacity", "0");
-					xlabelBox.style("opacity", "0");
-					xlabelText.style("opacity", "0");
+					hideTooltip();
 				})
 				.on('mouseover', function() { 
-					d3.select(".mouse-line").style("opacity", "1");
-					d3.selectAll(".mouse-per-line rect").style("opacity", "1");
-					d3.selectAll(".mouse-per-line text").style("opacity", "1");
-					xlabelBox.style("opacity", "0.6");
-					xlabelText.style("opacity", "1");
+					showTooltip();
 				})
 				.on('mousemove', function() {
 							var mouse = d3.mouse(this);
@@ -193,20 +201,24 @@
 															"transform",
 															"translate(" + mouse[0]
 																	+ ",20)").style(
-															"opacity", "1");
+															"opacity", "0.6");
 													
-													var offset = lines[i].getAttribute("transform") == null ? 22 : 0;
+													var offset = lines[i].getAttribute("transform") == null ? 22 : 0; // offset on zoom
 													var yValue = yScale.invert(pos.y);
 													
 													xlabelText.text(timestampToTime(xScale.invert(mouse[0])))
 															   .attr("transform", "translate("+ (mouse[0] + offset ) + ",40)")
 															   .style("opacity", "1");
 													if(new_yScale && (yValue < new_yScale.domain()[0] || yValue > new_yScale.domain()[1])){
-														return "translate(-10,-10)";
+														return "translate(-20,-20)";
 													}
 													d3.select(this).select('text').text(yValue.toFixed(2));
 													return "translate(" + mouse[0] + "," + pos.y + ")";
 											});
+						}).on('mousedown', function() { 
+							hideTooltip();
+						}).on('mouseup', function() { 
+							showTooltip();
 						});
 		
 		// ******** Tool Menu Options **********
@@ -292,7 +304,6 @@
 								.attr("transform",d3.event.transform);
 							}
 		  });
-		//vis.call(zoom);
 		
 		var mask, startarea, endarea;
 		var dragBehavior = d3.drag()
