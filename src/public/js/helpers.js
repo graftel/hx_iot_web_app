@@ -123,15 +123,9 @@
 	}
 	
 	function setStrokeVisibility(key) {
-		if ($(".sideLegend text[data-id*='" + key + "']").hasClass("showLine"))
+		if ($(".sideLegend foreignObject[data-id*='" + key + "']").hasClass("showLine"))
 			$("#" + key).attr("opacity", 1);
 		else
 			$("#" + key).attr("opacity", 0);
 	}
 	
-	function setLegendEnability(key, itemsLength) {
-		if (itemsLength == 0)
-			$(".sideLegend text[data-id*='" + key + "']").addClass("disable");
-		else
-			$(".sideLegend text[data-id*='" + key + "']").removeClass("disable");
-	}

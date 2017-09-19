@@ -1,7 +1,6 @@
 	
 	var zoomEnabled = false;
 	var lock = false;
-	var selectionDrag;
 
 	function drawLineGraph(graphDiv, data, assets, domain, YParam) {
 		
@@ -71,7 +70,7 @@
 		// ****** Path and side legend ********
 		var chartBody = vis.append("g").attr("clip-path", "url(#clip)").attr("id","chartBody");
 		var colors = assignColor(assets);
-		
+		var overflowOffset = 0;
 		var dataGroup = reformatData(data, YParam);
 		var lineGen = d3.line().curve(d3.curveBasis).x(function(d) {
 			return xScale(d.xV);
@@ -84,21 +83,25 @@
 		dataGroup.forEach(function(d, i) { // draw graph lines and add legend
 			
 			sideLegend.append('rect').attr('x', WIDTH - MARGINS.right - padding).attr('y', function() {
-				return (i * 20) + 50;
+				var prevElement = $(this).prev();
+				if(prevElement.prop("tagName") == "foreignObject" && prevElement.find("p").height() >20 )
+					overflowOffset += (prevElement.find("p").height()-20);		
+				return ((i * 20) + 50) + overflowOffset;
 			}).attr('width', 10).attr('height', 10).style('fill', function() {
 				return colors[d.key];
 			});
-	
-			sideLegend.append('text').attr('x', WIDTH - padding).attr('y', function() {
-				return (i * 20) + 60;
-			}).attr("class", "showLine").attr("data-id", d.key).text(function() {
-				return assets[d.key];
+			
+			sideLegend.append('foreignObject').attr('x', WIDTH - padding ).attr('y', function() {
+				return ((i * 20) + 45) + overflowOffset; //word wrap asset labels
+			}).attr("width",70).attr("height", 20 + overflowOffset).attr("class", "showLine").attr("data-id", d.key).html(function() {
+				if(d.values.length)
+					return "<p class='enabled-asset' style='color:"+colors[d.key]+"'>"+assets[d.key]+"</p>";
+				return "<p class='disabled-asset' style='color:#bfbfbf;'>"+assets[d.key]+"</p>"; // disabled assets
 			}).on("click", function() {
 				var device = $(this).attr("data-id");
 				$(this).toggleClass("showLine");
 				setStrokeVisibility(device);
 			});
-			setLegendEnability(d.key, d.values.length);
 			
 			chartBody.append('path').attr('d', lineGen(d.values)).attr('stroke',  // generate path lines
 					colors[d.key]).attr('stroke-width', 2).attr('class', 'line')
@@ -165,7 +168,7 @@
 													var key = Object.keys(d)[0];
 													var rectColor = $("#" + key).attr(
 																	"stroke");
-													if (!($(".sideLegend text[data-id*='"
+													if (!($(".sideLegend foreignObject[data-id*='"
 															+ key + "']")
 															.hasClass("showLine")))
 														return null;
@@ -225,11 +228,11 @@
 		
 		// ******** Tool Menu Options **********
 		var toolMenu = vis.append('g').attr('class', 'toolMenu'); // Tool menu group
-		toolMenu.append('rect').attr('x', WIDTH - MARGINS.left + padding).attr('y', 2).attr('width', 120)  // tool menu background
+		toolMenu.append('rect').attr('x', WIDTH - MARGINS.left + (2*padding) ).attr('y', 2).attr('width', 110)  // tool menu background
 		.attr('height', 25).style('fill', "#f2f2f2");
 	
 		var foreignObj = toolMenu.append("foreignObject").attr("class", "container").attr(
-			'x', WIDTH - MARGINS.left + padding).attr('y', 2).attr('width', 80).attr('height', 25);  // options under tool menu
+			'x', WIDTH - MARGINS.left + 2*padding).attr('y', 2).attr('width', 70).attr('height', 25);  // options under tool menu
 		
 		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
 		.attr("class", "row border-0")

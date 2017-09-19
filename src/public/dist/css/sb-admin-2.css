@@ -586,3 +586,13 @@ img.controls:hover{
     left: 2%;
     overflow: overlay !important;
 }
+
+.disabled-asset{
+	pointer-events: none;
+	font-weight: bold;
+}
+
+.enabled-asset{
+	cursor:pointer;
+	font-weight: bold;
+}
