@@ -537,7 +537,8 @@ input[readonly]
 
 img.controls{
 	padding: 2px;
-	box-sizing: border-box;
+	width: 23px;
+	height: 23px;
 }
 
 img.controls:hover{
@@ -549,7 +550,7 @@ img.controls:hover{
 	margin-left: 15px;
 	background-color: #f2f2f2;
 	display: none;
-	width: 90px;
+	width: 75px;
 }
 
 .timer-dropdown a{

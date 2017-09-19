@@ -93,7 +93,7 @@
 			
 			sideLegend.append('foreignObject').attr('x', WIDTH - padding ).attr('y', function() {
 				return ((i * 20) + 45) + overflowOffset; //word wrap asset labels
-			}).attr("width",70).attr("height", 20 + overflowOffset).attr("class", "showLine").attr("data-id", d.key).html(function() {
+			}).attr("width",70).attr("height", "100%").attr("class", "showLine").attr("data-id", d.key).html(function() {
 				if(d.values.length)
 					return "<p class='enabled-asset' style='color:"+colors[d.key]+"'>"+assets[d.key]+"</p>";
 				return "<p class='disabled-asset' style='color:#bfbfbf;'>"+assets[d.key]+"</p>"; // disabled assets
@@ -229,19 +229,19 @@
 		// ******** Tool Menu Options **********
 		var toolMenu = vis.append('g').attr('class', 'toolMenu'); // Tool menu group
 		toolMenu.append('rect').attr('x', WIDTH - MARGINS.left + (2*padding) ).attr('y', 2).attr('width', 110)  // tool menu background
-		.attr('height', 25).style('fill', "#f2f2f2");
+		.attr('height', 25).style('fill', "#f2f2f2").style('position', "relative");
 	
 		var foreignObj = toolMenu.append("foreignObject").attr("class", "container").attr(
-			'x', WIDTH - MARGINS.left + 2*padding).attr('y', 2).attr('width', 70).attr('height', 25);  // options under tool menu
+			'x', WIDTH - MARGINS.left + 3*padding).attr('y', 2).attr('width', "100%").attr('height',"100%");  // options under tool menu
 		
 		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
 		.attr("class", "row border-0")
-		.html('<img src="images/zoom_drag.png" alt="zoom" width="25" height="25" id="zoom" class="span3 controls" title="Selectable Zoom / Zoom InOut"/>'
-						+ '<img src="images/reset.png" alt="full" width="25" height="25" id="reset" class="span3 controls" style="margin: 0 5px 0 5px;" title="Reset" />'
-						+ '<img src="images/timer.png" alt="timer" width="25" height="25" id="timer" class="span3 controls" title="Time Period" data-toggle="dropdown"/>'
-						+ '<img src="images/unlock.png" alt="lock" width="25" height="25" id="lock" class="span3 controls" title="Lock this control bar" />'
-						+ '<div class="timer-dropdown"><div><a id="timer-1hr" href="#">1-hour data</a></div><div><a id="timer-2hr" href="#">2-hours data</a></div>'
-						+ '<div><a id="timer-3hr" href="#">3-hours data</a></div><div><a id="timer-5hr" href="#">5-hours data</a></div><div><a id="timer-24hr" href="#">24-hours data</a></div></div>');
+		.html('<img src="images/zoom_drag.png" alt="zoom" id="zoom" class="span3 controls" title="Selectable Zoom / Zoom InOut"/>'
+						+ '<img src="images/reset.png" alt="full" id="reset" class="span3 controls" style="margin: 0 5px 0 5px;" title="Reset" />'
+						+ '<img src="images/timer.png" alt="timer" id="timer" class="span3 controls" title="Time Period" data-toggle="dropdown"/>'
+						+ '<img src="images/unlock.png" alt="lock" id="lock" class="span3 controls" title="Lock this control bar" />'
+						+ '<div class="timer-dropdown"><div><a id="timer-1hr" href="#">1-hour</a></div><div><a id="timer-2hr" href="#">2-hours</a></div>'
+						+ '<div><a id="timer-3hr" href="#">3-hours</a></div><div><a id="timer-5hr" href="#">5-hours</a></div><div><a id="timer-24hr" href="#">24-hours</a></div></div>');
 		
 		if(window.location.pathname == "/asset"){
 			zoomEnabled = true;
