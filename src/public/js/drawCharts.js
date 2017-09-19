@@ -228,14 +228,15 @@
 		
 		// ******** Tool Menu Options **********
 		var toolMenu = vis.append('g').attr('class', 'toolMenu'); // Tool menu group
-		toolMenu.append('rect').attr('x', WIDTH - MARGINS.left + (2*padding) ).attr('y', 2).attr('width', 110)  // tool menu background
+		toolMenu.append('rect').attr('x', WIDTH - MARGINS.left + (padding) ).attr('y', 2).attr('width', 120)  // tool menu background
 		.attr('height', 25).style('fill', "#f2f2f2").style('position', "relative");
 	
-		var foreignObj = toolMenu.append("foreignObject").attr("class", "container").attr(
-			'x', WIDTH - MARGINS.left + 3*padding).attr('y', 2).attr('width', "100%").attr('height',"100%");  // options under tool menu
+		var foreignObj = toolMenu.append("foreignObject").attr("class", "container-fluid").attr(
+			'x', WIDTH - MARGINS.left + padding).attr('y', 2).attr('width', "100%").attr('height',"100%");  // options under tool menu
 		
 		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
-		.attr("class", "row border-0")
+		.attr("class", "border-0")
+		.attr("style", "margin: 0;")
 		.html('<img src="images/zoom_drag.png" alt="zoom" id="zoom" class="span3 controls" title="Selectable Zoom / Zoom InOut"/>'
 						+ '<img src="images/reset.png" alt="full" id="reset" class="span3 controls" style="margin: 0 5px 0 5px;" title="Reset" />'
 						+ '<img src="images/timer.png" alt="timer" id="timer" class="span3 controls" title="Time Period" data-toggle="dropdown"/>'
