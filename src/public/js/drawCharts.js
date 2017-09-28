@@ -147,7 +147,7 @@
 		.attr('height', 25).style('fill', "#f2f2f2").style('position', "relative");
 	
 		var foreignObj = toolMenu.append("foreignObject").attr("class", "container-fluid").attr(
-			'x', WIDTH - MARGINS.left + padding).attr('y', 2).attr('width', "100%").attr('height',"10%").attr("overflow","auto");  // options under tool menu
+			'x', WIDTH - MARGINS.left + padding).attr('y', 2).attr('width', "100%").attr('height',"23px").attr("overflow","auto");  // options under tool menu
 		
 		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
 		.attr("class", "border-0")
@@ -190,8 +190,10 @@
 	
 		toolMenu.selectAll("img#timer, div.timer-dropdown").on("mouseover", function() { // timer button - display events
 			toolMenu.select("div.timer-dropdown").style("display", "block");
+			foreignObj.attr("height","100%");
 		}).on("mouseout", function() {
 			toolMenu.select("div.timer-dropdown").style("display", "none");
+			foreignObj.attr("height","23px");
 		});
 		
 		toolMenu.selectAll("div.timer-dropdown a").on('click',function(){ // timer button - click events
