@@ -1,7 +1,7 @@
 	
-	var zoomEnabled = false;
+	var zoomEnabled = true;
 	var lock = false;
-var tooltip;
+	var tooltip;
 	function drawLineGraph(graphDiv, data, assets, domain, YParam) {
 		
 		graphDiv.select('svg').remove(); // empty svg on every load
@@ -164,16 +164,6 @@ var tooltip;
 		if (!lock) // lock button - initial setup
 			toolMenu.attr("display", "none");
 		
-		$("img#lock").click(function(event) { // lock button - click event
-			lock = !lock;
-			if(lock){
-				$("img#lock").attr("src", "images/lock.png");
-			}
-			else{
-				$("img#lock").attr("src", "images/unlock.png");
-			}
-		});
-	
 		vis.on("mouseover", function() { // tool menu - display events
 			if(window.location.pathname == "/asset"){
 				toolMenu.attr("display", "none");
@@ -230,30 +220,78 @@ var tooltip;
 		  });
 		
 
-			var selectZoom = d3.brush().on("end", brushended),
-		    idleTimeout, idleDelay = 350;
-		
-		function brushended() {
-			  var selection = d3.event.selection;
-			  if (!selection) {
-			    if (!idleTimeout) return idleTimeout = setTimeout(idled, idleDelay);
-			    xScaledomain([ domain.X.min, domain.X.max ]);
-			    yScale.domain([ domain.Y.min, domain.Y.max ]);
-			  } else {
-			    xScale.domain([selection[0][0], selection[1][0]].map(xScale.invert, xScale));
-			    yScale.domain([selection[1][1], selection[0][1]].map(yScale.invert, yScale));
-			    vis.select(".selection").call(selectZoom, null);
-			  }
-			  var t = chartBody.transition();
-			  var trans = d3.zoomIdentity.translate(-selection[0][1], 0).scale(1.1);
-			  vis.select(".xaxis").transition(t).call(xAxis).selectAll("text").attr("y", 0).attr("x", padding).attr("dy",
-				".35em").attr("transform", "rotate(90)").style("text-anchor",
-				"start");
-			  vis.select(".yaxis").transition(t).call(yAxis);
-			  vis.selectAll('.line').attr("d", drawPath());
-			//  vis.selectAll('.mouse-over-effects *:not(.holder)').attr("transform", trans);
+	var gBrush = chartBody.append("g").attr("class", "brush");
+	var selectZoom = d3.brush().on("start", startMoving)
+							   .on("brush", brushMoving)
+							   .on("end", brushEnded), 
+		idleTimeout, idleDelay = 350, startSelection, movingDirection = null;
+
+	var brushX = function(e, selection) {
+		movingDirection = "x";
+		e.target.move(gBrush, [ [ selection[0][0], 0 ],
+				[ selection[1][0], HEIGHT ] ]);
+	};
+
+	var brushY = function(e, selection) {
+		movingDirection = "y";
+		e.target.move(gBrush, [ [ 0, selection[0][1] ],
+				[ WIDTH, selection[1][1] ] ]);
+	};
+
+	function startMoving() {
+		startSelection = d3.event.selection;
+		movingDirection = null;
+	}
+
+	function brushMoving() {
+		var selection = d3.event.selection;
+		if (selection == null)
+			return;
+		if (movingDirection == null) {
+			if (startSelection[1][1] != selection[1][1]
+					|| startSelection[0][1] != selection[0][1]) {
+				brushY(d3.event, selection);
+			} else if (startSelection[0][0] != selection[0][0]
+					|| startSelection[1][0] != selection[1][0]) {
+				brushX(d3.event, selection);
 			}
+		} else {
+			if (movingDirection === "y") {
+				if (selection[0][0] != 0 && selection[1][0] != WIDTH)
+					brushY(d3.event, selection);
+			} else { // movingDirection is x
+				if (selection[0][1] != 0 && selection[1][1] != HEIGHT)
+					brushX(d3.event, selection);
+			}
+		}
+	}
+
+	function brushEnded() {
+		var selection = d3.event.selection;
+		if (!selection) {
+			if (!idleTimeout)
+				return idleTimeout = setTimeout(idled, idleDelay);
+			xScale.domain([ domain.X.min, domain.X.max ]);
+			yScale.domain([ domain.Y.min, domain.Y.max ]);
+		} else {
+			xScale.domain([ selection[0][0], selection[1][0] ].map(
+					xScale.invert, xScale));
+			yScale.domain([ selection[1][1], selection[0][1] ].map(
+					yScale.invert, yScale));
+		}
+		var trans = chartBody.transition();
+		vis.select(".xaxis").transition(trans).call(xAxis).selectAll("text").attr(
+				"y", 0).attr("x", padding).attr("dy", ".35em").attr(
+				"transform", "rotate(90)").style("text-anchor", "start");
+		vis.select(".yaxis").transition(trans).call(yAxis);
+		vis.selectAll('.line').attr("d", drawPath());
+		selectZoom.move(gBrush, null); // clear brush
+		movingDirection = null;
+	}
 	
+	function idled() {
+		idleTimeout = null;
+	}
 		var showTooltip = function(){
 			d3.select(".mouse-line").style("opacity", "1");
 			d3.selectAll(".mouse-per-line rect").style("opacity", "0.6");
@@ -299,8 +337,7 @@ var tooltip;
 						while (true) {
 							target = Math.floor((beginning + end) / 2);
 							pos = lines[i].getPointAtLength(target);
-							if ((target === end || target === beginning)
-									&& pos.x !== mouse[0]) {
+							if ((target === end || target === beginning) && pos.x !== mouse[0]) {
 								break;
 							}
 							if (pos.x > mouse[0])
@@ -333,7 +370,7 @@ var tooltip;
 			if(zoomEnabled){ // zoom enabled
 				$("img#zoom").attr("src", "images/zoom_in_out.png");
 				if(selectZoom) // disable select zoom behavior
-					chartBody.call(selectZoom).on(".brush",null);				
+					gBrush.call(selectZoom).on(".brush",null);				
 				d3.selectAll(".overlay").attr("pointer-events","none");
 				vis.call(zoom);								
 			}			
@@ -348,14 +385,29 @@ var tooltip;
 				    .on("touchmove.zoom", null)
 				    .on("touchend.zoom", null);		
 				
-				chartBody.call(selectZoom); // enable select zoom
+				gBrush.call(selectZoom); // enable select zoom
 			}
 		};
 		
+		var setLock = function(){
+			if(lock){
+				$("img#lock").attr("src", "images/lock.png");
+			}
+			else{
+				$("img#lock").attr("src", "images/unlock.png");
+			}
+		}
+		
+		setLock();
 		setZoom(); // for initial setup when graph loads
 		$("img#zoom").click(function(event) {
 			zoomEnabled = !zoomEnabled;
 			setZoom();
+		});
+		
+		$("img#lock").click(function(event) { // lock button - click event
+			lock = !lock;
+			setLock();
 		});
 	}
 	
