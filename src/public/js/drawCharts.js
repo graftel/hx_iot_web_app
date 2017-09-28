@@ -80,15 +80,6 @@
 		
 		var sideLegend = vis.append('g').attr('class', 'sideLegend'); // legend group
 		
-		var drawPath = function(){
-			dataGroup.forEach(function(d, i) { // draw graph lines
-				chartBody.append('path').attr('d', lineGen(d.values)).attr('stroke',  // generate path lines
-						colors[d.key]).attr('stroke-width', 2).attr('class', 'line')
-						.attr('fill', 'none').attr('id', d.key);
-			});
-		};
-		drawPath();
-		
 		dataGroup.forEach(function(d, i) { // add legend
 			
 			sideLegend.append('rect').attr('x', WIDTH - MARGINS.right - padding).attr('y', function() {
@@ -112,6 +103,17 @@
 				setStrokeVisibility(device);
 			});
 		});
+		
+		var drawPath = function(){
+			dataGroup.forEach(function(d, i) { // draw graph lines
+				
+				var line = chartBody.append('path').attr('d', lineGen(d.values)).attr('stroke',  // generate path lines
+						colors[d.key]).attr('stroke-width', 2).attr('class', 'line')
+						.attr('fill', 'none').attr('id', d.key);
+				setStrokeVisibility(d.key);
+			});
+		};
+		drawPath(); // draw lines on first load
 		
 		vis.append("defs").append("clipPath").attr("id", "clip").append("rect")
 		.attr("x", MARGINS.left).attr("y", 0).attr("width", WIDTH - (2*MARGINS.left)).attr("height", HEIGHT - MARGINS.top);		
@@ -137,6 +139,7 @@
 				.attr('height', HEIGHT - 2*MARGINS.top)
 				.attr('fill', 'none')
 				.attr('pointer-events', 'all');
+		// end of tooltip settings
 		
 		// ******** Tool Menu Options **********
 		var toolMenu = vis.append('g').attr('class', 'toolMenu'); // Tool menu group
@@ -144,7 +147,7 @@
 		.attr('height', 25).style('fill', "#f2f2f2").style('position', "relative");
 	
 		var foreignObj = toolMenu.append("foreignObject").attr("class", "container-fluid").attr(
-			'x', WIDTH - MARGINS.left + padding).attr('y', 2).attr('width', "100%").attr('height',"100%");  // options under tool menu
+			'x', WIDTH - MARGINS.left + padding).attr('y', 2).attr('width', "100%").attr('height',"10%").attr("overflow","auto");  // options under tool menu
 		
 		foreignObj.append('xhtml:div')					// tool menu options, timer drop down
 		.attr("class", "border-0")
@@ -199,9 +202,9 @@
 		vis.select("#reset").on("click",function() { // RESET button
 			drawLineGraph(graphDiv, data, assets, domain, YParam);
 		});
+		// end of tool menu
 		
-		
-		// ****** Zoom and Drag ********
+		// ****** Zoom  ********
 		window.zoom = d3.zoom().scaleExtent([ 0.5, 2 ])  // svg zoom properties
 		  .on("zoom", function() {
 							if (zoomEnabled) {
@@ -219,8 +222,8 @@
 							}
 		  });
 		
-
-	var gBrush = chartBody.append("g").attr("class", "brush");
+		// Selectable zoom using d3 brush
+	var gBrush = chartBody.append("g").attr("class", "brush").attr("x",MARGINS.left).attr("y",MARGINS.top);
 	var selectZoom = d3.brush().on("start", startMoving)
 							   .on("brush", brushMoving)
 							   .on("end", brushEnded), 
@@ -293,6 +296,10 @@
 	function idled() {
 		idleTimeout = null;
 	}
+	
+	//end of zoom with brush
+	
+	// ****** Tooltip  movements ********
 		var showTooltip = function(){
 			d3.select(".mouse-line").style("opacity", "1");
 			d3.selectAll(".mouse-per-line rect").style("opacity", "0.6");
@@ -366,7 +373,9 @@
 						return "translate(" + mouse[0] + "," + pos.y + ")";
 					});								
 				});
+		// end of tooltip
 		
+		// Set zoom and lock
 		var setZoom = function(){
 			if(zoomEnabled){ // zoom enabled
 				$("img#zoom").attr("src", "images/zoom_in_out.png");
