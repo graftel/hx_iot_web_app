@@ -284,7 +284,8 @@
 				"y", 0).attr("x", padding).attr("dy", ".35em").attr(
 				"transform", "rotate(90)").style("text-anchor", "start");
 		vis.select(".yaxis").transition(trans).call(yAxis);
-		vis.selectAll('.line').attr("d", drawPath());
+		vis.selectAll('.line').remove();
+		vis.selectAll('.line').attr("d", drawPath()); // redraw lines
 		selectZoom.move(gBrush, null); // clear brush
 		movingDirection = null;
 	}
