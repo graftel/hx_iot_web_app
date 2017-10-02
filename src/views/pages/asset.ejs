@@ -25,7 +25,7 @@
 						<tr>
 							<th>COLD Heat Gain(Btu/hour)</th>
 							<th>HOT Heat Loss(Btu/hour)</th>
-							<th>Heat Balance Error(Btu/hour)</th>
+<!-- 							<th>Heat Balance Error(Btu/hour)</th> -->
 							<th>Heat Balance Error(%)</th>
 						</tr>
 					</thead>
@@ -33,7 +33,7 @@
 						<tr>
 							<td><%= values["COLD_Heat_Gain(Btu/hr)"].toFixed(2) %></td>
 							<td><%= values["HOT_Heat_Loss_(Btu/hr)"].toFixed(2) %></td>
-							<td><%= values["Heat_Balance_Error(Btu/hr)"].toFixed(2) %></td>
+<!-- 							<td><%= values["Heat_Balance_Error(Btu/hr)"].toFixed(2) %></td> -->
 							<td><%= values["Heat_Balance_Error(%)"].toFixed(2) %></td>
 						</tr>
 					</tbody>
@@ -470,7 +470,7 @@
 			table.text("");
 			var unit = (parameter == "Temperature") ? "F" : "GPM";
 			var tableStructure = "";
-			tableStructure = tableStructure + "<thead><tr> <th> Sensor ID </th>";
+			tableStructure = tableStructure + "<thead><tr> <th> "+parameter+" Sensor ID </th>";
 			keys.map(function(key){ tableStructure = tableStructure+"<th>"+key+"</th>"; });
 			tableStructure = tableStructure + "</tr></thead>";
 			tableStructure = tableStructure + '<tbody><tr  id="LatestValue"> <td> Latest Value ('+unit+') </td></tr>'
@@ -482,17 +482,29 @@
 											//+ '<tr id="Stability"> <td> Stability(GPM/min) </td></tr></tbody>';
 			table.append(tableStructure);
 			for(key of keys){
-				var values = calculatedValues[key];
-				table.find("tr#LatestValue td").last().after("<td>" + latestValues[key].toFixed(3) + "</td>");
-				table.find("tr#Max td").last().after("<td>" + values["Max"].toFixed(3) + "</td>");
-				table.find("tr#Min td").last().after("<td>" + values["Min"].toFixed(3) + "</td>");
+				var values = calculatedValues[key];				
+				table.find("tr#LatestValue td").last().after("<td data-tooltip="+ new Date(data[3]*1000).toTimeString() +" >" + latestValues[key].toFixed(3) + "</td>");
+				table.find("tr#Max td").last().after("<td data-tooltip="+ findTimeStamp(data[2],key, values["Max"]) +">" + values["Max"].toFixed(3) + "</td>");
+				table.find("tr#Min td").last().after("<td data-tooltip="+ findTimeStamp(data[2],key, values["Min"]) +">" + values["Min"].toFixed(3) + "</td>");
 				table.find("tr#Mean td").last().after("<td>" + values["Mean"].toFixed(3) + "</td>");
 				//table.find("tr#Uncertainity td").last().after("<td>" + values["Uncertainity"].toFixed(3) + "</td>");
 				table.find("tr#Std td").last().after("<td>" + values["Std"].toFixed(3) + "</td>");
 				//table.find("tr#Stability td").last().after("<td>" + values["Stability"].toFixed(3) + "</td>");
 			}
 		}
-	
+		
+		function findTimeStamp(rawData, key, value){
+			var resObj;
+			rawData.forEach(function(obj){
+				var k = Object.keys(obj)[0];
+				if(k != key) return;
+				resObj =	$.grep(obj[k], function(v){
+					return (v.Value == value) ? v.EpochTimeStamp : false;
+				});
+			});
+			return new Date(resObj[0].EpochTimeStamp*1000).toTimeString();
+		}
+		
 		function setHeading(text){
 			var str = "  > ";
 			if(text.includes("HOT"))
@@ -527,7 +539,7 @@
 				assets[devices[i]] = devices[i];
 			}		
 			var domain = setMinMaxforAssetGraph(calculatedVals, latestTimeStamp);
-	
+			$("#date-range").html("Data from "+ new Date(domain.X.min*1000).toLocaleString() + " to "+ new Date(domain.X.max*1000).toLocaleString() );
 			drawLineGraph(d3.select("#assetPlotDiv"), rawValues, assets, domain, "Value");
 			drawSensorMap(latestVals);
 	

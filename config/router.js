@@ -690,7 +690,7 @@ module.exports = function(app,options){
 		 		var vals = d[key];
 		 		vals.map(function(val){ if(val.EpochTimeStamp == latestTimeStamp ) { latestRawValues[key] = val.Value; } });
 		 		calculations[key] = {
-		 				"LatestValue": Math.max.apply(Math,vals.map(function(o){return o.Value+0.5;})),
+		 				"LatestValue": latestRawValues[key],
 		 				"Max": Math.max.apply(Math,vals.map(function(o){return o.Value;})),
 		 				"Min": Math.min.apply(Math,vals.map(function(o){return o.Value;})),
 		 				"Mean": math.mean.apply(math,vals.map(function(o){return o.Value;})),

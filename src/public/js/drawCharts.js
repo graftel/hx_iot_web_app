@@ -321,7 +321,7 @@
 		tooltip.on('mouseout mousedown', function() { 
 			hideTooltip();
 		})
-		.on('mouseover mouseup click', function() { 
+		.on('mouseenter mouseover mouseup click', function() { 
 			showTooltip();
 		})
 		.on('mousemove', function() {

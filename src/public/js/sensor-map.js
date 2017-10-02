@@ -102,12 +102,12 @@
 		      .attr("class", "legend")
 		      .text(function(d){return d})
 		      .style("font-family", "sans-serif")
-		      .style("font-size", "11px")
+		      .style("font-size", "13px")
 		      .attr("text-anchor", "middle")
 		      .attr("dy", "1.5em")
 		      .attr("transform", function(d, i){return "translate(0, -10)"})
 		      .attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-60*Math.sin(i*cfg.radians/total);})
-		      .attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total);});
+		      .attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total)-5;});
 
 
 		    d.forEach(function(y, x){
@@ -153,6 +153,26 @@
 		      series++;
 		    });
 		    series=0;
+		    function res(k){
+		    	var r;
+		    	d[0].forEach(function(v){
+			    	  if(v.deviceid == k) {
+			    		  r = (domainY.min+v.value).toFixed(3);
+			    	  }
+			      }); 
+		    	  return r;
+		    }		    
+		    axis.append("text")
+		      .attr("class", "legend")
+		      .text(function(k){ return "("+res(k)+")"; })
+		      .style("font-family", "sans-serif")
+		      .style("font-size", "13px")
+		      .attr("text-anchor", "middle")
+		      .attr("dy", "1.5em")
+		      .attr("transform", function(d, i){return "translate(0, -10)"})
+		      .attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-60*Math.sin(i*cfg.radians/total)+((i+1)%2)*50;})
+		      .attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total)-5+((i)%2)*15;});
+		    
 
 
 		var tooltip = d3.select("body").append("div").attr("class", "toolTip");
@@ -167,8 +187,8 @@
 		        dataValues.push([
 		        cfg.w/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total)),
 		        cfg.h/2*(1-(parseFloat(Math.max(j.value, 0))/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total))
-		      ]);
-		      return cfg.w/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total));
+		        ]);
+		        return cfg.w/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.sin(i*cfg.radians/total));
 		      })
 		      .attr("cy", function(j, i){
 		        return cfg.h/2*(1-(Math.max(j.value, 0)/cfg.maxValue)*cfg.factor*Math.cos(i*cfg.radians/total));
