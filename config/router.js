@@ -69,7 +69,7 @@ module.exports = function(app,options){
 		else{
 			var currentUserID = req.user.userid;
 			getMainParameter(currentUserID);
-			getAssets(getCalculatedValues);
+			getAssets(currentUserID,getCalculatedValues);
 			simpleCallback = function(){
 				if(HBEdetails.length == assetIDs.length){
 					var parameterlist = {	"#HBP": "Heat_Balance_Error(%)",
@@ -108,14 +108,16 @@ module.exports = function(app,options){
 		if(typeof req.session.passport == 'undefined'){
 			res.status(440).send("Session expired! Login again");
 		}
-		var timer = req.body.timer || 1;
-		getCalculatedValues(timer, simpleCallback = function(){
-			if(HBEdetails.length == 0 ){
-				res.status(404).send("Oh uh, something went wrong");
-			}
-			if(HBEdetails.length == assetIDs.length){
-				res.end(JSON.stringify( {data: HBEdetails,assets:assets}));
-			}
+		var timer = req.body.timer;
+		updateTimer(timer,req.user.userid,function(){
+			getCalculatedValues(req.user.userid, simpleCallback = function(){
+				if(HBEdetails.length == 0 ){
+					res.status(404).send("Oh uh, something went wrong");
+				}
+				if(HBEdetails.length == assetIDs.length){
+					res.end(JSON.stringify( {data: HBEdetails,assets:assets}));
+				}
+			});
 		});
 	});
 
@@ -342,7 +344,7 @@ module.exports = function(app,options){
 					devicedetails: devicedetails
 				});
 			};
-			getAssets( function(){
+			getAssets(req.user.userid, function(){
 				for(let asset of assetIDs){
 					 var params = {
 							 TableName : tables.deviceConfig,
@@ -540,52 +542,54 @@ module.exports = function(app,options){
 	 });
 
 	// Helper Methods
-	var getCalculatedValues = function(timer=1, callback) {
+	var getCalculatedValues = function(userid, callback) {
 		 var params;
 		 HBEdetails=[];
 		 var curtime = new Date() / 1000;
-		 for(device of assetIDs)(
-			function(device){
-				var assetsParams = {
-				 	TableName: tables.assets,
-					FilterExpression: "AssetID = :v1",
-					ExpressionAttributeValues: {
-						":v1": device
-						}
-					};
-			 options.docClient.scan(assetsParams, function(err,data_assets){
-				 if (err) {
-						console.error("Unable to scan Assets table for AssetID:"+device+". ERROR JSON:", JSON.stringify(err, null, 2));
-						res(err,null);
-				 } else {
-					 					 var obj = new Object();
-					 					 var calculatedDataParams = {
-												 	TableName : tables.calculatedData,
-												    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": mainParameter},
-												    ProjectionExpression: "AssetID, #T, #E",
-												    KeyConditionExpression: "AssetID = :v1 AND #T BETWEEN :v2a and :v2b",
-												    ExpressionAttributeValues: {
-												        ":v1": device,
-												        ":v2a": curtime - (timer * 60 * 60),
-												        ":v2b": curtime
-												    },
-												    Select: "SPECIFIC_ATTRIBUTES"
-										 };
-										 options.docClient.query(calculatedDataParams, function (err, data) {
-										 	    if (err) {
-											        console.error("Unable to query calculatedData table for Asset "+device+". (getCalculatedValues) Error JSON:", JSON.stringify(err, null, 2));
-											    } else {
-												        obj[device] = data.Items;
-												        HBEdetails.push(obj);
-												        callback();
-											    }
-										 });
-					 }
-				 });
-		 })(device)
+		 getTimer(userid,function(timer){
+			 for(device of assetIDs)(
+						function(device){
+							var assetsParams = {
+							 	TableName: tables.assets,
+								FilterExpression: "AssetID = :v1",
+								ExpressionAttributeValues: {
+									":v1": device
+									}
+								};
+						 options.docClient.scan(assetsParams, function(err,data_assets){
+							 if (err) {
+									console.error("Unable to scan Assets table for AssetID:"+device+". ERROR JSON:", JSON.stringify(err, null, 2));
+									res(err,null);
+							 } else {
+								 					 var obj = new Object();
+								 					 var calculatedDataParams = {
+															 	TableName : tables.calculatedData,
+															    ExpressionAttributeNames: {"#T":"EpochTimeStamp", "#E": mainParameter},
+															    ProjectionExpression: "AssetID, #T, #E",
+															    KeyConditionExpression: "AssetID = :v1 AND #T BETWEEN :v2a and :v2b",
+															    ExpressionAttributeValues: {
+															        ":v1": device,
+															        ":v2a": curtime - (timer * 60 * 60),
+															        ":v2b": curtime
+															    },
+															    Select: "SPECIFIC_ATTRIBUTES"
+													 };
+													 options.docClient.query(calculatedDataParams, function (err, data) {
+													 	    if (err) {
+														        console.error("Unable to query calculatedData table for Asset "+device+". (getCalculatedValues) Error JSON:", JSON.stringify(err, null, 2));
+														    } else {
+															        obj[device] = data.Items;
+															        HBEdetails.push(obj);
+															        callback();
+														    }
+													 });
+								 }
+							 });
+					 })(device)			 
+		 });
 	 }
 
-	 function getAssets(callback) {
+	 function getAssets(userid,callback) {
 		 HBEdetails = [], assets = {}, assetIDs = []; // to empty any previous values stored
 		 var assetsParams = {
 				    TableName : tables.assets,
@@ -599,7 +603,7 @@ module.exports = function(app,options){
 			    		assets[data.Items[item].AssetID] = data.Items[item].DisplayName;
 			    		assetIDs.push(data.Items[item].AssetID);
 			    	}
-				    callback(1, simpleCallback);
+				    callback(userid, simpleCallback);
 			    }
 			});
 		}
@@ -808,4 +812,47 @@ module.exports = function(app,options){
 				    }
 				});
 	 }*/
+	 
+	 function updateTimer(time, userid,callback){
+		 if(time){
+			 var params = {
+						TableName : tables.users,
+						Key : {
+							UserID : userid
+						},
+						UpdateExpression : "SET Timer = :val",
+						ExpressionAttributeValues : {
+							":val" : time
+						},
+						ReturnValues : "NONE"
+					};
+					options.docClient.update(params, function(err, data) {
+						if (err) {
+							console.error("Unable to update timer for "+userid+". (updateTimer) Error JSON:", JSON.stringify(err, null, 2));
+						}
+						callback();
+					});
+		 }
+		 else
+			 callback();
+	 }
+	 
+	 function getTimer(userid, callback){
+		 var timer;
+		 var getTimer_params = {
+					TableName : tables.users,
+					KeyConditionExpression: "UserID = :v1",
+					ExpressionAttributeValues: {
+						 ":v1": userid
+					}
+				};
+		 options.docClient.query(getTimer_params, function (err, data) {
+				if (err) {
+					console.error("Unable to get timer for "+userid+". (getTimer) Error JSON:", JSON.stringify(err, null, 2));
+				} else {
+						timer = data.Items[0].Timer;	
+						callback(timer);
+				}
+		});
+	 }
 }
