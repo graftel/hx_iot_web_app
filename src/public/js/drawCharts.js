@@ -427,7 +427,8 @@
 		window.domainY = setMinMaxforAssetGraph(latestValues).Y;
 		var width = 300, height = 300;
 		var svg = d3.select('#sensor-chart').selectAll('svg').append('svg').attr(
-				"width", width).attr("height", height);
+				"width", "100%").attr("height", "100%").attr("preserveAspectRatio", "xMinYMin meet")
+				.attr("viewBox", "0 0 300 300");
 		svg.select("g").remove();
 		// Config for the Radar chart
 		var config = {

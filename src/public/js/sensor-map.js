@@ -34,11 +34,14 @@
 		    var radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
 		    var Format = d3.format('%');
 		    d3.select(id).select("svg").remove();
-
+		    var width = cfg.w+cfg.ExtraWidthX;
+		    var height = cfg.h+cfg.ExtraWidthY;
 		    var g = d3.select(id)
 		        .append("svg")
-		        .attr("width", cfg.w+cfg.ExtraWidthX)
-		        .attr("height", cfg.h+cfg.ExtraWidthY)
+		        .attr("width", "100%")
+		        .attr("height", "100%")
+		        .attr("viewBox", "0 0 "+width+" "+height)
+		        .attr("preserveAspectRatio", "xMidYMid meet")
 		        .append("g")
 		        .attr("transform", "translate(" + cfg.TranslateX + "," + cfg.TranslateY + ")");
 
@@ -102,7 +105,7 @@
 		      .attr("class", "legend")
 		      .text(function(d){return d})
 		      .style("font-family", "sans-serif")
-		      .style("font-size", "13px")
+		      .style("font-size", "15px")
 		      .attr("text-anchor", "middle")
 		      .attr("dy", "1.5em")
 		      .attr("transform", function(d, i){return "translate(0, -10)"})
@@ -166,11 +169,11 @@
 		      .attr("class", "legend")
 		      .text(function(k){ return "("+res(k)+")"; })
 		      .style("font-family", "sans-serif")
-		      .style("font-size", "13px")
+		      .style("font-size", "15px")
 		      .attr("text-anchor", "middle")
 		      .attr("dy", "1.5em")
 		      .attr("transform", function(d, i){return "translate(0, -10)"})
-		      .attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-60*Math.sin(i*cfg.radians/total)+((i+1)%2)*50;})
+		      .attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-60*Math.sin(i*cfg.radians/total)+5+((i+1)%2)*50;})
 		      .attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total)-5+((i)%2)*15;});
 		    
 
