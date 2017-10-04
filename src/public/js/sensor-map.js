@@ -68,7 +68,7 @@
 		    //Text indicating at what % each level is
 		    for(var j=0; j<cfg.levels; j++){
 		      var levelFactor = cfg.factor*radius*((j+1)/cfg.levels);
-		      g.selectAll(".levels")
+		      g.selectAll(".levels") // TOP axes labels
 		       .data([1]) //dummy data
 		       .enter()
 		       .append("svg:text")
@@ -76,11 +76,56 @@
 		       .attr("y", function(d){return levelFactor*(1-cfg.factor*Math.cos(0));})
 		       .attr("class", "legend")
 		       .style("font-family", "sans-serif")
-		       .style("font-size", "10px")
+		       .style("font-size", "80%")
 		       .attr("transform", "translate(" + (cfg.w/2-levelFactor + cfg.ToRight) + ", " + (cfg.h/2-levelFactor) + ")")
 		       .attr("fill", "#737373")
 		       .text(function(d){
 		    	 return  (domainY.min+((j+1)*cfg.maxValue/cfg.levels)).toFixed(2);
+		       });
+		      
+		      g.selectAll(".levels") // RIGHT axes labels
+		       .data([1]) //dummy data
+		       .enter()
+		       .append("svg:text")
+		       .attr("x", function(d){ return levelFactor*(1-cfg.factor*Math.sin(0));})
+		       .attr("y", function(d){ return levelFactor*(1-cfg.factor*Math.cos(0));})
+		       .attr("class", "legend")
+		       .style("font-family", "sans-serif")
+		       .style("font-size", "80%")
+		       .attr("transform", "translate(" + (cfg.w/2-levelFactor + (cfg.ToRight*7) + cfg.w/2) + ", " + (cfg.h/2-levelFactor+cfg.ToRight)+ ")rotate(90)")
+		       .attr("fill", "#737373")
+		       .text(function(d){
+		    	 return  (domainY.min+(((cfg.levels-j))*cfg.maxValue/cfg.levels)).toFixed(2);
+		       });
+		      
+		      g.selectAll(".levels") // BOTTOM axes labels
+		       .data([1]) //dummy data
+		       .enter()
+		       .append("svg:text")
+		       .attr("x", function(d){return levelFactor*(1-cfg.factor*Math.sin(0));})
+		       .attr("y", function(d){return levelFactor*(1-cfg.factor*Math.cos(0));})
+		       .attr("class", "legend")
+		       .style("font-family", "sans-serif")
+		       .style("font-size", "80%")
+		       .attr("transform", "translate(" + (cfg.w/2-levelFactor + cfg.ToRight) + ", " + (cfg.h/2-levelFactor*4 + levelFactor*cfg.ToRight) + ")")
+		       .attr("fill", "#737373")
+		       .text(function(d){
+		    	 return  (domainY.min+((j+1)*cfg.maxValue/cfg.levels)).toFixed(2);
+		       });
+		      
+		      g.selectAll(".levels") // LEFT axes labels
+		       .data([1]) //dummy data
+		       .enter()
+		       .append("svg:text")
+		       .attr("x", function(d){ return levelFactor*(1-cfg.factor*Math.sin(0));})
+		       .attr("y", function(d){ return levelFactor*(1-cfg.factor*Math.cos(0));})
+		       .attr("class", "legend")
+		       .style("font-family", "sans-serif")
+		       .style("font-size", "80%")
+		       .attr("transform", "translate(" + (levelFactor - cfg.ToRight*7) + ", " + (cfg.h/2-levelFactor + cfg.ToRight)+ ")rotate(90)")
+		       .attr("fill", "#737373")
+		       .text(function(d){
+		    	 return  (domainY.min+(((cfg.levels-j))*cfg.maxValue/cfg.levels)).toFixed(2);
 		       });
 		    }
 
@@ -165,7 +210,7 @@
 			      }); 
 		    	  return r;
 		    }		    
-		    axis.append("text")
+	/*	    axis.append("text")
 		      .attr("class", "legend")
 		      .text(function(k){ return "("+res(k)+")"; })
 		      .style("font-family", "sans-serif")
@@ -174,7 +219,7 @@
 		      .attr("dy", "1.5em")
 		      .attr("transform", function(d, i){return "translate(0, -10)"})
 		      .attr("x", function(d, i){return cfg.w/2*(1-cfg.factorLegend*Math.sin(i*cfg.radians/total))-60*Math.sin(i*cfg.radians/total)+5+((i+1)%2)*50;})
-		      .attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total)-5+((i)%2)*15;});
+		      .attr("y", function(d, i){return cfg.h/2*(1-Math.cos(i*cfg.radians/total))-20*Math.cos(i*cfg.radians/total)-5+((i)%2)*15;}); */
 		    
 
 

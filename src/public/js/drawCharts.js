@@ -44,7 +44,7 @@
 				"translate(" + (MARGINS.left) + ",0)").call(yAxis);
 		
 		var xlabelBox = d3.select(".xaxis").append("rect").attr("transform",
-		"translate(12,20)").style("fill", "#7d7e82").attr("width", 50)
+		"translate(12,20)").style("fill", "#7d7e82").attr("width", 60)
 		.attr("height", 30).style("opacity", "0");
 		
 		var xlabelText = d3.select(".xaxis").append("text").attr("transform",
@@ -126,7 +126,7 @@
 		var mousePerLine = mouseG.selectAll('.mouse-per-line').data(data).enter()   // tooltip group
 				.append("g").attr("class", "mouse-per-line");
 	
-		mousePerLine.append("rect").style("fill", "none").attr("width", 50).attr(
+		mousePerLine.append("rect").style("fill", "none").attr("width", 60).attr(
 				"height", 30).attr("class","holder").style("opacity", "0");
 	
 		mousePerLine.append("text").attr("transform", "translate(12,20)").attr("class","holder").style(
