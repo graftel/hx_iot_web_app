@@ -29,7 +29,8 @@
 			
 		    cfg.maxValue = (domainY.max) - (domainY.min);
 
-		    var allAxis = (d[0].map(function(i, j){return i.deviceid}));
+		    var devices = (d[0].map(function(i, j){return i.deviceid}));
+		    var allAxis = [0,1,2,3]; // dummy data
 		    var total = allAxis.length;
 		    var radius = cfg.factor*Math.min(cfg.w/2, cfg.h/2);
 		    var Format = d3.format('%');
@@ -148,7 +149,7 @@
 
 		    axis.append("text")
 		      .attr("class", "legend")
-		      .text(function(d){return d})
+		      .text(function(d,i){return devices[i]})
 		      .style("font-family", "sans-serif")
 		      .style("font-size", "15px")
 		      .attr("text-anchor", "middle")
