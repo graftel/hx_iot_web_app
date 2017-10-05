@@ -79,7 +79,7 @@
 		});
 		
 		var sideLegend = vis.append('g').attr('class', 'sideLegend'); // legend group
-		
+		var meanValues = getValuesForMean(data);
 		dataGroup.forEach(function(d, i) { // add legend
 			
 			sideLegend.append('rect').attr('x', WIDTH - MARGINS.right - padding).attr('y', function() {
@@ -114,6 +114,15 @@
 			});
 		};
 		drawPath(); // draw lines on first load
+
+		var meanLine= d3.line().curve(d3.curveBasis).x(function(d) {
+			return xScale(d.key);
+		}).y(function(d) {
+			return yScale(d.value.reduce((a, b) => a + b) / d.value.length); // average of values
+		});
+		chartBody.append('path').attr('d',meanLine(meanValues) ).attr('stroke',  // generate path lines
+		"black").attr('stroke-width', 2).attr('class', 'line')
+		.attr('fill', 'none');
 		
 		vis.append("defs").append("clipPath").attr("id", "clip").append("rect")
 		.attr("x", MARGINS.left).attr("y", 0).attr("width", WIDTH - (2*MARGINS.left)).attr("height", HEIGHT - MARGINS.top);		
@@ -448,4 +457,22 @@
 			});
 		}
 		RadarChart.draw("#sensor-chart", [ data ], config);
+	}
+	
+	function getValuesForMean(data){
+		var result = [], tempTS = [];
+		data.forEach(function(obj){
+			var key = Object.keys(obj)[0];
+			var values = obj[key];
+			values.forEach(function(timeStampObj){
+				if(tempTS.includes(timeStampObj.EpochTimeStamp)){
+					result.map(function(d){ if(d.key == timeStampObj.EpochTimeStamp){  d.value.push(timeStampObj.Value); } });
+				}
+				else{
+					result.push({key: timeStampObj.EpochTimeStamp, value: [timeStampObj.Value]  });
+					tempTS.push(timeStampObj.EpochTimeStamp);
+				}
+			});
+		});
+		return result;
 	}
