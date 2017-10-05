@@ -129,3 +129,30 @@
 			$("#" + key).attr("opacity", 0);
 	}
 	
+	function downloadCSV(rawdata) {
+        var data, filename, link;
+        var csv = formatDataToCSVString(rawdata);
+        if (csv == null) return;
+        filename = 'export.csv';
+        if (!csv.match(/^data:text\/csv/i)) {
+            csv = 'data:text/csv;charset=utf-8,' + csv;
+        }
+        data = encodeURI(csv);
+        link = document.createElement('a');
+        link.setAttribute('href', data);
+        link.setAttribute('download', filename);	
+        link.click();
+    }
+	
+	function formatDataToCSVString(rawdata) {
+	    var result = "SensorID,EpochTimeStamp,Value\n"; //header
+	    rawdata.forEach(function(sensorObj){ 	    // Add rows
+	    	var sensorid = Object.keys(sensorObj)[0];
+	        var values = sensorObj[sensorid];
+	        values.forEach(function(obj){
+	        	result += sensorid+","+obj.EpochTimeStamp+","+obj.Value+"\n";
+	        });
+	    });
+	    return result;
+	}
+	

@@ -540,10 +540,16 @@
 				assets[devices[i]] = devices[i];
 			}		
 			var domain = setMinMaxforAssetGraph(calculatedVals, latestTimeStamp);
-			$("#date-range").html("Data from "+ new Date(domain.X.min*1000).toLocaleString() + " to "+ new Date(domain.X.max*1000).toLocaleString() );
+			var startTime = new Date(domain.X.min*1000);
+			var endTime = new Date(domain.X.max*1000);
+			var minutes = (endTime - startTime)/(1000*60);
+			var m = minutes % 60, h = (minutes-m)/60;
+			$("#date-range").html("Data from "+ startTime.toLocaleString() + " to "+ endTime.toLocaleString() + ". Interval: "+ h + " hours "+ m +" minutes");
+			$('#downloadAsCSV').on('click', function(e) {
+				downloadCSV(rawValues);
+			});
 			drawLineGraph(d3.select("#assetPlotDiv"), rawValues, assets, domain, "Value");
-			drawSensorMap(latestVals);
-	
+			drawSensorMap(latestVals);	
 		}
 	
 		setInterval(function(){
