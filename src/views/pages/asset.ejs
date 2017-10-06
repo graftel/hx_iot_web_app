@@ -294,12 +294,12 @@
 								sodipodi:linespacing="125%">
 							<tspan sodipodi:role="line" id="tspan4222" x="530.30414"
 								y="35.179455"
-								style="font-size:17.50015831px;text-align:center;text-anchor:middle">Shell Inlet </tspan>
+								style="font-size:17.50015831px;text-align:center;text-anchor:middle">Shell Inlet</tspan>
 							<tspan sodipodi:role="line" x="489.22794" y="57.054653"
 								style="font-size:17.50015831px;text-align:center;text-anchor:middle"
 								id="tspan4284">(ID: <%= plateNames[asset]["COLD_IN"] %>)</tspan></text>
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+								class="asset-svg-plate-detail-text"
 								x="346.44479" y="122.74821" id="text4220-5"
 								sodipodi:linespacing="125%">
 							<tspan sodipodi:role="line" id="tspan4222-5" x="346.44479"
@@ -311,7 +311,7 @@
 								inkscape:original-d="m 379.44593,103.47996 0,55.25088"
 								inkscape:connector-curvature="0" />
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+								class="asset-svg-plate-detail-text"							
 								x="67.748936" y="334.88721" id="text4220-9"
 								sodipodi:linespacing="125%">
 							<tspan sodipodi:role="line" x="103.748936" y="334.88721"
@@ -333,7 +333,7 @@
 								inkscape:original-d="m 686.98739,382.73259 0,55.25088"
 								inkscape:connector-curvature="0" />
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+								class="asset-svg-plate-detail-text"								
 								x="579.9931" y="505.19406" id="text4220-99"
 								sodipodi:linespacing="125%">
 							<tspan sodipodi:role="line" id="tspan4222-0" x="623.9931"
@@ -343,7 +343,7 @@
 								style="font-size:17.50015831px;text-align:center;text-anchor:middle"
 								id="tspan4284-8">(ID: <%= plateNames[asset]["COLD_OUT"] %>)</tspan></text>
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+								class="asset-svg-plate-detail-text"
 								x="1003.3363" y="334.62448" id="text4220-9-9"
 								sodipodi:linespacing="125%">
 							<tspan sodipodi:role="line" x="1043.3363" y="334.62448"
@@ -359,62 +359,62 @@
 								inkscape:original-d="m 941.7202,270.86505 -58.70406,0"
 								inkscape:connector-curvature="0" sodipodi:nodetypes="cc" />
 							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
+								class="asset-svg-reading-text clickable"								
 								x="345.03348" y="53.226425" data-type="Temperature"
 								data-location="COLD_IN" onclick="getData(this)"
-								class="clickable" id="text4537">
+								id="text4537">
 							<tspan sodipodi:role="line" id="tspan4535" x="345.03348"
 								y="53.226425" style="stroke-width:0.93750846"><%= values["Ave_COLD_Inlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
+								class="asset-svg-reading-text clickable"	
 								x="25.1499186" y="277.56779" data-type="Temperature"
 								data-location="HOT_OUT" onclick="getData(this)"
-								class="clickable" id="text4541">
+								id="text4541">
 							<tspan sodipodi:role="line" id="tspan4539" x="25.1499186"
 								y="277.56779" style="stroke-width:0.93750846"><%= values["Ave_HOT_Outlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
+								class="asset-svg-reading-text clickable"								
 								x="636.37885" y="446.53967" data-type="Temperature"
 								data-location="COLD_OUT" onclick="getData(this)"
-								class="clickable" id="text4545">
+								id="text4545">
 							<tspan sodipodi:role="line" id="tspan4543" x="654.37885"
 								y="516.53967" style="stroke-width:0.93750846"><%= values["Ave_COLD_Outlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
+								class="asset-svg-reading-text clickable"								
 								x="966.68805" y="277.56779" data-type="Temperature"
-								data-location="HOT_IN" onclick="getData(this)" class="clickable"
+								data-location="HOT_IN" onclick="getData(this)"
 								id="text4549">
 							<tspan sodipodi:role="line" id="tspan4547" x="966.68805"
 								y="277.56779" style="stroke-width:0.93750846"><%= values["Ave_HOT_Inlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
+								class="asset-svg-reading-text clickable"								
 								x="171.68002" y="249.51559" data-type="FlowMeter"
 								data-location="HOT_FLOW_IN" onclick="getData(this)"
-								class="clickable" id="text4553">
+								id="text4553">
 							<tspan sodipodi:role="line" id="tspan4551" x="198.68002"
 								y="277.51559"
 								style="font-size:17.00027084px;stroke-width:0.93750846"><%=values["HOT_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
+								class="asset-svg-reading-text clickable"								
 								x="330.82059" y="198.21036" data-type="FlowMeter"
 								data-location="COLD_FLOW_IN" onclick="getData(this)"
-								class="clickable" id="text4557">
+								id="text4557">
 							<tspan sodipodi:role="line" id="tspan4555" x="330.82059"
 								y="198.21036"
 								style="font-size:17.00027084px;stroke-width:0.93750846"><%=values["COLD_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
  						 	<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
+								class="asset-svg-reading-text clickable"								
 								x="595.16998" y="332.21436" data-type="FlowMeter"
 								data-location="COLD_FLOW_IN" onclick="getData(this)"
-								class="clickable" id="text4561">
+								id="text4561">
 							<tspan sodipodi:role="line" id="tspan4559" x="645.16998"
 								y="357.21436"
 								style="font-size:17.00027084px;stroke-width:0.93750846"><%=values["COLD_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
   							<text xml:space="preserve"
-								style="font-style:normal;font-weight:normal;font-size:20.50033951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.93750846"
+								class="asset-svg-reading-text clickable"								
 								x="725.49536" y="244.75253" data-type="FlowMeter"
 								data-location="HOT_FLOW_IN" onclick="getData(this)"
-								class="clickable" id="text4565">
+								id="text4565">
 							<tspan sodipodi:role="line" id="tspan4563" x="775.49536"
 								y="274.75253"
 								style="font-size:16.00027084px;stroke-width:0.93750846"><%=values["HOT_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>

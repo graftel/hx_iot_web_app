@@ -103,7 +103,8 @@
 				setStrokeVisibility(device);
 			});
 		});
-		
+		vis.append("defs").append("clipPath").attr("id", "clip").append("rect")
+		.attr("x", MARGINS.left).attr("y", 0).attr("width", WIDTH - (2*MARGINS.left)).attr("height", HEIGHT - MARGINS.top);		
 		var drawPath = function(){
 			dataGroup.forEach(function(d, i) { // draw graph lines
 				
@@ -115,17 +116,28 @@
 		};
 		drawPath(); // draw lines on first load
 
-		var meanLine= d3.line().curve(d3.curveBasis).x(function(d) {
-			return xScale(d.key);
-		}).y(function(d) {
-			return yScale(d.value.reduce((a, b) => a + b) / d.value.length); // average of values
-		});
-		chartBody.append('path').attr('d',meanLine(meanValues) ).attr('stroke',  // generate path lines
-		"black").attr('stroke-width', 2).attr('class', 'line')
-		.attr('fill', 'none');
-		
-		vis.append("defs").append("clipPath").attr("id", "clip").append("rect")
-		.attr("x", MARGINS.left).attr("y", 0).attr("width", WIDTH - (2*MARGINS.left)).attr("height", HEIGHT - MARGINS.top);		
+		// ******** Mean line ********
+		if(window.location.pathname == "/asset"){
+			var meanLine= d3.line().curve(d3.curveBasis).x(function(d) { // mean path
+				return xScale(d.key);
+			}).y(function(d) {
+				return yScale(d.value.reduce((a, b) => a + b) / d.value.length); // average of values
+			});
+			chartBody.append('path').attr('d',meanLine(meanValues) ).attr('stroke',  // generate path lines
+			"black").attr('stroke-width', 2).attr('class', 'line')
+			.attr('fill', 'none');
+	
+			sideLegend.append('rect').attr('x', WIDTH - MARGINS.right - padding).attr('y', function() { // add legend rect
+				var prevElement = $(this).prev();
+				if(prevElement.prop("tagName") == "foreignObject" && prevElement.find("p").height() >20 )
+					overflowOffset += (prevElement.find("p").height()-20);		
+				return ((i * 20) + 70) + overflowOffset;
+			}).attr('width', 10).attr('height', 10).style('fill', "black");
+			
+			sideLegend.append('foreignObject').attr('x', WIDTH - padding ).attr('y', function() { // add legend text
+				return ((i * 20) + 65) + overflowOffset; //word wrap asset labels
+			}).attr("width",70).attr("height", "100%").html("<b>Mean</b>");
+		}	
 		
 		// ****** Tool tip **********
 		var lines = document.getElementsByClassName('line');
