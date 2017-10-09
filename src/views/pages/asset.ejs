@@ -364,28 +364,28 @@
 								data-location="COLD_IN" onclick="getData(this)"
 								id="text4537">
 							<tspan sodipodi:role="line" id="tspan4535" x="345.03348"
-								y="53.226425" style="stroke-width:0.93750846"><%= values["Ave_COLD_Inlet(F)"].toFixed(2) %>F</tspan></text>
+								y="53.226425" style="stroke-width:0.93750846"><%=  (values["Ave_COLD_Inlet(F)"] === undefined) ? "" : values["Ave_COLD_Inlet(F)"].toFixed(2)+"F" %></tspan></text>
   							<text xml:space="preserve"
 								class="asset-svg-reading-text clickable"	
 								x="25.1499186" y="277.56779" data-type="Temperature"
 								data-location="HOT_OUT" onclick="getData(this)"
 								id="text4541">
 							<tspan sodipodi:role="line" id="tspan4539" x="25.1499186"
-								y="277.56779" style="stroke-width:0.93750846"><%= values["Ave_HOT_Outlet(F)"].toFixed(2) %>F</tspan></text>
+								y="277.56779" style="stroke-width:0.93750846"><%= (values["Ave_HOT_Outlet(F)"] === undefined) ? "" :  values["Ave_HOT_Outlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
 								class="asset-svg-reading-text clickable"								
 								x="636.37885" y="446.53967" data-type="Temperature"
 								data-location="COLD_OUT" onclick="getData(this)"
 								id="text4545">
 							<tspan sodipodi:role="line" id="tspan4543" x="654.37885"
-								y="516.53967" style="stroke-width:0.93750846"><%= values["Ave_COLD_Outlet(F)"].toFixed(2) %>F</tspan></text>
+								y="516.53967" style="stroke-width:0.93750846"><%= (values["Ave_COLD_Outlet(F)"] === undefined) ? "" : values["Ave_COLD_Outlet(F)"].toFixed(2)+"F" %></tspan></text>
   							<text xml:space="preserve"
 								class="asset-svg-reading-text clickable"								
 								x="966.68805" y="277.56779" data-type="Temperature"
 								data-location="HOT_IN" onclick="getData(this)"
 								id="text4549">
 							<tspan sodipodi:role="line" id="tspan4547" x="966.68805"
-								y="277.56779" style="stroke-width:0.93750846"><%= values["Ave_HOT_Inlet(F)"].toFixed(2) %>F</tspan></text>
+								y="277.56779" style="stroke-width:0.93750846"><%= (values["Ave_HOT_Inlet(F)"] === undefined) ? "" :  values["Ave_HOT_Inlet(F)"].toFixed(2) %>F</tspan></text>
   							<text xml:space="preserve"
 								class="asset-svg-reading-text clickable"								
 								x="171.68002" y="249.51559" data-type="FlowMeter"
@@ -393,7 +393,7 @@
 								id="text4553">
 							<tspan sodipodi:role="line" id="tspan4551" x="198.68002"
 								y="277.51559"
-								style="font-size:17.00027084px;stroke-width:0.93750846"><%=values["HOT_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
+								style="font-size:17.00027084px;stroke-width:0.93750846"><%= (values["HOT_Flow(gpm)"] === undefined) ? "" : values["HOT_Flow(gpm)"].toFixed(2)+"GPM" %></tspan></text>
   							<text xml:space="preserve"
 								class="asset-svg-reading-text clickable"								
 								x="330.82059" y="198.21036" data-type="FlowMeter"
@@ -401,23 +401,23 @@
 								id="text4557">
 							<tspan sodipodi:role="line" id="tspan4555" x="330.82059"
 								y="198.21036"
-								style="font-size:17.00027084px;stroke-width:0.93750846"><%=values["COLD_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
+								style="font-size:17.00027084px;stroke-width:0.93750846"><%= (values["COLD_Flow(gpm)"] === undefined) ? "" : values["COLD_Flow(gpm)"].toFixed(2)+"GPM" %></tspan></text>
  						 	<text xml:space="preserve"
 								class="asset-svg-reading-text clickable"								
 								x="595.16998" y="332.21436" data-type="FlowMeter"
-								data-location="COLD_FLOW_IN" onclick="getData(this)"
+								data-location="COLD_FLOW_OUT" onclick="getData(this)"
 								id="text4561">
 							<tspan sodipodi:role="line" id="tspan4559" x="645.16998"
 								y="357.21436"
-								style="font-size:17.00027084px;stroke-width:0.93750846"><%=values["COLD_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
+								style="font-size:17.00027084px;stroke-width:0.93750846"><%= (values["COLD_Flow_OUT(gpm)"] === undefined) ? "" : values["COLD_Flow_OUT(gpm)"].toFixed(2)+"GPM" %></tspan></text>
   							<text xml:space="preserve"
 								class="asset-svg-reading-text clickable"								
 								x="725.49536" y="244.75253" data-type="FlowMeter"
-								data-location="HOT_FLOW_IN" onclick="getData(this)"
+								data-location="HOT_FLOW_OUT" onclick="getData(this)"
 								id="text4565">
 							<tspan sodipodi:role="line" id="tspan4563" x="775.49536"
 								y="274.75253"
-								style="font-size:16.00027084px;stroke-width:0.93750846"><%=values["HOT_Flow(gpm)"].toFixed(2) %>GPM</tspan></text>
+								style="font-size:16.00027084px;stroke-width:0.93750846"><%= (values["HOT_Flow_OUT(gpm)"] == undefined) ? "" : values["HOT_Flow_OUT(gpm)"].toFixed(2)+"GPM" %></tspan></text>
 </svg>
 					</div>
 				</div>
