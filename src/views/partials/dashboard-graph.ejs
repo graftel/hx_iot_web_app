@@ -15,7 +15,7 @@
 						<% for(asset in assets){ %>
 							<tr> 
 								<td><%= assets[asset] %></td> 
-								<td style="color: green; font-weight: bold;">OK</td> 
+								<td ><img src="/images/ok.png" height="20" width="20" title="OK" alt="OK" /></td> 
 								<td><%= devicesCount[asset] %></td> 
 								<td data-assetid="<%= asset %>"><%= new Date(assetTimeStamps[asset]*1000).toLocaleDateString() %> <%= new Date(assetTimeStamps[asset]*1000).toLocaleTimeString() %> </td> 
 							</tr> 
