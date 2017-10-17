@@ -34,6 +34,7 @@
 <script type="text/javascript">
 	$( document ).ready(function() {
 		var refreshIntervalId =	setInterval(function(){
+		console.log("refreshing data");
 		getLiveData();
     	getInstData();
 	},1 * 60 * 1000);  // refresh every 1 minute
@@ -47,6 +48,7 @@
                 var mainParameter = <%- JSON.stringify(mainParameter) %>;
                 var data = JSON.parse(data);
                 var domain = getDomainForDashboardGraph(data.data,mainParameter);
+                updateTimeStamps(data.assetTimeStamps, data.assets);
                 drawLineGraph(d3.select("#dashboard-line-chart-div"),data.data, data.assets,domain, mainParameter);
             },
             error: function(err){
@@ -87,6 +89,13 @@ function getInstData(){
 	    	$('div[role="alert"]').show();
 	}
 	toggleAlert();
+	
+	function updateTimeStamps(timestamps, assets){
+		for(asset in assets){
+			$('td[data-assetid='+asset+']').text(new Date(timestamps[asset]*1000).toLocaleDateString()+" "+new Date(timestamps[asset]*1000).toLocaleTimeString());
+		}
+	}
+	
 </script>
 
 </html>

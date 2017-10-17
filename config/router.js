@@ -114,13 +114,14 @@ module.exports = function(app,options){
 			res.status(440).send("Session expired! Login again");
 		}
 		var timer = req.body.timer;
+		getLatestTimeStamps();
 		updateTimer(timer,req.user.userid,function(){
 			getCalculatedValues(req.user.userid, simpleCallback = function(){
 				if(HBEdetails.length == 0 ){
 					res.status(404).send("Oh uh, something went wrong");
 				}
 				if(HBEdetails.length == assetIDs.length){
-					res.end(JSON.stringify( {data: HBEdetails,assets:assets}));
+					res.end(JSON.stringify( {data: HBEdetails,assets:assets,assetTimeStamps: assetTimeStamps }));
 				}
 			});
 		});

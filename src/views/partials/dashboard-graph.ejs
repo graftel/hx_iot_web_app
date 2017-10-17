@@ -17,8 +17,8 @@
 								<td><%= assets[asset] %></td> 
 								<td style="color: green; font-weight: bold;">OK</td> 
 								<td><%= devicesCount[asset] %></td> 
-								<td><%= new Date(assetTimeStamps[asset]*1000).toLocaleDateString() %> <%= new Date(assetTimeStamps[asset]*1000).toLocaleTimeString() %> </td> 
-							</tr>
+								<td data-assetid="<%= asset %>"><%= new Date(assetTimeStamps[asset]*1000).toLocaleDateString() %> <%= new Date(assetTimeStamps[asset]*1000).toLocaleTimeString() %> </td> 
+							</tr> 
 						<% } %>
 					</tbody>
 				</table>
