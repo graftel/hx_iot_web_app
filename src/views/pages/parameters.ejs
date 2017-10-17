@@ -1,0 +1,140 @@
+<html>
+<%- include ../partials/header.ejs %> 
+<%- include ../partials/scripts.ejs %>
+<body>
+	<div id="wrapper">
+		<!-- Navigation -->
+		<nav class="navbar navbar-default navbar-static-top" role="navigation"
+			style="margin-bottom: 0"><%- include ../partials/header-nav.ejs
+			%> <%- include ../partials/side-nav.ejs %></nav>
+		<div id="page-wrapper">
+		<table class="table table-striped">
+			<thead>
+			    <tr>
+			       <th>Tag</th>
+			       <th></th>
+			       <th>Equation</th>
+			       <th>Unit</th>
+			    </tr>
+			</thead>
+		    <tbody>
+			<% data.forEach(function(paramObj){ %>
+			      <tr>
+			        <td><%= paramObj.Tag %></td>
+			        <td> = </td>
+			        <td><%= paramObj.Equation %></td>
+			        <td><%= paramObj.Unit %></td>
+			      </tr>
+			<%	}); %>
+			</tbody>
+		</table>
+		<div class="row">
+			<div class="col-md-3" style="border:1px solid #cecece;">
+				<table class="table table-hover"> 
+					<tbody>
+						<% for(var i=0; i < data.length; i++){ %>
+							<tr>
+						        <td> <a href="javascript:void(0);" onclick="loadFormula(this); return false;" data-type="parameter" data-value="<%= data[i].Equation %>"> <%= data[i].Tag %></a> </td>
+						    </tr>
+						<% } %>
+					</tbody> 
+				</table>	
+			</div>
+			<div class="col-md-3" style="border:1px solid #cecece;">
+				<table class="table table-hover"> 
+				<% var operations = ['+','-','*','/','^','ABS','AVG','( )'] %>
+					<tbody>
+						<% for(var i=0; i < operations.length; i++){ %>
+							<tr>
+						        <td> <a href="javascript:void(0);" onclick="loadFormula(this); return false;" data-type="operator" data-value="<%= operations[i] %>"> <%= operations[i] %></a> </td>
+						    </tr>
+						<% } %>
+					</tbody> 
+				</table>	
+			</div>
+			<div class="col-md-6" style="border:1px solid #cecece;">
+			<form class="row" action="/parameters" method="post" role="form">
+				<input type="text" name="tag" class="col-md-4"/> <span class='col-md-1 text-center'>=</span>
+				<textarea id="equation" name="equation" rows="4" cols="70" class="col-md-7"></textarea>
+				<button type="reset" value="Reset" class="center col-md-offset-9">Clear</button>
+				<button type="submit" value="Submit" class="center">Submit</button>
+			</form> </div>
+			</div>
+		</div>
+	</div>
+</body>
+
+<script type="text/javascript">
+	function loadFormula(element) {
+		var value = element.getAttribute("data-value");
+		if(element.getAttribute("data-type") == "operator"){
+			switch (value) {
+				case '^':
+								var selected = window.getSelection().toString();
+								if(selected.length < 1){
+									alert('Please select the text you want to insert power');
+								}else{
+									var power = prompt("Please enter a number");
+									if(/^\d+$/.test(power)){
+										var inputBox = document.getElementById("equation");	
+										var startPosition = inputBox.selectionStart, endPosition = inputBox.selectionEnd;
+										var str = inputBox.value;
+										str = str.substring(0, startPosition) + "(" + selected + ")^"+ power + str.substring(endPosition, str.length);			           
+										document.getElementById("equation").value = str;
+									}else{
+										alert("Please enter a valid number");
+									}
+								}
+								return;
+				case 'ABS':     var selected = window.getSelection().toString();
+								if(selected.length < 1){
+									alert('Please select the text you want to insert absolute function');
+								}else{
+										var inputBox = document.getElementById("equation");	
+										var startPosition = inputBox.selectionStart, endPosition = inputBox.selectionEnd;
+										var str = inputBox.value;
+										str = str.substring(0, startPosition) + "ABS(" + selected + ")" + str.substring(endPosition, str.length);			           
+										document.getElementById("equation").value = str;
+									
+								}
+								return;
+				case 'AVG':     
+							var selected = window.getSelection().toString();
+							if(selected.length < 1){
+								alert('Please select the text you want to insert average function');
+							}else{					
+									var inputBox = document.getElementById("equation");	
+									var startPosition = inputBox.selectionStart, endPosition = inputBox.selectionEnd;
+									var str = inputBox.value;
+									str = str.substring(0, startPosition) + "AVG(" + selected + ")" + str.substring(endPosition, str.length);			           
+									document.getElementById("equation").value = str;
+							}
+							return;
+				case '()':     
+					var selected = window.getSelection().toString();
+					if(selected.length < 1){
+						alert('Please select the text you want to insert ( )');
+					}else{					
+							var inputBox = document.getElementById("equation");	
+							var startPosition = inputBox.selectionStart, endPosition = inputBox.selectionEnd;
+							var str = inputBox.value;
+							str = str.substring(0, startPosition) + "(" + selected + ")" + str.substring(endPosition, str.length);			           
+							document.getElementById("equation").value = str;
+					}
+					return;
+					
+				default:
+							document.getElementById("equation").value += value;
+							return;
+			}
+		}
+		document.getElementById("equation").value += value;
+	}
+	
+	function evaluateexpr(){
+		var eq = document.getElementById("equation").value;
+		//console.log(eq.split('#').filter(Boolean).join(""));
+		console.log(eq.match(/\#(.*?)\#/g));
+	}
+</script>
+</html>

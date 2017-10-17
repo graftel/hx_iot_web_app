@@ -3,6 +3,7 @@ module.exports = function(app,options){
 	var dynamodb = new options.AWS.DynamoDB();
 	var math = require('mathjs');	
 	const path = require("path");
+	var Parser = require('expr-eval').Parser;
 
 	// declarations
 	var tables = {
@@ -51,7 +52,7 @@ module.exports = function(app,options){
 							"Heat_Balance_Error(%)",
 							"Heat_Balance_Error(Btu/hr)"
 						 ];
-	var HBEdetails = [], assets=[], assetIDs = [],mainParameter;
+	var HBEdetails = [], assets=[], assetIDs = [],mainParameter, devicesCount = {}, assetTimeStamps = {};
 	var today = new Date();
 	today = today.getTime()/1000;
 
@@ -72,6 +73,8 @@ module.exports = function(app,options){
 			getAssets(currentUserID,getCalculatedValues);
 			simpleCallback = function(){
 				if(HBEdetails.length == assetIDs.length){
+					getDevicesCount();
+					getLatestTimeStamps();
 					var parameterlist = {	"#HBP": "Heat_Balance_Error(%)",
 											"#HBE": "Heat_Balance_Error(Btu/hr)",
 											"#HMF":"HOT_Mass_Flow_(lbm/hr)",
@@ -94,6 +97,8 @@ module.exports = function(app,options){
 								predictions: 1,
 								mainParameter: mainParameter,
 								data: HBEdetails,
+								devicesCount: devicesCount,
+								assetTimeStamps: assetTimeStamps,
 								instData: res_inst
 							});
 						}
@@ -272,6 +277,113 @@ module.exports = function(app,options){
 						res.end(JSON.stringify([latestRawValues,calculations,rawValues,latestTimeStamp]));
 					});
 				}
+		});
+	 app.post('/device/detail', function (req, res) {
+			if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Login again.");
+			}
+			else{
+				var asset = req.body.asset;
+				var device = req.body.device;
+				var params = {
+					    TableName : tables.deviceConfig,
+						FilterExpression: "DeviceID = :v1 and ASSETID = :v2",
+						ExpressionAttributeValues: {
+						        ":v1": device,
+						        ":v2": asset
+						}
+					};
+				options.docClient.scan(params, function (err, data) {
+				    if (err) {
+				        console.error("Unable to scan parameters table. (GET /parameters) Error JSON:", JSON.stringify(err, null, 2));
+				    } else {
+				    	if(data.Count > 0){
+				    		var deviceDetails = data.Items[0];
+				    		if(deviceDetails.Type == "Temperature" || deviceDetails.Type == "FlowMeter"){
+						    		 var reading = {Timestamp :null, Value: null };
+						    		 var gettReadingForAsset_params = {
+						    					TableName : tables.assets,
+						    					KeyConditionExpression: "AssetID = :v1",
+						    					ProjectionExpression: "LastestTimeStamp",
+						    					ExpressionAttributeValues: {
+						    						 ":v1": asset
+						    					},
+						    					Select: "SPECIFIC_ATTRIBUTES"
+						    				};
+						    		 options.docClient.query(gettReadingForAsset_params, function (err, data) {
+						    				if (err) {
+						    					console.error("Unable to get timestamp for asset. (getReadingForAsset) Error JSON:", JSON.stringify(err, null, 2));
+						    				} else {
+						    					 reading.Timestamp = data.Items[0].LastestTimeStamp;
+						    					 gettReadingForAsset_params = {
+						    								TableName : tables.rawData,
+						    								ExpressionAttributeNames: { "#V": "Value" },
+						    								KeyConditionExpression: "DeviceID = :v1 and EpochTimeStamp = :v2",
+						    								ProjectionExpression: "#V",
+						    								ExpressionAttributeValues: {
+						    									 ":v1": device,
+						    									 ":v2": reading.Timestamp
+						    								},
+						    								Select: "SPECIFIC_ATTRIBUTES"
+						    							}; 
+						    					 options.docClient.query(gettReadingForAsset_params, function (err, data) {
+						    							if (err) {
+						    								console.error("Unable to get value from raw data for (getReadingForAsset) Error JSON:", JSON.stringify(err, null, 2));
+						    							} else {
+						    								reading.Value = data.Items[0].Value;
+						    					    		res.end(JSON.stringify([deviceDetails, reading]));				    		
+						    							}
+						    					 });
+						    				}
+						    		});				    		
+				    	}else{
+				    		res.end(JSON.stringify([deviceDetails]));			
+				    	}
+				    }
+				    	else{
+				    		console.error("Device information not found. (POST /device/detail) Error JSON:", JSON.stringify(err, null, 2));
+				    		res.end(JSON.stringify([]));
+				    	}
+				    }
+				});
+			}
+		});
+	 
+	 app.get('/parameters', function (req, res) {
+			if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Login again.");
+			}else{
+				var params = {
+					    TableName : "Hx.Parameters"
+					};
+				options.docClient.scan(params, function (err, data) {
+				    if (err) {
+				        console.error("Unable to scan parameters table. (GET /parameters) Error JSON:", JSON.stringify(err, null, 2));
+				    } else {
+				    	res.render('pages' + path.sep + 'parameters', {
+							data: data.Items,
+							assets: assets
+						});
+				    }
+				});
+			}
+		});
+	 
+	 app.post('/parameters', function (req, res) {
+			if(typeof req.session.passport == 'undefined'){
+				res.status(440).send("Session expired! Login again.");
+			}else{
+				/*var tagName = req.body.tag;
+				var equation = req.body.equation;
+				var tags = equation.match(/\#(.*?)\#/g);
+				var equationFunctions = equation.match(/^\(]+/g);
+				equation = equation.replace(/#/g,"");
+				var expr = Parser.parse(equation);
+				console.log(expr.tokens);
+				console.log(expr.variables());
+				console.log(expr.symbols());
+				console.log(equationFunctions);*/
+			}
 		});
 
 	 // Settings route
@@ -855,4 +967,46 @@ module.exports = function(app,options){
 				}
 		});
 	 }
+	 
+	 var getDevicesCount = function(){
+		 assetIDs.forEach(function(asset){
+			 var params = {
+					 TableName : tables.deviceConfig,
+					 FilterExpression: "ASSETID = :v1",
+					 ProjectionExpression: "DeviceID",
+					 ExpressionAttributeValues: {
+					        ":v1": asset
+					 },
+					 Select: "SPECIFIC_ATTRIBUTES"
+			 }
+			 options.docClient.scan(params, function (err, data) {
+			 	    if (err) {
+				        console.error("Unable to scan the devices table. (Function getDevicesCount) Error JSON:", JSON.stringify(err, null, 2));
+				    } else {
+				    	devicesCount[asset] = data.Count;
+				    }
+			 });
+		 }); 
+	 };
+	 
+	 var getLatestTimeStamps = function(){
+		 assetIDs.forEach(function(asset){
+			 var assetParams = {
+						TableName : tables.assets,
+						KeyConditionExpression: "AssetID = :v1",
+						ProjectionExpression: "LastestTimeStamp",
+						ExpressionAttributeValues: {
+							 ":v1": asset
+						},
+						Select: "SPECIFIC_ATTRIBUTES"
+					};
+			 options.docClient.query(assetParams, function (err, data) {
+					if (err) {
+						console.error("Unable to get timestamp for asset. (getLatestTimeStamps) Error JSON:", JSON.stringify(err, null, 2));
+					} else {
+						assetTimeStamps[asset] = data.Items[0].LastestTimeStamp;
+					}
+			});
+		 }); 
+	 };
 }

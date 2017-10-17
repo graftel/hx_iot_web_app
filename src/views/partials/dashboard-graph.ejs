@@ -1,7 +1,27 @@
 
-<h2 class="chart-heading"><%= JSON.stringify(mainParameter).replace(/"/g, "") %></h2>
-<div style='position: relative;'>
-<div class="row col-md-8 svg-container" id="dashboard-line-chart-div"> </div>
+<!-- <h2 class="chart-heading"><%= JSON.stringify(mainParameter).replace(/"/g, "") %></h2> -->
+<!-- <div style='position: relative;'> -->
+<!-- <div class="row col-md-8 svg-container" id="dashboard-line-chart-div"> </div> -->
+<table class="table table-responsive table-striped">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Status</th>
+							<th>Devices Connected</th>
+							<th>Time Stamp</th>
+						</tr>
+					</thead>
+					<tbody>
+						<% for(asset in assets){ %>
+							<tr> 
+								<td><%= assets[asset] %></td> 
+								<td style="color: green; font-weight: bold;">OK</td> 
+								<td><%= devicesCount[asset] %></td> 
+								<td><%= new Date(assetTimeStamps[asset]*1000).toLocaleDateString() %> <%= new Date(assetTimeStamps[asset]*1000).toLocaleTimeString() %> </td> 
+							</tr>
+						<% } %>
+					</tbody>
+				</table>
 
 <style>
 .xaxis text, .yaxis text {
@@ -28,7 +48,7 @@ path.line {
 	var data = <%- JSON.stringify(data) %>;
 	var assets = <%- JSON.stringify(assets) %>;
 	var mainParameter = <%- JSON.stringify(mainParameter) %>;
-	var domain = getDomainForDashboardGraph(data,mainParameter);
-	drawLineGraph(d3.select("#dashboard-line-chart-div"), data, assets, domain,
-			mainParameter);
+	//var domain = getDomainForDashboardGraph(data,mainParameter); 
+	//drawLineGraph(d3.select("#dashboard-line-chart-div"), data, assets, domain,
+		//	mainParameter);
 </script>
