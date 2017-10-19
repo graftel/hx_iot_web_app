@@ -145,12 +145,13 @@
     }
 	
 	function formatDataToCSVString(rawdata) {
-	    var result = "SensorID,EpochTimeStamp,Value\n"; //header
+	    var result = "SensorID,Date Time,Value\n"; //header
 	    rawdata.forEach(function(sensorObj){ 	    // Add rows
 	    	var sensorid = Object.keys(sensorObj)[0];
 	        var values = sensorObj[sensorid];
 	        values.forEach(function(obj){
-	        	result += sensorid+","+obj.EpochTimeStamp+","+obj.Value+"\n";
+	        	var ts = new Date(obj.EpochTimeStamp*1000).toLocaleDateString() + " " + new Date(obj.EpochTimeStamp*1000).toLocaleTimeString();
+	        	result += sensorid+","+ts+","+obj.Value+"\n";
 	        });
 	    });
 	    return result;
