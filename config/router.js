@@ -238,12 +238,42 @@ module.exports = function(app,options){
 				        console.error("Unable to query calculatedData for AssetID:"+assetid+". (Route: GET '/asset') Error JSON:", JSON.stringify(err, null, 2));
 				    } else {
 				        if(data.Items.length == 1){
-							res.render('pages' + path.sep + 'asset',{
-								assets: assets,
-								asset: assetid,
-								values: data.Items[0],
-								plateNames: plateNames
-							});
+				        	var calculatedData = data.Items[0];
+				        	var deviceConfigParams = {
+									TableName : tables.deviceConfig,
+									ExpressionAttributeNames: {"#T":"Type","#U":"Unit","#L":"Location"},
+									FilterExpression: "ASSETID = :v1",
+									ProjectionExpression: ['DeviceID','#T','Location_Display','#L','#U',"Orientation"],
+									ExpressionAttributeValues: {
+								        ":v1": assetid
+								    },
+								    Select: 'SPECIFIC_ATTRIBUTES'
+							};
+				        	options.docClient.scan(deviceConfigParams, function (err, data) {
+						 	    if (err) {
+							        console.error("Unable to query deviceConfig table for AssetID:"+assetid+". (Route: GET '/asset') Error JSON:", JSON.stringify(err, null, 2));
+							    } else {
+							    	var devices = data.Items;
+							    	var deviceIDs = [], devicesFormatted = {};
+							    	devices = devices.sort(function(a,b){ return a["Location"] - b["Location"] || a["Orientation"] - b["Orientation"]; });
+							    	for(device of devices){
+							    		deviceIDs.push(device.DeviceID);							    		
+							    		devicesFormatted[device.DeviceID] = { Unit: device.Unit, Type: device.Type, Location_Display: device.Location_Display, Orientation: device.Orientation };
+							    	}
+									var sendData = function(rawData=null,timeStamps=null){ 
+											res.render('pages' + path.sep + 'asset',{
+														assets: assets,
+														asset: assetid,
+														values: calculatedData,
+														devices: devicesFormatted,
+														rawData: rawData,
+														timeStamps: timeStamps,
+														plateNames: plateNames
+													});
+									};
+							    	getRecentRawdata(timer=0.25,deviceIDs,calculatedData.EpochTimeStamp,printData,sendData);
+							    }
+						 	});      	
 				        }else{
 				        	console.error("Error with data of calculatedData for AssetID:"+assetid+" (Route: '/asset')");
 				        	req.flash("error", "Error in receiving data. Please try again later");
@@ -737,12 +767,12 @@ module.exports = function(app,options){
 			        console.error("Unable to query the assets table. (getLatestRecordedTimeStamp) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	   latestTimeStamp = data.Items[0].LastestTimeStamp;
-			  		   callback(assetid,parameter,location,timer,getRecentRawdata,sendData);
+			  		   callback(assetid,latestTimeStamp,parameter,location,timer,getRecentRawdata,sendData);
 			    }
 		 });
 	 }
 
-	 function getDevicesForAsset(assetid,parameter,location,timer,callback,sendData){
+	 function getDevicesForAsset(assetid,latestTimeStamp,parameter,location,timer,callback,sendData){
 		 var params = {
 				 TableName : tables.deviceConfig,
 				 ExpressionAttributeNames: { "#Ty": "Type", "#L": "Location" },
@@ -760,12 +790,12 @@ module.exports = function(app,options){
 			        console.error("Unable to scan the devices table. (Function getDevicesForAsset) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
 			    	deviceids = data.Items.map(function(d){ return d.DeviceID });
-					callback(timer,calculateDeviceValues,sendData);
+					callback(timer,deviceids,latestTimeStamp,calculateDeviceValues,sendData);
 			    }
 		 });
 	 }
 
-	 function getRecentRawdata(timer=0.25,callback,sendData){
+	 function getRecentRawdata(timer=0.25,deviceids,latestTimeStamp,callback,sendData){
 		 rawValues = [];
 		 var counter = 0;
 		 if(deviceids.length == 0){
@@ -1010,4 +1040,21 @@ module.exports = function(app,options){
 			});
 		 }); 
 	 };
+	 
+	 function printData(rawData, callback) {
+		 var timeStamps = [];
+		 var formattedRawData = {};
+		 rawData.forEach(function(key){
+			 var deviceid = Object.keys(key);
+			 var values = key[deviceid];
+			 values.forEach(function(value){
+				 if(formattedRawData[deviceid] == undefined)
+					 formattedRawData[deviceid] = {}
+				 if(timeStamps.indexOf(value.EpochTimeStamp) == -1)
+					 timeStamps.push(value.EpochTimeStamp);
+				 formattedRawData[deviceid][value.EpochTimeStamp] = value.Value;
+			 });
+		 });
+		 callback(formattedRawData, timeStamps);
+	 }
 }
