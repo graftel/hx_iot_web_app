@@ -445,6 +445,8 @@
 	}
 	
 	function drawSensorMap(latestValues) {
+		if(Object.keys(latestValues).length < 2)
+			return;
 		window.domainY = setMinMaxforAssetGraph(latestValues).Y;
 		var width = 300, height = 300;
 		var svg = d3.select('#sensor-chart').selectAll('svg').append('svg').attr(
@@ -469,6 +471,7 @@
 			});
 		}
 		RadarChart.draw("#sensor-chart", [ data ], config);
+		$('#radar-chart-heading strong').text("Radar Chart with latest values recorded");
 	}
 	
 	function getValuesForMean(data){
