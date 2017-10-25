@@ -464,14 +464,14 @@
 					<tr>
 						<th>Time / Sensor</th>
 						<% timeStamps.sort().forEach(function(timestamp){ %>
-							<th> <%= new Date(timestamp*1000).toLocaleDateString() %><br><%= new Date(timestamp*1000).toLocaleTimeString() %> </th>
+							<th class="text-info"> <%= new Date(timestamp*1000).toLocaleDateString() %><br><%= new Date(timestamp*1000).toLocaleTimeString() %> </th>
 						<% }) %>
 					</tr>
 				</thead>
 				<tbody>
 					<% for(deviceid in devices){ %>
 					<% if(devices[deviceid].Location_Display == null){ continue; } %>
-						<tr> <th><%= devices[deviceid].Location_Display %>, <br><%= devices[deviceid].Orientation %>&deg;</th>
+						<tr> <th class="text-info"><%= devices[deviceid].Location_Display %>, <br><%= devices[deviceid].Orientation %>&deg;</th>
 						<% timeStamps.sort().forEach(function(timestamp){ %>
 							<% if(rawData[deviceid] != null || rawData[deviceid] != undefined){ %>
 							<td> <%= rawData[deviceid][timestamp].toFixed(2) %> <%= devices[deviceid]['Unit'] %> </td>
@@ -694,12 +694,9 @@
 				$('*[data-side="flow-cold-in"]').hide();
 		}
 		
-		
-		$( document ).ready(function() { 	
-		    if(window.location.hash != "")
-		    	 $('a[href="'+window.location.hash+'"]').tab('show');
-			hideOuterBoxes();
-		});
+		if(window.location.hash != "")
+			$('a[href="'+ window.location.hash+'"]').tab('show');
+		hideOuterBoxes();
 		
 		$('.nav-pills a').on('shown.bs.tab', function (e) {
 			window.location.hash = e.target.hash;

@@ -107,19 +107,18 @@ module.exports = function(app, options) {
 							if(user){
 								var params = {
 										TableName : "Hx.Users",
-										Key: {
-											UserID : user.UserID
-										},
+										KeyConditionExpression : "UserID = :v1",										
 										ExpressionAttributeNames : {
 											"#C" : "VerificationCode"
 										},
 										FilterExpression : "#C = :v2",
 										ExpressionAttributeValues : {
+											":v1" : user.UserID,
 											":v2" : code
 										},
 										Select : "ALL_ATTRIBUTES"
 									};
-									options.docClient.scan(params,
+									options.docClient.query(params,
 													function(err, data) {
 														if (err) {
 															console.error("Unable to query Users table for user "+emailid+". (Route GET '/reset-password' ) Error JSON:", JSON.stringify(err,null,2));
@@ -184,6 +183,7 @@ module.exports = function(app, options) {
 	});
 
 	app.post('/register', function(req, res) {
+		var emailAddresses = [];
 		var now = new Date();
 		var expiry = new Date();
 		expiry.setDate(expiry.getDate() + 1);
@@ -194,14 +194,21 @@ module.exports = function(app, options) {
 				ProjectionExpression: "EmailAddress",	
 				Select:  "SPECIFIC_ATTRIBUTES"
 			};
-			options.docClient.scan(params, function(err, data) {
+			options.docClient.scan(params, onScan);
+			function onScan(err, data) {
 				if (err) {
 					console.error("Unable to scan from Users table for "+email+". (getUserByEmail) Error JSON:",
 							JSON.stringify(err, null, 2));
 				} else {
-					var emailAddresses = data.Items.map(function(d){ return data.Items[0][Object.keys(d)[0]]; });
+					emailAddresses = emailAddresses.concat(data.Items.map(function(d){ return data.Items[0][Object.keys(d)[0]]; }));
+					if (typeof data.LastEvaluatedKey != "undefined") {
+			            console.log("Scanning for more data - /register");
+			            params.ExclusiveStartKey = data.LastEvaluatedKey;
+			            return options.docClient.scan(params, onScan);
+			        }
+					console.log(emailAddresses);
 					if(!emailAddresses.includes(email)){
-						var userid = data.Count+1;
+						var userid = emailAddresses.length + 1;
 						var usersParams = {
 								TableName : "Hx.Users",
 								Item : {
@@ -212,8 +219,7 @@ module.exports = function(app, options) {
 									VerificationCode: generateVerificationCode(),
 									CreatedAt: now.toString(),
 									Expiry: expiry.toString()
-								},
-								ConditionExpression : "attribute_not_exists(EmailAddress)"
+								}
 							};
 							options.docClient.put(usersParams, function(err, data) {
 								if (err) {
@@ -240,7 +246,7 @@ module.exports = function(app, options) {
 								});
 					}
 				}
-			});	
+			}
 	});
 
 	app.get('/registration2', function(req, res) {

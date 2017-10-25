@@ -52,7 +52,7 @@ module.exports = function(app,options){
 							"Heat_Balance_Error(%)",
 							"Heat_Balance_Error(Btu/hr)"
 						 ];
-	var HBEdetails = [], assets=[], assetIDs = [],mainParameter, devicesCount = {}, assetTimeStamps = {};
+	var HBEdetails = [], assets=[], assetIDs = [], mainParameter, devicesCount = {}, assetTimeStamps = {};
 	var today = new Date();
 	today = today.getTime()/1000;
 
@@ -73,37 +73,39 @@ module.exports = function(app,options){
 			getAssets(currentUserID,getCalculatedValues);
 			simpleCallback = function(){
 				if(HBEdetails.length == assetIDs.length){
-					getDevicesCount();
-					getLatestTimeStamps();
 					var parameterlist = {	"#HBP": "Heat_Balance_Error(%)",
-											"#HBE": "Heat_Balance_Error(Btu/hr)",
-											"#HMF":"HOT_Mass_Flow_(lbm/hr)",
-											"#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
-											"#HHL":"HOT_Heat_Loss_(Btu/hr)",
-											"#CMF":"COLD_Mass_Flow(lbm/hr)",
-											"#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
-											"#CHG":"COLD_Heat_Gain(Btu/hr)"
-										 };
-					getInstData(parameterlist,function(err, res_inst){
-						if (err)
-						{
-							console.error("Unable to get Instant data for Dashboard .(Route: GET '/' ) ERROR JSON:", JSON.stringify(err, null, 2));
-						}
-						else {
-							return res.render('pages' + path.sep + 'index', {
-								assets: assets,
-								warnings: 0,
-								alerts: 0,
-								predictions: 1,
-								mainParameter: mainParameter,
-								data: HBEdetails,
-								devicesCount: devicesCount,
-								assetTimeStamps: assetTimeStamps,
-								instData: res_inst
-							});
-						}
-					});
-
+							"#HBE": "Heat_Balance_Error(Btu/hr)",
+							"#HMF":"HOT_Mass_Flow_(lbm/hr)",
+							"#HSH":"HOT_Specific_Heat(Btu/lbm-F)",
+							"#HHL":"HOT_Heat_Loss_(Btu/hr)",
+							"#CMF":"COLD_Mass_Flow(lbm/hr)",
+							"#CSH":"COLD_Specific_Heat(Btu/lbm-F)",
+							"#CHG":"COLD_Heat_Gain(Btu/hr)"
+						 };
+					
+					getDevicesCount(getLatestTimeStamps, getInstDataAndrender); // get devices count,then get latest timestamps and then call getInstDataAndrender function to get instant data and render page.
+					
+					function getInstDataAndrender(){
+							getInstData(parameterlist, function(err, res_inst){
+							if (err)
+							{
+								console.error("Unable to get Instant data for Dashboard .(Route: GET '/' ) ERROR JSON:", JSON.stringify(err, null, 2));
+							}
+							else {
+								return res.render('pages' + path.sep + 'index', {
+									assets: assets,
+									warnings: 0,
+									alerts: 0,
+									predictions: 1,
+									mainParameter: mainParameter,
+									data: HBEdetails,
+									devicesCount: devicesCount,
+									assetTimeStamps: assetTimeStamps,
+									instData: res_inst
+								});
+							}
+						})
+					}										
 				}
 			}
 		}
@@ -134,59 +136,66 @@ module.exports = function(app,options){
 		var inst_scan_params = {
 			TableName : tables.assets
 		};// to do: bond to company
-		options.docClient.scan(inst_scan_params, function(err,data){
-			if (err) {
-				 console.error("Unable to scan Instant data for Dashboard. (Route: POST /getHBEdata : var getInstData) ERROR JSON:", JSON.stringify(err, null, 2));
-				 res(err,null);
-			} else {
-
-				if (data.Count == 0)
-				{
-					console.error("No assets available! (Route: POST /getHBEdata : var getInstData)");
-					res("No assets availble!",null);
-				}
-				else {
-						for(var item in data.Items)
-						{
-							(function(item){
-								var inst_query_params = {
-									TableName : tables.calculatedData,
-									ExpressionAttributeNames: req,
-									ProjectionExpression: "AssetID, EpochTimeStamp" + " , " + Object.keys(req).toString(),
-									KeyConditionExpression: "AssetID = :v1 AND EpochTimeStamp = :v2",
-								 ExpressionAttributeValues: {
-										 ":v1": data.Items[item].AssetID,
-										 ":v2":  data.Items[item].LastestTimeStamp
-								 }
-								};
-								options.docClient.query(inst_query_params, function (err, dataq) {
-										if (err) {
-												console.error("Unable to query the table calculatedData for asset "+ data.Items[item].AssetID +". (Route: POST /getHBEdata : var getInstData) Error JSON:", JSON.stringify(err, null, 2));
-												res(err,null);
-										} else {
-												if (dataq.Count == 1) // verify there is actually data inside
-												{
-													dataq.Items[0].DisplayName = data.Items[item].DisplayName;
-													instData[item] = dataq.Items[0];													
-												}else{
-													instData[item] = { };													
-												}
-												if (datacount == data.Items.length - 1)
-												{
-													output.Items = instData;
-													output.Parameters = req;
-													output.Count = data.Items.length;
-													res(null,output);
-												}
-												datacount++;
+		options.docClient.scan(inst_scan_params, onScan);				
+		var allItems = [];
+		function onScan(err,data){
+				if (err) {
+					 console.error("Unable to scan Instant data for Dashboard. (Route: POST /getHBEdata : var getInstData) ERROR JSON:", JSON.stringify(err, null, 2));
+					 res(err,null);
+				} else {
+					if (data.Count == 0 && allItems.length == 0)
+					{
+						console.error("No assets available! (Route: POST /getHBEdata : var getInstData)");
+						res("No assets availble!",null);
+					}
+					else {
+						allItems = allItems.concat(data.Items);
+						if (typeof data.LastEvaluatedKey != "undefined") {
+				            console.log("Scanning for more data - getInstData");
+				            inst_scan_params.ExclusiveStartKey = data.LastEvaluatedKey;
+				            return options.docClient.scan(inst_scan_params, onScan);
+				        }
+							for(var item in allItems)
+							{
+								(function(item){
+									var inst_query_params = {
+										TableName : tables.calculatedData,
+										ExpressionAttributeNames: req,
+										ProjectionExpression: "AssetID, EpochTimeStamp" + " , " + Object.keys(req).toString(),
+										KeyConditionExpression: "AssetID = :v1 AND EpochTimeStamp = :v2",
+										ExpressionAttributeValues: {
+												 ":v1": allItems[item].AssetID,
+												 ":v2": allItems[item].LastestTimeStamp
 										}
-								});
-							})(item);
-						}
+									};
+									options.docClient.query(inst_query_params, function (err, dataq) {
+											if (err) {
+													console.error("Unable to query the table calculatedData for asset "+ allItems[item].AssetID +". (Route: POST /getHBEdata : var getInstData) Error JSON:", JSON.stringify(err, null, 2));
+													res(err,null);
+											} else {
+													if (dataq.Count == 1) // verify there is actually data inside																			
+													{
+														dataq.Items[0].DisplayName = allItems[item].DisplayName;
+														instData[item] = dataq.Items[0];													
+													}else{
+														instData[item] = { };													
+													}
+													if (datacount == allItems.length - 1)
+													{
+														output.Items = instData;
+														output.Parameters = req;
+														output.Count = allItems.length;
+														res(null,output);
+													}
+													datacount++;
+											}
+									});
+								})(item);
+							}
+					}
+					
 				}
-			}
-
-		});
+		}
 	};
 
 	app.post('/instData', function (req, res) {
@@ -208,7 +217,8 @@ module.exports = function(app,options){
 					console.error("Unable to get Instant data for Dashboard: (Route: POST '/instData') ", JSON.stringify(err, null, 2));
 				}
 				else{
-				//	new EJS({url: 'comments.ejs'}).update('element_id', '/comments.json')
+				// new EJS({url: 'comments.ejs'}).update('element_id',
+				// '/comments.json')
 						res.end(JSON.stringify(res1));
 				}
 			});
@@ -243,22 +253,31 @@ module.exports = function(app,options){
 									TableName : tables.deviceConfig,
 									ExpressionAttributeNames: {"#T":"Type","#U":"Unit","#L":"Location"},
 									FilterExpression: "ASSETID = :v1",
-									ProjectionExpression: ['DeviceID','#T','Location_Display','#L','#U',"Orientation"],
+									ProjectionExpression: ['DeviceID','#T','Location_Display','#L','#U',"Orientation","LinkDeviceID"],
 									ExpressionAttributeValues: {
 								        ":v1": assetid
 								    },
 								    Select: 'SPECIFIC_ATTRIBUTES'
 							};
-				        	options.docClient.scan(deviceConfigParams, function (err, data) {
+				        	options.docClient.scan(deviceConfigParams, onScan);
+				        	
+				        	var devices = []; var deviceIDs = [], devicesFormatted = {};
+				        	
+				        	function onScan(err, data) {
 						 	    if (err) {
 							        console.error("Unable to query deviceConfig table for AssetID:"+assetid+". (Route: GET '/asset') Error JSON:", JSON.stringify(err, null, 2));
 							    } else {
-							    	var devices = data.Items;
-							    	var deviceIDs = [], devicesFormatted = {};
+							    	devices = devices.concat(data.Items);
+									if (typeof data.LastEvaluatedKey != "undefined") {
+							            console.log("Scanning for more data - /asset");
+							            deviceConfigParams.ExclusiveStartKey = data.LastEvaluatedKey;
+							            return options.docClient.scan(deviceConfigParams, onScan);
+							        }		    							    	
 							    	devices = devices.sort(function(a,b){ return a["Location"] - b["Location"] || a["Orientation"] - b["Orientation"]; });
 							    	for(device of devices){
-							    		deviceIDs.push(device.DeviceID);							    		
-							    		devicesFormatted[device.DeviceID] = { Unit: device.Unit, Type: device.Type, Location_Display: device.Location_Display, Orientation: device.Orientation };
+							    		deviceIDs = deviceIDs.concat(device.DeviceID);							    		
+							    		devicesFormatted[device.DeviceID] = { Unit: device.Unit, Type: device.Type, Location_Display: device.Location_Display, 
+							    				                              Orientation: device.Orientation, LinkDeviceID: device.LinkDeviceID };							    		
 							    	}
 									var sendData = function(rawData=null,timeStamps=null){ 
 											res.render('pages' + path.sep + 'asset',{
@@ -273,7 +292,7 @@ module.exports = function(app,options){
 									};
 							    	getRecentRawdata(timer=0.25,deviceIDs,calculatedData.EpochTimeStamp,printData,sendData);
 							    }
-						 	});      	
+						 	}      	
 				        }else{
 				        	console.error("Error with data of calculatedData for AssetID:"+assetid+" (Route: '/asset')");
 				        	req.flash("error", "Error in receiving data. Please try again later");
@@ -318,15 +337,16 @@ module.exports = function(app,options){
 				var device = req.body.device;
 				var params = {
 					    TableName : tables.deviceConfig,
-						FilterExpression: "DeviceID = :v1 and ASSETID = :v2",
+						FilterExpression: "ASSETID = :v2",
+						KeyConditionExpression: "DeviceID = :v1",
 						ExpressionAttributeValues: {
 						        ":v1": device,
 						        ":v2": asset
 						}
 					};
-				options.docClient.scan(params, function (err, data) {
+				options.docClient.query(params, function (err, data) {
 				    if (err) {
-				        console.error("Unable to scan parameters table. (GET /parameters) Error JSON:", JSON.stringify(err, null, 2));
+				        console.error("Unable to query deviceConfig table. (GET /device/detail) Error JSON:", JSON.stringify(err, null, 2));
 				    } else {
 				    	if(data.Count > 0){
 				    		var deviceDetails = data.Items[0];
@@ -387,16 +407,24 @@ module.exports = function(app,options){
 				var params = {
 					    TableName : "Hx.Parameters"
 					};
-				options.docClient.scan(params, function (err, data) {
+				options.docClient.scan(params, onScan); 
+				var result = [];
+				function onScan(err, data) {
 				    if (err) {
 				        console.error("Unable to scan parameters table. (GET /parameters) Error JSON:", JSON.stringify(err, null, 2));
 				    } else {
+				    	result = result.concat(data.Items);
+						if (typeof data.LastEvaluatedKey != "undefined") {
+				            console.log("Scanning for more data - /parameters");
+				            params.ExclusiveStartKey = data.LastEvaluatedKey;
+				            return options.docClient.scan(params, onScan);
+				        }
 				    	res.render('pages' + path.sep + 'parameters', {
-							data: data.Items,
+							data: result,
 							assets: assets
 						});
 				    }
-				});
+				}
 			}
 		});
 	 
@@ -404,16 +432,14 @@ module.exports = function(app,options){
 			if(typeof req.session.passport == 'undefined'){
 				res.status(440).send("Session expired! Login again.");
 			}else{
-				/*var tagName = req.body.tag;
-				var equation = req.body.equation;
-				var tags = equation.match(/\#(.*?)\#/g);
-				var equationFunctions = equation.match(/^\(]+/g);
-				equation = equation.replace(/#/g,"");
-				var expr = Parser.parse(equation);
-				console.log(expr.tokens);
-				console.log(expr.variables());
-				console.log(expr.symbols());
-				console.log(equationFunctions);*/
+				/*
+				 * var tagName = req.body.tag; var equation = req.body.equation;
+				 * var tags = equation.match(/\#(.*?)\#/g); var
+				 * equationFunctions = equation.match(/^\(]+/g); equation =
+				 * equation.replace(/#/g,""); var expr = Parser.parse(equation);
+				 * console.log(expr.tokens); console.log(expr.variables());
+				 * console.log(expr.symbols()); console.log(equationFunctions);
+				 */
 			}
 		});
 
@@ -599,25 +625,16 @@ module.exports = function(app,options){
 			}else{
 				// TO DO : Unlink device
 				// NOT deleting device for now
-				/*var deviceid = req.body.deviceid;
-				var type = req.body.type;
-				if(deviceid){
-					var params = {
-						    TableName: tables.deviceConfig,
-						    Key:{
-						    	DeviceID: deviceid,
-						    	Type: type
-						    }						    
-						};
-						options.docClient.delete(params, function(err, data) {
-						    if (err) {
-						        console.error("Unable to delete item. (POST /device/delete) Error JSON:", JSON.stringify(err, null, 2));
-						        res.status(404).send("Delete failed");
-						    } else {
-						        res.end("success");
-						    }
-						});
-				}				*/
+				/*
+				 * var deviceid = req.body.deviceid; var type = req.body.type;
+				 * if(deviceid){ var params = { TableName: tables.deviceConfig,
+				 * Key:{ DeviceID: deviceid, Type: type } };
+				 * options.docClient.delete(params, function(err, data) { if
+				 * (err) { console.error("Unable to delete item. (POST
+				 * /device/delete) Error JSON:", JSON.stringify(err, null, 2));
+				 * res.status(404).send("Delete failed"); } else {
+				 * res.end("success"); } }); }
+				 */
 				res.end("success");
 			}
 		 });
@@ -643,9 +660,9 @@ module.exports = function(app,options){
 					 	    if (err) {
 						        console.error("Unable to scan the deviceConfig table. (GET /asset/delete) Error JSON:", JSON.stringify(err, null, 2));
 						    } else {
-						    	//if(data.Count > 0)
-						    	//	batchDeleteDevices(data.Items);
-						    	//deleteAsset(assetId);
+						    	// if(data.Count > 0)
+						    	// batchDeleteDevices(data.Items);
+						    	// deleteAsset(assetId);
 						    	// TO DO: Unlink asset from company ID
 						    	return res.redirect('/manageassets');
 						    }
@@ -694,14 +711,14 @@ module.exports = function(app,options){
 						function(device){
 							var assetsParams = {
 							 	TableName: tables.assets,
-								FilterExpression: "AssetID = :v1",
+							 	KeyConditionExpression : "AssetID = :v1",
 								ExpressionAttributeValues: {
 									":v1": device
 									}
 								};
-						 options.docClient.scan(assetsParams, function(err,data_assets){
+						 options.docClient.query(assetsParams, function(err,data_assets){
 							 if (err) {
-									console.error("Unable to scan Assets table for AssetID:"+device+". ERROR JSON:", JSON.stringify(err, null, 2));
+									console.error("Unable to query Assets table for AssetID:"+device+". ERROR JSON:", JSON.stringify(err, null, 2));
 									res(err,null);
 							 } else {
 								 					 var obj = new Object();
@@ -733,22 +750,29 @@ module.exports = function(app,options){
 	 }
 
 	 function getAssets(userid,callback) {
-		 HBEdetails = [], assets = {}, assetIDs = []; // to empty any previous values stored
+		 HBEdetails = [], assets = {}, assetIDs = [], scanResult = []; // to empty any previous values stores
 		 var assetsParams = {
 				    TableName : tables.assets,
 				    ProjectionExpression: ["AssetID","DisplayName"]
 				};
-		 options.docClient.scan(assetsParams, function (err, data) {
+		 options.docClient.scan(assetsParams, onScan);
+		 function onScan(err, data) {
 			    if (err) {
 			        console.error("Unable to scan the assets table.(getAssets) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
-			    	for(item in data.Items){
-			    		assets[data.Items[item].AssetID] = data.Items[item].DisplayName;
-			    		assetIDs.push(data.Items[item].AssetID);
+			    	scanResult = scanResult.concat(data.Items);
+					if (typeof data.LastEvaluatedKey != "undefined") {
+			            console.log("Scanning for more data - getAssets");
+			            assetsParams.ExclusiveStartKey = data.LastEvaluatedKey;
+			            return options.docClient.scan(assetsParams, onScan);
+			        }
+			    	for(item in scanResult){
+			    		assets[scanResult[item].AssetID] = scanResult[item].DisplayName;
+			    		assetIDs.push(scanResult[item].AssetID);
 			    	}
 				    callback(userid, simpleCallback);
 			    }
-			});
+			}
 		}
 
 	 function getLatestRecordedTimeStamp(assetid,parameter,location,timer,callback,sendData){
@@ -773,6 +797,7 @@ module.exports = function(app,options){
 	 }
 
 	 function getDevicesForAsset(assetid,latestTimeStamp,parameter,location,timer,callback,sendData){
+		 deviceids = [];
 		 var params = {
 				 TableName : tables.deviceConfig,
 				 ExpressionAttributeNames: { "#Ty": "Type", "#L": "Location" },
@@ -785,14 +810,21 @@ module.exports = function(app,options){
 				 },
 				 Select: "SPECIFIC_ATTRIBUTES"
 		 }
-		 options.docClient.scan(params, function (err, data) {
+		 options.docClient.scan(params, onScan);
+		 function onScan(err, data) {
 		 	    if (err) {
 			        console.error("Unable to scan the devices table. (Function getDevicesForAsset) Error JSON:", JSON.stringify(err, null, 2));
 			    } else {
-			    	deviceids = data.Items.map(function(d){ return d.DeviceID });
-					callback(timer,deviceids,latestTimeStamp,calculateDeviceValues,sendData);
+			    	deviceids = deviceids.concat(data.Items.map(function(d){ return d.DeviceID }));
+					if (typeof data.LastEvaluatedKey != "undefined") {
+			            console.log("Scanning for more data - getDevicesForAsset");
+			            params.ExclusiveStartKey = data.LastEvaluatedKey;
+			            return options.docClient.scan(params, onScan);
+			        }
+					else
+						callback(timer,deviceids,latestTimeStamp,calculateDeviceValues,sendData);
 			    }
-		 });
+		 }
 	 }
 
 	 function getRecentRawdata(timer=0.25,deviceids,latestTimeStamp,callback,sendData){
@@ -850,18 +882,12 @@ module.exports = function(app,options){
 	 }
 
 	 function getStartTime(){
-/*			options.docClient.scan(params, function (err, data) {
-			    if (err) {
-			        console.error("Unable to scan time. Error JSON:", JSON.stringify(err, null, 2));
-			    } else {
-			    	if(data.Count > 0)
-			    		startTime = data.Items[0].EpochTimeStamp;
-			    	else
-			    		startTime= 0;
-			    	startTime = 1499850224;
-			    	currTime=startTime;
-			    }
-			});*/
+			/*
+			 * options.docClient.scan(params, function (err, data) { if (err) {
+			 * console.error("Unable to scan time. Error JSON:", JSON.stringify(err, null,
+			 * 2)); } else { if(data.Count > 0) startTime = data.Items[0].EpochTimeStamp;
+			 * else startTime= 0; startTime = 1499850224; currTime=startTime; } });
+			 */
 			startTime = today - (2*60);
 			currTime=startTime;
 	}
@@ -924,37 +950,25 @@ module.exports = function(app,options){
 			});
 	 }
 	 
-	 /*function batchDeleteDevices(items){
-		 var deviceConfigParams = {  "RequestItems": { } };
-			deviceConfigParams["RequestItems"][tables.deviceConfig] = [];							
-			items.forEach(function(item){
-				var tempObj = {};
-				tempObj["DeleteRequest"] = { "Key": item };
-				deviceConfigParams["RequestItems"][tables.deviceConfig].push(tempObj);
-			});
-			options.docClient.batchWrite(deviceConfigParams, function(err, data) {
-				if (err) {
-					console.error("Unable to delete devices from Devices table. (Function batchDeleteDevices ) Error JSON:", JSON.stringify(err, null, 2));
-				}
-			});
-	 }
-	 
-	 function deleteAsset(assetId){
-		 var assetsParams = {
-				    TableName: tables.assets,
-				    Key:{
-				    	AssetID: assetId
-				    }						    
-				};
-				options.docClient.delete(assetsParams, function(err, data) {
-				    if (err) {
-				        console.error("Unable to delete asset. deleteAsset Error JSON:", JSON.stringify(err, null, 2));
-				        
-				    } else {
-				    	console.log("success");
-				    }
-				});
-	 }*/
+	 /*
+		 * function batchDeleteDevices(items){ var deviceConfigParams = {
+		 * "RequestItems": { } };
+		 * deviceConfigParams["RequestItems"][tables.deviceConfig] = [];
+		 * items.forEach(function(item){ var tempObj = {};
+		 * tempObj["DeleteRequest"] = { "Key": item };
+		 * deviceConfigParams["RequestItems"][tables.deviceConfig].push(tempObj);
+		 * }); options.docClient.batchWrite(deviceConfigParams, function(err,
+		 * data) { if (err) { console.error("Unable to delete devices from
+		 * Devices table. (Function batchDeleteDevices ) Error JSON:",
+		 * JSON.stringify(err, null, 2)); } }); }
+		 * 
+		 * function deleteAsset(assetId){ var assetsParams = { TableName:
+		 * tables.assets, Key:{ AssetID: assetId } };
+		 * options.docClient.delete(assetsParams, function(err, data) { if (err) {
+		 * console.error("Unable to delete asset. deleteAsset Error JSON:",
+		 * JSON.stringify(err, null, 2));
+		 *  } else { console.log("success"); } }); }
+		 */
 	 
 	 function updateTimer(time, userid,callback){
 		 if(time){
@@ -999,9 +1013,11 @@ module.exports = function(app,options){
 		});
 	 }
 	 
-	 var getDevicesCount = function(){
+	 var getDevicesCount = function(callback, callBackFunction){
+		 var params = {}, counter = 0;
+	 
 		 assetIDs.forEach(function(asset){
-			 var params = {
+			params[asset]  = {
 					 TableName : tables.deviceConfig,
 					 FilterExpression: "ASSETID = :v1",
 					 ProjectionExpression: "DeviceID",
@@ -1010,17 +1026,30 @@ module.exports = function(app,options){
 					 },
 					 Select: "SPECIFIC_ATTRIBUTES"
 			 }
-			 options.docClient.scan(params, function (err, data) {
+			 options.docClient.scan(params[asset], onScan);
+			 function onScan(err, data) {
 			 	    if (err) {
 				        console.error("Unable to scan the devices table. (Function getDevicesCount) Error JSON:", JSON.stringify(err, null, 2));
 				    } else {
-				    	devicesCount[asset] = data.Count;
+				    	if(typeof devicesCount[asset] == 'undefined')
+				    		devicesCount[asset] = data.Count;
+				    	else
+				    		devicesCount[asset] = devicesCount[asset] + data.Count;
+				    	
+				    	if (typeof data.LastEvaluatedKey != "undefined") {
+				            console.log("Scanning for more data - getDevicesCount");
+				            params[asset].ExclusiveStartKey = data.LastEvaluatedKey;
+				            return options.docClient.scan(params[asset], onScan);
+				        }
+				    	counter++;
 				    }
-			 });
+					 if(Object.keys(devicesCount).length == assetIDs.length && counter == assetIDs.length)
+						 callback(callBackFunction);
+			 }
 		 }); 
 	 };
 	 
-	 var getLatestTimeStamps = function(){
+	 var getLatestTimeStamps = function(callback = function(){/* empty function */}){
 		 assetIDs.forEach(function(asset){
 			 var assetParams = {
 						TableName : tables.assets,
@@ -1039,6 +1068,7 @@ module.exports = function(app,options){
 					}
 			});
 		 }); 
+		 callback();
 	 };
 	 
 	 function printData(rawData, callback) {

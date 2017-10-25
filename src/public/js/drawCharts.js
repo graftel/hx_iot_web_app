@@ -117,7 +117,7 @@
 		drawPath(); // draw lines on first load
 
 		// ******** Mean line ********
-		if(window.location.pathname == "/asset"){
+		if(window.location.pathname == "/asset" && Object.keys(assets).length > 1){
 			var meanLine= d3.line().curve(d3.curveBasis).x(function(d) { // mean path
 				return xScale(d.key);
 			}).y(function(d) {
