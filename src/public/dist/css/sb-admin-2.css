@@ -690,3 +690,7 @@ img.controls:hover{
 	stroke-linejoin:miter;
 	stroke-opacity:1;
 }
+
+.font-weight-bold{
+	font-weight: bold;
+}

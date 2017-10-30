@@ -304,7 +304,22 @@ module.exports = function(app,options){
 		});
 
 	var latestTimeStamp = 0, deviceids, calculations, rawValues = [], latestRawValues = [], calculations = {};
-
+	
+	app.post('/asset/rawdata', function(req,res){
+		if(typeof req.session.passport == 'undefined'){
+			res.status(440).send("Session expired! Login again.");
+		}
+		else{
+			var assetid = req.body.asset;
+			var toTimeStamp = parseInt(req.body.timestamp);
+			var deviceIds = req.body.deviceids;
+			var sendData = function(rawData=null,timeStamps=null){ 
+				res.end(JSON.stringify([rawData,timeStamps]));
+			};
+			getRecentRawdata(timer=0.25,deviceIds,toTimeStamp-10,printData,sendData);
+		}
+	});
+	
 	 app.post('/asset/detail', function (req, res) {
 			if(typeof req.session.passport == 'undefined'){
 				res.status(440).send("Session expired! Login again.");
