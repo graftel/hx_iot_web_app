@@ -486,17 +486,16 @@
 					<div id="data" class="tab-pane table-responsive"
 						style="position: relative; padding-top: 2%;">
 
-						<button type="button" class="btn btn-link" onclick="loadmore()">Load last 15minutes data</button>
+						<button type="button" class="btn btn-info pull-right" onclick="loadmore()">Load last 15 minutes data</button>
 						<table class="table table-hover table-striped table-bordered"
 							data-toggle="table">
 							<thead>
 								<tr class="font-weight-bold">
-									<th data-title="Time/Sensor">Time / Sensor</th> 
+									<th data-title="Time/Sensor" class="text-primary"></th> 
 									<% for(deviceid in devices){ %> 
 									<% if(devices[deviceid].Location_Display == null){ continue; } %>
-										<td data-row-probe="<%= deviceid  %>"
-											data-title="<%= deviceid %>"><strong> <%= devices[deviceid].Location_Display %>, <br><%= devices[deviceid].Orientation %>&deg;
-											</strong>
+										<td data-row-probe="<%= deviceid  %>" class="text-primary"
+											data-title="<%= devices[deviceid].Location_Display %>, <br><%= devices[deviceid].Orientation %>&deg; [<%= deviceid %>] %>"><strong></strong>
 										</td> 
 									<% } %>
 								</tr>
