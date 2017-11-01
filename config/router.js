@@ -273,7 +273,7 @@ module.exports = function(app,options){
 							            deviceConfigParams.ExclusiveStartKey = data.LastEvaluatedKey;
 							            return options.docClient.scan(deviceConfigParams, onScan);
 							        }		    							    	
-							    	devices = devices.sort(function(a,b){ return a["Location"] - b["Location"] || a["Orientation"] - b["Orientation"]; });
+							    	devices = devices.sort(function(a,b){ return stringCompare(a["Location_Display"], b["Location_Display"]) || a["Orientation"] -  b["Orientation"]; });
 							    	for(device of devices){
 							    		deviceIDs = deviceIDs.concat(device.DeviceID);							    		
 							    		devicesFormatted[device.DeviceID] = { Unit: device.Unit, Type: device.Type, Location_Display: device.Location_Display, 
@@ -1101,5 +1101,13 @@ module.exports = function(app,options){
 			 });
 		 });
 		 callback(formattedRawData, timeStamps);
+	 }
+	 
+	 function stringCompare(a,b){		
+		if (a < b)
+			  return -1;
+		if ( a > b)
+			  return 1;
+		return 0;
 	 }
 }
