@@ -497,7 +497,7 @@
 					<div id="data" class="tab-pane table-responsive"
 						style="position: relative; padding-top: 2%;">
 						<div id="slider" style="width: 60%; margin: 3% 0 1% 3%;"></div>
-						<button type="button" class="btn btn-info pull-right" onclick="loadmore()">Load last 15 minutes data</button>
+						<button type="button" class="btn btn-info btn-sm pull-right" onclick="loadmore()"><span class="glyphicon glyphicon-time"></span> Last 15 minutes </button>
 						<table class="table table-hover table-striped table-bordered" data-toggle="table">
 							<thead>
 								<tr class="font-weight-bold">
@@ -828,10 +828,10 @@
 			   var table = $("#details table");
 			   var element = document.getElementById(table.data("showing"));
 			   var deviceDetailsDisplay = $("#deviceDetails").css('display');
+			   if(window.location.hash == "#data") return;
 			   if(element == null && deviceDetailsDisplay == "none")
 				   return document.location.reload(true);
-			   if(deviceDetailsDisplay == "block")
-				   return;
+			   if(deviceDetailsDisplay == "block") return;
 			   console.log("refreshing");
 			   getData(element, 0.25);
 			}, 1 * 60 * 1000);
