@@ -518,8 +518,8 @@
 									<% for(deviceid in devices){ %> 
 									<% if(devices[deviceid].Location_Display == null){ continue; } %>
 									<td data-row-probe="<%= deviceid  %>" class="text-primary">
-										<strong><%= devices[deviceid].Location_Display %>, <br>
-										<%= devices[deviceid].Orientation %>&deg; [<%= deviceid %>] %>
+										<strong><%= devices[deviceid].Location_Display %>,  <br>
+										<%= devices[deviceid].Orientation %>&deg;  (<%= devices[deviceid]['Unit'] %>)  [<%= deviceid %>] %>
 									</strong>
 									</td> <% } %>
 								</tr>
@@ -535,7 +535,7 @@
 										<% if(devices[deviceid].Location_Display == null){ continue; } %> 
 										<% if(rawData[deviceid] != null || rawData[deviceid] != undefined){ %>
 											<td> <%= rawData[deviceid][timestamp].toFixed(2) %> 
-												 <%= devices[deviceid]['Unit'] %> </td> 
+												</td>
 									<% }} %>
 								</tr>
 								<% }) %>
