@@ -290,7 +290,7 @@ module.exports = function(app,options){
 														plateNames: plateNames
 													});
 									};
-							    	getRecentRawdata(timer=0.25,deviceIDs,calculatedData.EpochTimeStamp,printData,sendData);
+							    	getRecentRawdata(timer=0.25,deviceIDs,null,calculatedData.EpochTimeStamp,printData,sendData);
 							    }
 						 	}      	
 				        }else{
@@ -311,12 +311,13 @@ module.exports = function(app,options){
 		}
 		else{
 			var assetid = req.body.asset;
-			var toTimeStamp = parseInt(req.body.timestamp);
+			var toTimeStamp = parseInt(req.body.toTimestamp);
+			var fromTimeStamp = parseInt(req.body.fromTimestamp);
 			var deviceIds = req.body.deviceids;
 			var sendData = function(rawData=null,timeStamps=null){ 
 				res.end(JSON.stringify([rawData,timeStamps]));
 			};
-			getRecentRawdata(timer=0.25,deviceIds,toTimeStamp-10,printData,sendData);
+			getRecentRawdata(timer=0.25,deviceIds,fromTimeStamp,toTimeStamp-10,printData,sendData);
 		}
 	});
 	
@@ -842,8 +843,9 @@ module.exports = function(app,options){
 		 }
 	 }
 
-	 function getRecentRawdata(timer=0.25,deviceids,latestTimeStamp,callback,sendData){
+	 function getRecentRawdata(timer=0.25,deviceids,fromTimeStamp,toTimeStamp,callback,sendData){
 		 rawValues = [];
+		 fromTimeStamp = fromTimeStamp ||  toTimeStamp - (timer * 60 * 60);
 		 var counter = 0;
 		 if(deviceids.length == 0){
 			 console.log("Length of deviceids is 0");
@@ -857,8 +859,8 @@ module.exports = function(app,options){
 					 ProjectionExpression: "EpochTimeStamp, #V",
 					 ExpressionAttributeValues: {
 					        ":v1": deviceid,
-					        ":v2": latestTimeStamp - (timer * 60 * 60),
-					        ":v3": latestTimeStamp
+					        ":v2": fromTimeStamp,
+					        ":v3": toTimeStamp
 					 },
 					 Select: "SPECIFIC_ATTRIBUTES"
 			 }

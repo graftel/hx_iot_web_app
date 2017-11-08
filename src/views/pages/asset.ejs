@@ -8,6 +8,7 @@
     
     <!-- No UI Slider  CSS -->
     <link href="vendor/nouislider/nouislider.min.css" rel="stylesheet">
+    <link href="vendor/jquery-datetimepicker/jquery.datetimepicker.min.css" rel="stylesheet">
 	<style>
 		.noUi-connect {
 		    background-color: #337ab7;
@@ -496,29 +497,46 @@
 					</div>
 					<div id="data" class="tab-pane table-responsive"
 						style="position: relative; padding-top: 2%;">
-						<div id="slider" style="width: 60%; margin: 3% 0 1% 3%;"></div>
-						<button type="button" class="btn btn-info btn-sm pull-right" onclick="loadmore()"><span class="glyphicon glyphicon-time"></span> Last 15 minutes </button>
+						<div class="well row">
+							<div class="input-append col-md-2 startDiv">
+								<label> Start Time: </label> <input id="start-date" type="text"></input> 
+									<span class="add-on" style="cursor:pointer;"> <i class="fa fa-calendar fa-fw"></i>
+								</span>
+							</div>
+							<div class="input-append col-md-2 endDiv">
+								<label> End Time: </label> <input id="end-date" type="text"></input> 
+									<span class="add-on" style="cursor:pointer;"> <i class="fa fa-calendar fa-fw"></i>
+								</span>
+							</div>
+							<button class="btn btn-primary btn-sm" style="margin-top: 25px;" onclick="loadSelectedData()">Get Data</button>
+							<button class="btn btn-default btn-sm" style="margin-top: 25px;" onclick="location.reload();">Clear</button>
+						</div>
 						<table class="table table-hover table-striped table-bordered" data-toggle="table">
 							<thead>
 								<tr class="font-weight-bold">
-									<th data-title="Time/Sensor" class="text-primary"></th> 
+									<th class="text-primary">Time/Sensor</th> 
 									<% for(deviceid in devices){ %> 
 									<% if(devices[deviceid].Location_Display == null){ continue; } %>
-										<td data-row-probe="<%= deviceid  %>" class="text-primary"
-											data-title="<%= devices[deviceid].Location_Display %>, <br><%= devices[deviceid].Orientation %>&deg; [<%= deviceid %>] %>"><strong></strong>
-										</td> 
-									<% } %>
+									<td data-row-probe="<%= deviceid  %>" class="text-primary">
+										<strong><%= devices[deviceid].Location_Display %>, <br>
+										<%= devices[deviceid].Orientation %>&deg; [<%= deviceid %>] %>
+									</strong>
+									</td> <% } %>
 								</tr>
 							</thead>
 							<tbody>
-								<% timeStamps.sort().forEach(function(timestamp){ %>
+								<% timeStamps.reverse().forEach(function(timestamp){ %>
 								<tr>
-									<td class="font-weight-bold"><%= timestamp %>
-									</td> <% for(deviceid in devices){ %> 
-									<% if(devices[deviceid].Location_Display == null){ continue; } %>
+									<td class="font-weight-bold">
+										<%= new Date(timestamp*1000).toLocaleDateString() %> 
+										<%= new Date(timestamp*1000).toLocaleTimeString() %>
+									</td> 
+									<% for(deviceid in devices){ %> 
+										<% if(devices[deviceid].Location_Display == null){ continue; } %> 
 										<% if(rawData[deviceid] != null || rawData[deviceid] != undefined){ %>
-											<td><%= rawData[deviceid][timestamp].toFixed(2) %> <%= devices[deviceid]['Unit'] %></td> 
-										<% }} %>
+											<td> <%= rawData[deviceid][timestamp].toFixed(2) %> 
+												 <%= devices[deviceid]['Unit'] %> </td> 
+									<% }} %>
 								</tr>
 								<% }) %>
 							</tbody>
@@ -542,93 +560,74 @@
     <script src="vendor/datatables/js/jquery.dataTables.min.js"></script>
     <script src="vendor/datatables-plugins/dataTables.bootstrap.min.js"></script>
     <script src="vendor/datatables-responsive/dataTables.responsive.js"></script>
+    <script src="vendor/jquery-datetimepicker/jquery.datetimepicker.full.min.js"></script>
 	<!-- No UI Slider JavaScript -->
     <script src="vendor/nouislider/nouislider.min.js"></script>
     
 	<script type="text/javascript">
 		var devices = JSON.parse('<%- JSON.stringify(devices) %>');
-		var startTime = Math.min.apply(null,JSON.parse("<%- JSON.stringify(timeStamps) %>"));
+		var loadedStartTime = Math.min.apply(null,JSON.parse("<%- JSON.stringify(timeStamps) %>"));
 		var deviceids = Object.keys(devices);
-		
-		var endTime = startTime+(15*60); // 15minutes range
-		var range;
-		
-		var dataTable = $("#data table").DataTable({
-			paging: true,
-			pageLength: 25,
-			columnDefs: [
-	            {
-	                "render": function ( data, type, row ) {
-	                	if(type === 'display'){
-	                        return "<strong>"+new Date(data*1000).toLocaleDateString() + "<br>" + new Date(data*1000).toLocaleTimeString()+"</strong>";
-	                    }
-	                    return data;
-	                },
-	                "targets": 0
-	            }
-	        ]
+		var timeStamps = JSON.parse('<%- JSON.stringify(timeStamps) %>');
+		var rawData = JSON.parse('<%- JSON.stringify(rawData) %>');
+		var loadedEndTime = loadedStartTime+(15*60); // 15minutes range
+		var flagSelected = false;
+
+		$(window).scroll(function() {
+			   if($(window).scrollTop() + $(window).height() == $(document).height() && !flagSelected) {
+			   		loadmore();
+			   }
 		});
 		
-		var handlesSlider = document.getElementById('slider');
-	
-		noUiSlider.create(handlesSlider, {
-			start: [ startTime, startTime+(60*25) ],
-			step: 60, // 1 minute
-			connect: true,
-			tooltips: true,
-			range: {
-				'min': [ startTime ],
-				'max': [ endTime ]
-			},
-			format: {
-	            to: function (value) {
-	                return new Date(value*1000).toLocaleDateString() + "<br>" + new Date(value*1000).toLocaleTimeString();
-	            },
-	            from: function (value) {
-	                return value;
-	            }
-	        }
-		});
-	
-		handlesSlider.noUiSlider.on('update', function( values, handle, unencoded  ) {
-			range = unencoded;
-			dataTable.draw();
-		});
+		 $(function() {		    
+			    $('#start-date').datetimepicker({
+			    	closeOnDateSelect: true,
+			    	onShow: function(ct) {
+			    	   this.setOptions({
+			    		   maxDate: $('#end-date').val() ? $('#end-date').val() : false,
+			    		   maxTime: $('#end-date').val() ? $('#end-date').val() : false
+			    	   })
+			    	  }
+			    });
+			    $('#end-date').datetimepicker({
+			    	closeOnDateSelect: true,
+			    	onShow: function(ct) {
+			    	   this.setOptions({
+			    	    minDate: $('#start-date').val() ? $('#start-date').val() : false,
+			    	    minTime: $('#start-date').val() ? $('#start-date').val() : false
+			    	   })
+			    	  }
+			    });
+		 });
 		
-		function loadmore(){		
+		$('.startDiv span').click(function(){
+			  jQuery('#start-date').datetimepicker('show'); //support hide,show and destroy command
+		});
+		$('.endDiv span').click(function(){
+			  jQuery('#end-date').datetimepicker('show'); //support hide,show and destroy command
+		});
+		 
+		function loadmore() {			
 			 $.ajax({
 					type : 'POST',
 					url : '/asset/rawdata',
 					data : {
 						asset : "<%- asset %>",
 						deviceids : deviceids,
-						timestamp : startTime
+						toTimestamp : loadedStartTime
 					},
 					traditional : true,
 					success : function(data) {
 					 		data = JSON.parse(data);
-							var timeStamps = data[1];
-						 	var rawdata = data[0];
-							var result = [];
-							timeStamps.forEach(function(timestamp){
-								var ts = "<strong>" + new Date(timestamp*1000).toLocaleDateString() + " <br> " + new Date(timestamp*1000).toLocaleTimeString() + "</strong>";
-								var element = [timestamp];
-								deviceids.forEach(function(deviceid){
-									if(rawdata[deviceid] == null) return;
-									element.push(rawdata[deviceid][timestamp].toFixed(2)+ " " + devices[deviceid]["Unit"]);
-								});
-								result.push(element);
-							});			
-							startTime = Math.min.apply(null,timeStamps);
-							handlesSlider.noUiSlider.updateOptions({ // update slider
-								start: [ startTime, endTime ],
-								range: {
-									'min': startTime,
-									'max': endTime
-								}
-							});
-							range = [startTime, endTime];
-							dataTable.rows.add(result).draw();  // update data table
+							var newTimeStamps = data[1].sort().reverse();
+						 	var newRawdata = data[0];
+						 	
+						 	loadDatainTable(newTimeStamps, newRawdata);
+						 	timeStamps = timeStamps.concat(newTimeStamps); 	
+						 	for(id in rawData){
+						 		rawData[id] = Object.assign({}, rawData[id], newRawdata[id]);
+						 	}
+							loadedStartTime = Math.min.apply(null,timeStamps);
 					},
 					error : function(err) {
 				          if(err.status == 440)
@@ -637,28 +636,63 @@
 					}
 				});
 		}
-	
-		$.fn.dataTable.ext.search.push(
-			    function( settings, searchData, index, rowData, counter ) {
-			        var min = range[0];
-			        var max = range[1];
-			        var timeStamp = searchData[0];
-			        
-			        if ( ( isNaN( min ) && isNaN( max ) ) ||
-			             ( isNaN( min ) && timeStamp <= max ) ||
-			             ( min <= timeStamp   && isNaN( max ) ) ||
-			             ( min <= timeStamp   && timeStamp <= max ) )
-			        {
-			            return true;
-			        }
-			        return false;
-			    }
-			); 
 		
-		$( document ).ready(function() {
-		    $("#DataTables_Table_0_filter").hide();
-		})
-
+		function loadSelectedData() {
+			if($("#start-date").val() == '' || $("#end-date").val() == '') return;
+			flagSelected = true;
+			var selectedStartTime = new Date($("#start-date").val());
+			var selectedEndTime = new Date($("#end-date").val());
+			$("#data table tbody tr").remove();
+			$("#data table tbody").append("<tr></tr>");
+			if(loadedStartTime*1000 <= selectedStartTime && loadedEndTime*1000 >= selectedEndTime){ // in loaded range
+				
+				var selectedTimeStamps = timeStamps.filter(function(ts) {
+					if(ts*1000 >= selectedStartTime && ts*1000 <= selectedEndTime)
+						return true;
+					else
+						return false;
+				});
+				loadDatainTable(selectedTimeStamps, rawData);
+			}else{		// not in loaded range
+			
+				 $.ajax({
+						type : 'POST',
+						url : '/asset/rawdata',
+						data : {
+							asset : "<%- asset %>",
+							deviceids : deviceids,							
+							fromTimestamp : selectedStartTime/1000,
+							toTimestamp : selectedEndTime/1000
+						},
+						traditional : true,
+						success : function(data) {
+							data = JSON.parse(data);
+							var newTimeStamps = data[1].sort().reverse();
+						 	var newRawdata = data[0];
+							loadDatainTable(newTimeStamps, newRawdata);
+						},
+						error : function(err) {
+					          if(err.status == 440)
+					        	  document.location.reload(true);
+					          console.log(err);
+						}
+				 });
+			}
+		}
+		
+		function loadDatainTable(timeStamps, rawdata){
+			var table = $('#data table tbody tr:last');
+			timeStamps.sort().forEach(function(timestamp){
+				var ts = "<strong>" + new Date(timestamp*1000).toLocaleDateString() + " <br> " + new Date(timestamp*1000).toLocaleTimeString() + "</strong>";
+				var element = "<tr><td>"+ts+"</td>";
+				deviceids.forEach(function(deviceid){
+					if(rawdata[deviceid] == null) return;
+					element += "<td>"+rawdata[deviceid][timestamp].toFixed(2)+ " " + devices[deviceid]["Unit"] + "</td>";
+				});
+				table.after(element);
+			});			
+		}
+		
 		 window.getData = function(element, timer) {
 			var parameter = element.getAttribute("data-type");
 			var location = element.getAttribute("data-location");
@@ -704,7 +738,7 @@
 											+ '<tr id="Min"> <td> Minimum ('+unit+') </td> </tr>'
 											+ '<tr id="Mean"> <td> Mean ('+unit+') </td></tr>'
 										//	+ '<tr id="Uncertainity"> <td> Measurement Uncertainity(GPM) </td></tr>'
-											+ '<tr id="Std"> <td> Standard Deviation ('+unit+') </td></tr>'
+											+ '<tr id="Std"> <td> Standard Deviation ('+unit+') </td></tr>';
 											//+ '<tr id="Stability"> <td> Stability(GPM/min) </td></tr></tbody>';
 			table.append(tableStructure);
 			for(key of keys){
