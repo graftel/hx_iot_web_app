@@ -838,7 +838,7 @@ module.exports = function(app,options){
 			            return options.docClient.scan(params, onScan);
 			        }
 					else
-						callback(timer,deviceids,latestTimeStamp,calculateDeviceValues,sendData);
+						callback(timer,deviceids,null,latestTimeStamp,calculateDeviceValues,sendData);
 			    }
 		 }
 	 }

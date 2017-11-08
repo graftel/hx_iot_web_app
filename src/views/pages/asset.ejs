@@ -584,27 +584,26 @@
 			    	closeOnDateSelect: true,
 			    	onShow: function(ct) {
 			    	   this.setOptions({
-			    		   maxDate: $('#end-date').val() ? $('#end-date').val() : false,
-			    		   maxTime: $('#end-date').val() ? $('#end-date').val() : false
+			    		   maxDate: new Date(),
+			    		   maxTime: new Date()+1
 			    	   })
 			    	  }
 			    });
 			    $('#end-date').datetimepicker({
-			    	closeOnDateSelect: true,
 			    	onShow: function(ct) {
 			    	   this.setOptions({
-			    	    minDate: $('#start-date').val() ? $('#start-date').val() : false,
-			    	    minTime: $('#start-date').val() ? $('#start-date').val() : false
+			    		   maxDate: new Date(),
+			    		   maxTime: new Date()+1
 			    	   })
 			    	  }
 			    });
 		 });
 		
 		$('.startDiv span').click(function(){
-			  jQuery('#start-date').datetimepicker('show'); //support hide,show and destroy command
+			  $('#start-date').datetimepicker('show');
 		});
 		$('.endDiv span').click(function(){
-			  jQuery('#end-date').datetimepicker('show'); //support hide,show and destroy command
+			  $('#end-date').datetimepicker('show');
 		});
 		 
 		function loadmore() {			
